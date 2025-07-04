@@ -49,8 +49,8 @@ auto boolean_attr::get(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr
 boolean_attr::boolean_attr(tinytc_compiler_context_t ctx, bool value)
     : tinytc_attr(AK::boolean, ctx), value_{value} {}
 
-auto dictionary_attr::get(tinytc_compiler_context_t ctx, array_view<named_attr> sorted_attrs)
-    -> tinytc_attr_t {
+auto dictionary_attr::get(tinytc_compiler_context_t ctx,
+                          array_view<tinytc_named_attr_t> sorted_attrs) -> tinytc_attr_t {
     const auto hash = [&] {
         auto h = fnv1a0();
         for (auto const &na : sorted_attrs) {
@@ -62,7 +62,7 @@ auto dictionary_attr::get(tinytc_compiler_context_t ctx, array_view<named_attr> 
     const auto is_equal = [&](tinytc_attr_t a) {
         const auto da = dyn_cast<dictionary_attr>(a);
         return da && std::equal(sorted_attrs.begin(), sorted_attrs.end(), da->begin(), da->end(),
-                                [](named_attr const &a, named_attr const &b) {
+                                [](tinytc_named_attr_t const &a, tinytc_named_attr_t const &b) {
                                     return a.name == b.name && a.attr == b.attr;
                                 });
     };
@@ -80,12 +80,12 @@ auto dictionary_attr::get_name_string(tinytc_attr_t name) -> std::string_view {
     throw status::ir_expected_string_attribute;
 }
 
-void dictionary_attr::sort(mutable_array_view<named_attr> unsorted_attrs) {
+void dictionary_attr::sort(mutable_array_view<tinytc_named_attr_t> unsorted_attrs) {
     if (unsorted_attrs.empty()) {
         return;
     }
     std::sort(unsorted_attrs.begin(), unsorted_attrs.end(),
-              [](named_attr const &a, named_attr const &b) {
+              [](tinytc_named_attr_t const &a, tinytc_named_attr_t const &b) {
                   return get_name_string(a.name) < get_name_string(b.name);
               });
     for (std::size_t i = 1; i < unsorted_attrs.size(); ++i) {
@@ -96,7 +96,7 @@ void dictionary_attr::sort(mutable_array_view<named_attr> unsorted_attrs) {
 }
 
 dictionary_attr::dictionary_attr(tinytc_compiler_context_t ctx,
-                                 std::vector<named_attr> sorted_attrs)
+                                 std::vector<tinytc_named_attr_t> sorted_attrs)
     : tinytc_attr(AK::dictionary, ctx), attrs_{std::move(sorted_attrs)} {}
 
 auto dictionary_attr::find(tinytc_attr_t name) -> tinytc_attr_t {

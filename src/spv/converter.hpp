@@ -22,7 +22,8 @@
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
+auto convert_prog_to_spirv(tinytc_prog &p, tinytc_core_info const &info)
+    -> shared_handle<tinytc_spv_mod_t>;
 
 class inst_converter {
   public:

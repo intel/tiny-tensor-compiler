@@ -21,7 +21,7 @@
 
 using namespace tinytc;
 
-tinytc_prog::tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc)
+tinytc_prog::tinytc_prog(shared_handle<tinytc_compiler_context_t> ctx, tinytc_location const &lc)
     : ctx_{std::move(ctx)} {
     loc(lc);
 }
@@ -34,8 +34,7 @@ tinytc_status_t tinytc_prog_create(tinytc_prog_t *prg, tinytc_compiler_context_t
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *prg =
-            std::make_unique<tinytc_prog>(compiler_context{ctx, true}, get_optional(loc)).release();
+        *prg = std::make_unique<tinytc_prog>(shared_handle{ctx, true}, get_optional(loc)).release();
     });
 }
 
@@ -43,7 +42,7 @@ tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun) {
     if (prg == nullptr || fun == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { prg->push_back(tinytc::func{fun}); });
+    return exception_to_status_code([&] { prg->push_back(tinytc::unique_handle(fun)); });
 }
 
 tinytc_status_t tinytc_prog_release(tinytc_prog_t obj) {
@@ -77,7 +76,7 @@ tinytc_status_t tinytc_prog_get_compiler_context(const_tinytc_prog_t prg,
     if (prg == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { *ctx = prg->share_context().release(); });
+    return exception_to_status_code([&] { *ctx = prg->context(); });
 }
 
 tinytc_status_t tinytc_prog_print_to_file(tinytc_prog_t prg, char const *filename) {

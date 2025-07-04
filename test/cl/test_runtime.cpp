@@ -71,19 +71,20 @@ void opencl_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t byt
     synchronize();
 }
 
-auto opencl_test_runtime::get_core_info() const -> tinytc::core_info {
+auto opencl_test_runtime::get_core_info() const -> tinytc::shared_handle<tinytc_core_info_t> {
     return ::tinytc::make_core_info(dev_);
 }
 auto opencl_test_runtime::get_device() -> device_t { return dev_; }
 auto opencl_test_runtime::get_context() -> context_t { return ctx_; }
 auto opencl_test_runtime::get_command_list() -> command_list_t { return q_; }
-auto opencl_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
+auto opencl_test_runtime::get_recipe_handler(tinytc_recipe_t rec)
+    -> tinytc::shared_handle<tinytc_recipe_handler_t> {
     return tinytc::make_recipe_handler(ctx_, dev_, rec);
 }
-auto opencl_test_runtime::get_kernel_bundle(tinytc::prog p,
+auto opencl_test_runtime::get_kernel_bundle(tinytc_prog_t p,
                                             tinytc_core_feature_flags_t core_features)
     -> kernel_bundle_t {
-    return ::tinytc::make_kernel_bundle(ctx_, dev_, std::move(p), core_features);
+    return ::tinytc::make_kernel_bundle(ctx_, dev_, p, core_features);
 }
 auto opencl_test_runtime::get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t {
     return ::tinytc::make_kernel(bundle.get(), name);

@@ -18,7 +18,7 @@ class arg_parser;
 using optflag_states = std::vector<std::pair<optflag, std::int32_t>>;
 
 void add_optflag_states(arg_parser &parser, optflag_states &flags);
-void set_optflags(compiler_context &ctx, optflag_states const &flags);
+void set_optflags(tinytc_compiler_context_t ctx, optflag_states const &flags);
 void list_optimization_flags(std::ostream &os);
 
 void add_core_feature_flags(arg_parser &parser, tinytc_core_feature_flags_t &flags);

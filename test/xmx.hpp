@@ -73,10 +73,10 @@ void run_custom_test_case(std::string const &code, char const *kernel_name, T &.
     }
 
     auto ctx = make_compiler_context();
-    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+    set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });
-    auto bundle = gpu_rt->get_kernel_bundle(parse_string(code, ctx),
+    auto bundle = gpu_rt->get_kernel_bundle(parse_string(code, ctx.get()).get(),
                                             tinytc_core_feature_flag_large_register_file);
     auto kernel = gpu_rt->get_kernel(bundle, kernel_name);
 

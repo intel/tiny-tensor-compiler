@@ -458,6 +458,8 @@ Data Type
 
   * :ref:`tinytc_void_type_get`
 
+  * :ref:`tinytc_type_get_compiler_context`
+
 Data Type Functions
 -------------------
 
@@ -572,6 +574,13 @@ tinytc_void_type_get
 ....................
 
 .. doxygenfunction:: tinytc_void_type_get
+
+.. _tinytc_type_get_compiler_context:
+
+tinytc_type_get_compiler_context
+................................
+
+.. doxygenfunction:: tinytc_type_get_compiler_context
 
 Function
 ========

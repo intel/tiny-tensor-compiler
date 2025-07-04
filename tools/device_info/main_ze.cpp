@@ -47,17 +47,19 @@ int main() {
                 std::cout << "\tDevice " << device_no++ << ": " << props.name << std::endl;
                 auto info = make_core_info(device);
                 std::cout << "\t\t" << "Subgroup sizes  :";
-                for (auto sgs : get_subgroup_sizes(info)) {
+                for (auto sgs : get_subgroup_sizes(info.get())) {
                     std::cout << " " << sgs;
                 }
                 std::cout << std::endl;
-                std::cout << "\t\tRegister space  : " << get_register_space(info) << std::endl;
+                std::cout << "\t\tRegister space  : " << get_register_space(info.get())
+                          << std::endl;
                 std::cout << "\t\tSPIR-V features : " << std::endl;
                 for (int i = 0; i < TINYTC_ENUM_NUM_SPIRV_FEATURE; ++i) {
                     const auto feature = spirv_feature{std::underlying_type_t<spirv_feature>(i)};
                     std::cout << "\t\t\t" << std::setw(width) << std::left << to_string(feature)
                               << ": ";
-                    std::cout << (have_spirv_feature(info, feature) ? "yes" : "no") << std::endl;
+                    std::cout << (have_spirv_feature(info.get(), feature) ? "yes" : "no")
+                              << std::endl;
                 }
             }
         }

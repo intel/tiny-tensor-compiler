@@ -19,9 +19,9 @@ namespace tinytc {
 
 class parse_context {
   public:
-    parse_context(compiler_context compiler_ctx);
+    parse_context(shared_handle<tinytc_compiler_context_t> compiler_ctx);
     inline auto program() { return program_; }
-    inline void program(prog p) { program_ = std::move(p); }
+    inline void program(shared_handle<tinytc_prog_t> p) { program_ = std::move(p); }
 
     void val(std::variant<std::int64_t, std::string> const &id, tinytc_value &val,
              location const &l);
@@ -30,7 +30,7 @@ class parse_context {
 
     void report_error(location const &loc, std::string const &what);
 
-    auto cctx() -> compiler_context const & { return compiler_ctx_; }
+    auto cctx() -> tinytc_compiler_context_t { return compiler_ctx_.get(); }
 
     void push_scope();
     void pop_scope();
@@ -43,12 +43,12 @@ class parse_context {
     void add_global_name(std::string const &name, location const &l);
 
   private:
-    compiler_context compiler_ctx_;
+    shared_handle<tinytc_compiler_context_t> compiler_ctx_;
     std::vector<std::unordered_map<std::int64_t, tinytc_value_t>> unnamed_id_map_;
     std::vector<std::unordered_map<std::string, tinytc_value_t>> named_id_map_;
     std::stack<tinytc_region_t> regions_;
     std::unordered_map<std::string, location> global_names_;
-    prog program_;
+    shared_handle<tinytc_prog_t> program_;
 };
 
 } // namespace tinytc

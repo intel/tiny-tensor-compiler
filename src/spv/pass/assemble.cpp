@@ -18,7 +18,7 @@
 
 namespace tinytc::spv {
 
-auto assembler::run_on_module(tinytc_spv_mod const &mod) -> binary {
+auto assembler::run_on_module(tinytc_spv_mod const &mod) -> shared_handle<tinytc_binary_t> {
     auto data = std::vector<std::uint8_t>{};
     auto stream = word_stream<std::int32_t>{data};
 
@@ -44,7 +44,7 @@ auto assembler::run_on_module(tinytc_spv_mod const &mod) -> binary {
     tinytc_binary_t bin;
     CHECK_STATUS(tinytc_binary_create(&bin, mod.context(), tinytc_bundle_format_spirv, data.size(),
                                       data.data(), mod.core_features()));
-    return binary{bin};
+    return shared_handle{bin};
 }
 
 } // namespace tinytc::spv

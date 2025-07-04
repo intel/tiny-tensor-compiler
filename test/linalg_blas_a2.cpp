@@ -7,12 +7,13 @@
 
 namespace tinytc::test {
 
-auto make_blas_a2_prog(compiler_context const &ctx, char const *name, tensor_layout const &layoutA,
-                       tensor_layout const &layoutB, tinytc_type_t alpha_ty, tinytc_type_t A_ty,
-                       tinytc_type_t beta_ty, tinytc_type_t B_ty,
+auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
+                       tinytc_type_t alpha_ty, tinytc_type_t A_ty, tinytc_type_t beta_ty,
+                       tinytc_type_t B_ty,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
-                       std::int32_t work_group_size) -> prog {
-    auto p = make_prog(ctx);
+                       std::int32_t work_group_size) -> shared_handle<tinytc_prog_t> {
+    auto ctx = get_compiler_context(alpha_ty);
+    auto p = make_prog(ctx.get());
 
     auto At = get<memref_type>(A_ty, layoutA.static_shape(), layoutA.static_stride(),
                                address_space::global);
@@ -22,14 +23,14 @@ auto make_blas_a2_prog(compiler_context const &ctx, char const *name, tensor_lay
     auto void_ty = get<void_type>(ctx.get());
     auto f = make_func(name, {alpha_ty, At, beta_ty, Bt}, void_ty);
     if (work_group_size) {
-        auto const wgs_attr =
-            named_attr{get_string_attr(ctx.get(), "work_group_size"),
-                       get_array_attr(ctx.get(), {get_integer_attr(ctx.get(), work_group_size),
-                                                  get_integer_attr(ctx.get(), 1)})};
-        set_attr(f, get_dictionary_attr_with_sorted(ctx.get(), wgs_attr));
+        auto const wgs_attr = tinytc_named_attr_t{
+            get_string_attr(ctx.get(), "work_group_size"),
+            get_array_attr(ctx.get(), {get_integer_attr(ctx.get(), work_group_size),
+                                       get_integer_attr(ctx.get(), 1)})};
+        set_attr(f.get(), get_dictionary_attr_with_sorted(ctx.get(), wgs_attr));
     }
 
-    auto fn_body = get_body(f);
+    auto fn_body = get_body(f.get());
     auto params = std::array<tinytc_value_t, 4u>{};
     get_parameters(fn_body, params);
     set_name(params[0], "alpha");
@@ -41,7 +42,7 @@ auto make_blas_a2_prog(compiler_context const &ctx, char const *name, tensor_lay
 
     make_op(bb, params);
 
-    add_function(p, std::move(f));
+    add_function(p.get(), std::move(f));
 
     return p;
 }

@@ -14,8 +14,6 @@
 #include <string>
 #include <vector>
 
-using tinytc::compiler_context;
-
 extern "C" {
 
 tinytc_status_t
@@ -77,14 +75,13 @@ tinytc_status_t tinytc_cl_kernel_bundle_create_with_binary(cl_program *bundle, c
 
     tinytc_compiler_context_t ctx = nullptr;
     TINYTC_CHECK_STATUS(tinytc_binary_get_compiler_context(bin, &ctx));
-    auto ctx_ = compiler_context{ctx}; // Clean-up ctx when ctx_ gets out of scope
 
     char const *options = "";
     if (core_features & tinytc_core_feature_flag_large_register_file) {
         options = tinytc::large_register_file_compiler_option_cl;
     }
     if (err = clBuildProgram(p, 1, &device, options, nullptr, nullptr); err != CL_SUCCESS) {
-        if (ctx_.get()) {
+        if (ctx) {
             std::string log;
             std::size_t log_size;
             clGetProgramBuildInfo(p, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
@@ -92,7 +89,7 @@ tinytc_status_t tinytc_cl_kernel_bundle_create_with_binary(cl_program *bundle, c
             clGetProgramBuildInfo(p, device, CL_PROGRAM_BUILD_LOG, log_size, log.data(), nullptr);
 
             tinytc_location_t loc = {};
-            tinytc_compiler_context_report_error(ctx_.get(), &loc, log.c_str());
+            tinytc_compiler_context_report_error(ctx, &loc, log.c_str());
         }
         clReleaseProgram(p);
         TINYTC_CL_CHECK_STATUS(err);

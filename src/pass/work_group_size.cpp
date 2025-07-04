@@ -120,8 +120,8 @@ void work_group_size_pass::run_on_function(tinytc_func &fn) {
     }
 
     fn.attr(get_dictionary_attr_with_sorted(
-        ctx, {named_attr{get_string_attr(ctx, "subgroup_size"), sgs_attr},
-              named_attr{get_string_attr(ctx, "work_group_size"), wgs_attr}}));
+        ctx, {tinytc_named_attr_t{get_string_attr(ctx, "subgroup_size"), sgs_attr},
+              tinytc_named_attr_t{get_string_attr(ctx, "work_group_size"), wgs_attr}}));
 }
 
 } // namespace tinytc

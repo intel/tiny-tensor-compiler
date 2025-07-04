@@ -14,14 +14,18 @@
 
 struct tinytc_prog final : tinytc::reference_counted {
   public:
-    using iterator = tinytc::indirect_random_access_iterator<std::vector<tinytc::func>::iterator>;
-    using const_iterator =
-        tinytc::indirect_random_access_iterator<std::vector<tinytc::func>::const_iterator>;
+    using container_t = std::vector<tinytc::unique_handle<tinytc_func_t>>;
 
-    tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc = {});
+    using iterator = tinytc::indirect_random_access_iterator<container_t::iterator>;
+    using const_iterator = tinytc::indirect_random_access_iterator<container_t::const_iterator>;
+
+    tinytc_prog(tinytc::shared_handle<tinytc_compiler_context_t> ctx,
+                tinytc_location const &lc = {});
 
     inline auto context() const -> tinytc_compiler_context_t { return ctx_.get(); }
-    inline auto share_context() const -> tinytc::compiler_context { return ctx_; }
+    inline auto share_context() const -> tinytc::shared_handle<tinytc_compiler_context_t> {
+        return ctx_;
+    }
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
@@ -30,11 +34,13 @@ struct tinytc_prog final : tinytc::reference_counted {
     inline auto end() -> iterator { return iterator{funcs_.end()}; }
     inline auto begin() const -> const_iterator { return const_iterator{funcs_.begin()}; }
     inline auto end() const -> const_iterator { return const_iterator{funcs_.end()}; }
-    inline void push_back(tinytc::func fun) { funcs_.push_back(std::move(fun)); }
+    inline void push_back(tinytc::unique_handle<tinytc_func_t> &&fun) {
+        funcs_.push_back(std::move(fun));
+    }
 
   private:
-    tinytc::compiler_context ctx_;
-    std::vector<tinytc::func> funcs_;
+    tinytc::shared_handle<tinytc_compiler_context_t> ctx_;
+    container_t funcs_;
     tinytc_location loc_;
 };
 

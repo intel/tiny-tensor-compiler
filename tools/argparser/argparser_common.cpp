@@ -37,7 +37,7 @@ void add_optflag_states(arg_parser &parser, optflag_states &flags) {
         .converter(converter);
 }
 
-void set_optflags(compiler_context &ctx, optflag_states const &flags) {
+void set_optflags(tinytc_compiler_context_t ctx, optflag_states const &flags) {
     for (auto const &flag : flags) {
         set_optimization_flag(ctx, flag.first, flag.second);
     }

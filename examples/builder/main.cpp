@@ -25,7 +25,7 @@ int main() {
         auto void_ty = get<void_type>(ctx.get());
         auto f = make_func("copy", {ty, ty}, void_ty);
 
-        auto body = get_body(f);
+        auto body = get_body(f.get());
         std::array<tinytc_value_t, 2u> params;
         get_parameters(body, params);
 
@@ -34,10 +34,10 @@ int main() {
         auto beta = bb.constant_zero(element_ty);
         bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
 
-        auto p = make_prog(ctx);
-        add_function(p, std::move(f));
+        auto p = make_prog(ctx.get());
+        add_function(p.get(), std::move(f));
 
-        dump(p);
+        dump(p.get());
     } catch (builder_error const &e) {
         std::cerr << "Error  " << static_cast<int>(e.code()) << std::endl;
     } catch (status const &st) {

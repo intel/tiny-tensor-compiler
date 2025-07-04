@@ -77,13 +77,13 @@ auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout c
     return {M, N};
 }
 
-auto make_blas_a3_prog(compiler_context const &ctx, char const *name, tensor_layout const &layoutA,
-                       tensor_layout const &layoutB, tensor_layout const &layoutC,
-                       tinytc_type_t alpha_ty, tinytc_type_t A_ty, tinytc_type_t B_ty,
-                       tinytc_type_t beta_ty, tinytc_type_t C_ty,
+auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
+                       tensor_layout const &layoutC, tinytc_type_t alpha_ty, tinytc_type_t A_ty,
+                       tinytc_type_t B_ty, tinytc_type_t beta_ty, tinytc_type_t C_ty,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
-    -> prog {
-    auto p = make_prog(ctx);
+    -> shared_handle<tinytc_prog_t> {
+    auto ctx = get_compiler_context(alpha_ty);
+    auto p = make_prog(ctx.get());
 
     auto At = get<memref_type>(A_ty, layoutA.static_shape(), layoutA.static_stride(),
                                address_space::global);
@@ -94,7 +94,7 @@ auto make_blas_a3_prog(compiler_context const &ctx, char const *name, tensor_lay
 
     auto void_ty = get<void_type>(ctx.get());
     auto f = make_func(name, {alpha_ty, At, Bt, beta_ty, Ct}, void_ty);
-    auto fn_body = get_body(f);
+    auto fn_body = get_body(f.get());
     auto params = std::array<tinytc_value_t, 5u>{};
     get_parameters(fn_body, params);
     set_name(params[0], "alpha");
@@ -107,7 +107,7 @@ auto make_blas_a3_prog(compiler_context const &ctx, char const *name, tensor_lay
 
     make_op(bb, params);
 
-    add_function(p, std::move(f));
+    add_function(p.get(), std::move(f));
 
     return p;
 }

@@ -92,7 +92,7 @@ tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length, char 
     });
 }
 
-tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, size_t arg_no, attr a) {
+tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, size_t arg_no, tinytc_attr_t a) {
     if (fun == nullptr || arg_no >= fun->num_params()) {
         return tinytc_status_invalid_arguments;
     }

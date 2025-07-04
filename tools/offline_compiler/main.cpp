@@ -16,7 +16,7 @@ using namespace tinytc;
 
 int main(int argc, char **argv) {
     char const *filename = nullptr;
-    auto info = core_info{};
+    auto info = shared_handle<tinytc_core_info_t>{};
     tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
     auto flags = cmd::optflag_states{};
@@ -32,13 +32,14 @@ int main(int argc, char **argv) {
         parser
             .set_short_opt('d', &info,
                            "Device name (cf. intel_gpu_architecture enum), default is \"pvc\"")
-            .converter([](char const *str, core_info &val) -> cmd::parser_status {
-                val = make_core_info_intel_from_name(str);
-                if (!val) {
-                    return cmd::parser_status::invalid_argument;
-                }
-                return cmd::parser_status::success;
-            });
+            .converter(
+                [](char const *str, shared_handle<tinytc_core_info_t> &val) -> cmd::parser_status {
+                    val = make_core_info_intel_from_name(str);
+                    if (!val) {
+                        return cmd::parser_status::invalid_argument;
+                    }
+                    return cmd::parser_status::success;
+                });
         parser.set_short_opt('S', &emit_asm, "Compile only; do not assemble");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
@@ -67,29 +68,28 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    auto ctx = compiler_context{};
     try {
-        ctx = make_compiler_context();
-        set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+        auto ctx = make_compiler_context();
+        set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
             std::cerr << what << std::endl;
         });
-        set_optimization_level(ctx, opt_level);
-        cmd::set_optflags(ctx, flags);
-        set_core_features(info, core_features);
-        auto p = prog{};
-        if (!filename) {
-            p = parse_stdin(ctx);
-        } else {
-            p = parse_file(filename, ctx);
-        }
+        set_optimization_level(ctx.get(), opt_level);
+        cmd::set_optflags(ctx.get(), flags);
+        set_core_features(info.get(), core_features);
+        auto p = [&] {
+            if (!filename) {
+                return parse_stdin(ctx.get());
+            }
+            return parse_file(filename, ctx.get());
+        }();
 
         if (emit_asm) {
-            auto mod = compile_to_spirv(std::move(p), info);
-            auto spvasm = print_to_string(mod);
+            auto mod = compile_to_spirv(p.get(), info.get());
+            auto spvasm = print_to_string(mod.get());
             std::cout << spvasm.get();
         } else {
-            auto bin = compile_to_spirv_and_assemble(std::move(p), info);
-            auto raw_data = get_raw(bin);
+            auto bin = compile_to_spirv_and_assemble(p.get(), info.get());
+            auto raw_data = get_raw(bin.get());
             std::cout.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
         }
     } catch (status const &st) {

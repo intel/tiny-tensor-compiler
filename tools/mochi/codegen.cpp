@@ -357,7 +357,7 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                 os << " * @return Instruction\n */\n";
                 os << "inline auto operator()(";
                 generate_inst_cxx_params(os, in);
-                os << "= {}) -> inst {\n";
+                os << "= {}) -> unique_handle<tinytc_inst_t> {\n";
                 os << "tinytc_inst_t instr;\n";
                 os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n",
                                   in->class_name());
@@ -366,7 +366,7 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                     generate_cxx_to_c_cast(os, q, ty, name);
                     os << ", ";
                 });
-                os << "&loc), loc);\nreturn inst(instr);\n}\n};\n\n";
+                os << "&loc), loc);\nreturn unique_handle{instr};\n}\n};\n\n";
             }
         });
     }
@@ -492,7 +492,7 @@ public:
     if (!in->has_children()) {
         os << "static auto create(";
         generate_inst_cxx_params(os, in);
-        os << ") -> inst;\n\n";
+        os << ") -> unique_handle<tinytc_inst_t>;\n\n";
     }
     os << "\n";
 
@@ -585,7 +585,7 @@ public:
 void generate_inst_create(std::ostream &os, inst *in) {
     os << "auto " << in->class_name() << "::create(";
     generate_inst_cxx_params(os, in);
-    os << ") -> inst {\n";
+    os << ") -> unique_handle<tinytc_inst_t> {\n";
 
     os << "std::int32_t num_operands = 0;\n"
        << "std::int32_t num_results = 0;\n";
@@ -627,7 +627,7 @@ void generate_inst_create(std::ostream &os, inst *in) {
     sizeof({1}::properties),
     {0},
 }};
-auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
+auto in = unique_handle{{tinytc_inst::create(IK::{2}, layout, loc)}};
 [[maybe_unused]] std::int32_t ret_no = 0;
 [[maybe_unused]] std::int32_t op_no = 0;
 )CXXT",

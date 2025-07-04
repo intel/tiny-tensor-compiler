@@ -42,13 +42,15 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
     for (std::int64_t n = 1; n <= N_; ++n) {
         auto bn = Bd_aligned(N_ - n);
         g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx.get()), transpose::N,
+            q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
                                         transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
-                                        dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_)));
+                                        dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_)
+                    .get()));
         g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx.get()), transpose::N,
+            q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
                                         transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
-                                        A_[0].stride(), dQ_[n].ld(), dQ_[n].stride())));
+                                        A_[0].stride(), dQ_[n].ld(), dQ_[n].stride())
+                    .get()));
     }
 }
 
@@ -78,7 +80,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
 
         auto void_ty = get<void_type>(ctx);
         auto f = make_func("ader_kernel", param_types, void_ty);
-        auto fn_body = get_body(f);
+        auto fn_body = get_body(f.get());
 
         std::array<tinytc_value_t, 2 * dim + 3> params;
         get_parameters(fn_body, params);
@@ -164,16 +166,16 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         return f;
     };
     auto ctx = make_compiler_context();
-    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+    set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });
-    auto p = make_prog(ctx);
-    add_function(p, opt_kernel(ctx.get()));
+    auto p = make_prog(ctx.get());
+    add_function(p.get(), opt_kernel(ctx.get()));
     if (dump_code) {
-        dump(p);
+        dump(p.get());
     }
-    return make_kernel_bundle(q_.get_context(), q_.get_device(),
-                              compile_to_spirv_and_assemble(p, dev_info_));
+    auto bin = compile_to_spirv_and_assemble(p.get(), dev_info_.get());
+    return make_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
 }
 
 template <typename T>
@@ -203,12 +205,13 @@ template <typename T> std::vector<event> test_ader<T>::reference() {
         num *= dt;
         denom *= n + 1;
         for (std::size_t d = 0; d < dim; ++d) {
-            small_gemm_batched::set_args(g_[2 * (n - 1)], howmany_, T(1.0), K_[d].get(),
-                                         dQ_[n - 1].get(), T(0.0), tmp_.get());
-            e[0] = g_[2 * (n - 1)].submit(q_, e);
-            small_gemm_batched::set_args(g_[2 * n - 1], howmany_, T(1.0), tmp_.get(), A_[d].get(),
-                                         T(1.0), dQ_[n].get());
-            e[0] = g_[2 * n - 1].submit(q_, e);
+            auto handler = g_[2 * (n - 1)].get();
+            set_small_gemm_batched_args(handler, howmany_, T(1.0), K_[d].get(), dQ_[n - 1].get(),
+                                        T(0.0), tmp_.get());
+            e[0] = submit(handler, q_, e);
+            set_small_gemm_batched_args(handler, howmany_, T(1.0), tmp_.get(), A_[d].get(), T(1.0),
+                                        dQ_[n].get());
+            e[0] = submit(handler, q_, e);
         }
         e[0] = taylor_sum(I_ref_, dQ_[n], num / denom, e);
     }

@@ -9,7 +9,7 @@
 #include <cstdint>
 
 namespace tinytc {
-auto parse(std::uint64_t size, char const *input) -> prog;
+auto parse(std::uint64_t size, char const *input) -> shared_handle<tinytc_prog_t>;
 }
 
 #endif // PARSER_20230614_HPP

@@ -18,7 +18,7 @@ using namespace tinytc;
 int main(int argc, char **argv) {
     auto pass_names = std::vector<char const *>{};
     char const *filename = nullptr;
-    auto info = core_info{};
+    auto info = shared_handle<tinytc_core_info_t>{};
     tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
     auto flags = cmd::optflag_states{};
@@ -33,13 +33,14 @@ int main(int argc, char **argv) {
         parser
             .set_short_opt('d', &info,
                            "Device name (cf. intel_gpu_architecture enum), default is \"pvc\"")
-            .converter([](char const *str, core_info &val) -> cmd::parser_status {
-                val = make_core_info_intel_from_name(str);
-                if (!val) {
-                    return cmd::parser_status::invalid_argument;
-                }
-                return cmd::parser_status::success;
-            });
+            .converter(
+                [](char const *str, shared_handle<tinytc_core_info_t> &val) -> cmd::parser_status {
+                    val = make_core_info_intel_from_name(str);
+                    if (!val) {
+                        return cmd::parser_status::invalid_argument;
+                    }
+                    return cmd::parser_status::success;
+                });
         parser.set_short_opt('p', &pass_names, "Run pass");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
@@ -84,24 +85,23 @@ int main(int argc, char **argv) {
         pass_names.emplace_back("dump-ir");
     }
 
-    auto ctx = compiler_context{};
     try {
-        ctx = make_compiler_context();
-        set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+        auto ctx = make_compiler_context();
+        set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
             std::cerr << what << std::endl;
         });
-        set_optimization_level(ctx, opt_level);
-        cmd::set_optflags(ctx, flags);
-        set_core_features(info, core_features);
-        auto p = prog{};
-        if (!filename) {
-            p = parse_stdin(ctx);
-        } else {
-            p = parse_file(filename, ctx);
-        }
+        set_optimization_level(ctx.get(), opt_level);
+        cmd::set_optflags(ctx.get(), flags);
+        set_core_features(info.get(), core_features);
+        auto p = [&] {
+            if (!filename) {
+                return parse_stdin(ctx.get());
+            }
+            return parse_file(filename, ctx.get());
+        }();
 
         for (auto const &pass_name : pass_names) {
-            run_function_pass(pass_name, p, info);
+            run_function_pass(pass_name, p.get(), info.get());
         }
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;

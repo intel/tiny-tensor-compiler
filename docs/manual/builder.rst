@@ -43,7 +43,7 @@ by actual values:
           size_t num_params;
           tinytc_compiler_context_t ctx;
           tinytc_prog_t program;
-          tinytc_data_type_t void_ty, element_ty, ty;
+          tinytc_type_t void_ty, element_ty, ty;
           tinytc_func_t copy_fun;
           tinytc_region_t copy_body;
           tinytc_inst_t tmp;
@@ -64,7 +64,7 @@ by actual values:
           tinytc_void_type_get(&void_ty, ctx);
 
           // Create function
-          tinytc_data_type_t param_types[2] = {ty, ty};
+          tinytc_type_t param_types[2] = {ty, ty};
           tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, void_ty,
                              NULL);
           tinytc_prog_add_function(program, copy_fun);
@@ -110,16 +110,16 @@ by actual values:
           auto void_ty = get<void_type>(ctx.get());
           auto f = make_func("copy", {ty, ty}, void_ty);
 
-          auto body = f.get_body();
+          auto body = get_body(f);
           std::array<tinytc_value_t, 2u> params;
-          body.get_parameters(params);
+          get_parameters(body, params);
 
           auto bb = region_builder{body};
-          auto alpha = bb.add(make_constant_one(element_ty));
-          auto beta = bb.add(make_constant_zero(element_ty));
-          bb.add(make_axpby(false, transpose::N, alpha, params[0], beta, params[1]));
+          auto alpha = bb.constant_one(element_ty);
+          auto beta = bb.constant_zero(element_ty);
+          bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
 
           auto p = make_prog(ctx);
-          p.add_function(std::move(f));
+          add_function(p, std::move(f));
 
-          p.dump();
+          dump(p);

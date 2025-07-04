@@ -27,20 +27,19 @@ auto hadamard_m(tensor_layout const &A, tensor_layout const &B, tensor_layout co
 auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
     -> std::array<std::int64_t, 2u>;
 
-auto make_blas_a3_prog(compiler_context const &ctx, char const *name, tensor_layout const &layoutA,
-                       tensor_layout const &layoutB, tensor_layout const &layoutC,
-                       tinytc_type_t alpha_ty, tinytc_type_t A_ty, tinytc_type_t B_ty,
-                       tinytc_type_t beta_ty, tinytc_type_t C_ty,
+auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
+                       tensor_layout const &layoutC, tinytc_type_t alpha_ty, tinytc_type_t A_ty,
+                       tinytc_type_t B_ty, tinytc_type_t beta_ty, tinytc_type_t C_ty,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
-    -> prog;
+    -> shared_handle<tinytc_prog_t>;
 
 template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT>
 auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        tensor_layout const &layoutC,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
-    -> prog {
+    -> shared_handle<tinytc_prog_t> {
     auto ctx = make_compiler_context();
-    return make_blas_a3_prog(ctx, name, layoutA, layoutB, layoutC, to_type<AlphaT>(ctx.get()),
+    return make_blas_a3_prog(name, layoutA, layoutB, layoutC, to_type<AlphaT>(ctx.get()),
                              to_type<AT>(ctx.get()), to_type<BT>(ctx.get()),
                              to_type<BetaT>(ctx.get()), to_type<CT>(ctx.get()), std::move(make_op));
 }
@@ -63,7 +62,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
     auto lB() const -> tensor_layout const & { return lB_; }
     auto lC() const -> tensor_layout const & { return lC_; }
 
-    auto make_prog() const -> prog {
+    auto make_prog() const -> shared_handle<tinytc_prog_t> {
         return make_blas_a3_prog<AlphaT, AT, BT, BetaT, CT>(
             kernel_name, lA_, lB_, lC_, [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<gemm_inst>(false, tA_, tB_, params[0], params[1], params[2], params[3],
@@ -106,7 +105,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
     auto lB() const -> tensor_layout const & { return lB_; }
     auto lC() const -> tensor_layout const & { return lC_; }
 
-    auto make_prog() const -> prog {
+    auto make_prog() const -> shared_handle<tinytc_prog_t> {
         return make_blas_a3_prog<AlphaT, AT, BT, BetaT, CT>(
             kernel_name, lA_, lB_, lC_, [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<gemv_inst>(false, tA_, params[0], params[1], params[2], params[3],
@@ -147,7 +146,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
     auto lB() const -> tensor_layout const & { return lB_; }
     auto lC() const -> tensor_layout const & { return lC_; }
 
-    auto make_prog() const -> prog {
+    auto make_prog() const -> shared_handle<tinytc_prog_t> {
         return make_blas_a3_prog<AlphaT, AT, BT, BetaT, CT>(
             kernel_name, lA_, lB_, lC_, [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<ger_inst>(false, params[0], params[1], params[2], params[3], params[4]);
@@ -184,7 +183,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
     auto lB() const -> tensor_layout const & { return lB_; }
     auto lC() const -> tensor_layout const & { return lC_; }
 
-    auto make_prog() const -> prog {
+    auto make_prog() const -> shared_handle<tinytc_prog_t> {
         return make_blas_a3_prog<AlphaT, AT, BT, BetaT, CT>(
             kernel_name, lA_, lB_, lC_, [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<hadamard_inst>(false, params[0], params[1], params[2], params[3],

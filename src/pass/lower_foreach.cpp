@@ -61,15 +61,15 @@ class foreach_generator {
   public:
     foreach_generator(local_tiling tiling, core_config core_cfg)
         : tiling_{std::move(tiling)}, core_cfg_{std::move(core_cfg)} {}
-    auto operator()(inst_view) -> inst { return inst{}; }
-    auto operator()(foreach_inst in) -> inst;
+    auto operator()(inst_view) -> unique_handle<tinytc_inst_t> { return {}; }
+    auto operator()(foreach_inst in) -> unique_handle<tinytc_inst_t>;
 
   private:
     local_tiling tiling_ = {};
     core_config core_cfg_ = {};
 };
 
-auto foreach_generator::operator()(foreach_inst in) -> inst {
+auto foreach_generator::operator()(foreach_inst in) -> unique_handle<tinytc_inst_t> {
     const int block_size0 = core_cfg_.subgroup_size;
 
     auto parallel = create<parallel_inst>(in.loc());
@@ -90,8 +90,8 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
             tinytc_region_t current_region = bb.get_region();
             for (std::int64_t i = in.dim() - 1; i > 1; --i) {
                 auto for_i =
-                    inst{for_inst::create(&from[i], &to[i], nullptr, array_view<tinytc_value_t>{},
-                                          array_view<tinytc_type_t>{}, in.loc())};
+                    create<for_inst>(&from[i], &to[i], nullptr, array_view<tinytc_value_t>{},
+                                     array_view<tinytc_type_t>{}, in.loc());
                 auto for_i_view = for_inst(for_i.get());
                 cloner.set_subs(&loop_vars[i], &for_i_view.loop_var());
                 tinytc_region_t next_region = &for_i_view.body();

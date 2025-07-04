@@ -9,15 +9,13 @@
 
 namespace tinytc {
 
-class binary;
-class prog;
-
 enum class small_gemm_batched_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *;
 
 struct small_gemm_batched_recipe : ::tinytc_recipe {
   public:
-    small_gemm_batched_recipe(prog prg, binary bin, tinytc_type_t ty);
+    small_gemm_batched_recipe(shared_handle<tinytc_prog_t> prg, shared_handle<tinytc_binary_t> bin,
+                              tinytc_type_t ty);
     auto num_kernels() const -> int override;
     auto kernel_name(int kernel_num) const -> char const * override;
 

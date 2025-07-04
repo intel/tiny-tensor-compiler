@@ -50,25 +50,25 @@ TEST_CASE("device (OpenCL)") {
     }
 
     auto info = make_core_info(device);
-    const auto sgs = get_subgroup_sizes(info);
+    const auto sgs = get_subgroup_sizes(info.get());
 
     if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         REQUIRE(sgs.size() == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(get_register_space(info) == 64 * 128);
-        set_core_features(info, tinytc_core_feature_flag_large_register_file);
-        CHECK(get_register_space(info) == 64 * 256);
+        CHECK(get_register_space(info.get()) == 64 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 64 * 256);
     } else if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::tgl)) {
         REQUIRE(sgs.size() == 3u);
         CHECK(sgs[0] == 8);
         CHECK(sgs[1] == 16);
         CHECK(sgs[2] == 32);
 
-        CHECK(get_register_space(info) == 32 * 128);
-        set_core_features(info, tinytc_core_feature_flag_large_register_file);
-        CHECK(get_register_space(info) == 32 * 128);
+        CHECK(get_register_space(info.get()) == 32 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 32 * 128);
     } else {
         WARN_MESSAGE(false, "Device test only works on Gen12 / PVC");
     }

@@ -35,13 +35,10 @@ Builder C++-API:
       - get_integer_attr
       - get_string_attr
       - sort_items
-    typedef:
-      - tinytc::attr
-      - tinytc::named_attr
   Data Type:
     function:
       - tinytc::get
-      - tinytc::get_compiler_context(tinytc_type_t)
+      - tinytc::get_compiler_context(const_tinytc_type_t)
       - tinytc::to_type
     struct:
       - tinytc::getter< boolean_type >
@@ -64,15 +61,12 @@ Builder C++-API:
     function:
       - tinytc::get_body
       - tinytc::make_func
-      - tinytc::set_attr(func&,attr)
+      - tinytc::set_attr(tinytc_func_t,tinytc_attr_t)
       - tinytc::set_parameter_attr
-    class:
-      - tinytc::func
   Instruction:
     function:
       - tinytc::create
-    class:
-      - tinytc::inst
+      - tinytc::set_attr(tinytc_inst_t,tinytc_attr_t)
     struct:
       - tinytc::creator< alloca_inst >
       - tinytc::creator< barrier_inst >
@@ -163,6 +157,11 @@ Builder C++-API:
       - tinytc::make_prog
   Region:
     function:
+      - tinytc::append
+      - tinytc::begin
+      - tinytc::end
+      - tinytc::get_parameters
+      - tinytc::insert
       - tinytc::next
       - tinytc::prev
     class:

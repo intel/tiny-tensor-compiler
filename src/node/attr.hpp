@@ -78,24 +78,28 @@ class boolean_attr : public tinytc_attr {
 class dictionary_attr : public tinytc_attr {
   public:
     inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::dictionary; }
-    static auto get(tinytc_compiler_context_t ctx, array_view<named_attr> sorted_attrs)
+    static auto get(tinytc_compiler_context_t ctx, array_view<tinytc_named_attr_t> sorted_attrs)
         -> tinytc_attr_t;
-    static void sort(mutable_array_view<named_attr> unsorted_attrs);
+    static void sort(mutable_array_view<tinytc_named_attr_t> unsorted_attrs);
 
-    inline auto begin() const -> std::vector<named_attr>::const_iterator { return attrs_.begin(); }
-    inline auto end() const -> std::vector<named_attr>::const_iterator { return attrs_.end(); }
+    inline auto begin() const -> std::vector<tinytc_named_attr_t>::const_iterator {
+        return attrs_.begin();
+    }
+    inline auto end() const -> std::vector<tinytc_named_attr_t>::const_iterator {
+        return attrs_.end();
+    }
     inline auto const &attrs() const { return attrs_; }
 
     auto find(tinytc_attr_t name) -> tinytc_attr_t;
     auto find(std::string_view name) -> tinytc_attr_t;
 
   protected:
-    dictionary_attr(tinytc_compiler_context_t ctx, std::vector<named_attr> sorted_attrs);
+    dictionary_attr(tinytc_compiler_context_t ctx, std::vector<tinytc_named_attr_t> sorted_attrs);
 
   private:
     static auto get_name_string(tinytc_attr_t name) -> std::string_view;
 
-    std::vector<named_attr> attrs_;
+    std::vector<tinytc_named_attr_t> attrs_;
 };
 
 class integer_attr : public tinytc_attr {

@@ -74,9 +74,10 @@ TINYTC_EXPORT float tinytc_f16_as_ui16_to_f32(uint16_t x);
 /**
  * @brief Get context object from program object
  *
+ * The reference count of the context remains unchanged.
+ *
  * @param prg [in] program object
- * @param ctx [out] pointer to context object; reference count is increased so the user needs to
- * call tinytc_compiler_context_release to clean up
+ * @param ctx [out] pointer to context object
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -511,9 +512,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin,
 /**
  * @brief Get context object from binary object
  *
+ * The reference count of the context remains unchanged.
+ *
  * @param bin [in] binary object
- * @param ctx [out] pointer to context object; reference count is increased so the user needs to
- * call tinytc_compiler_context_release to clean up
+ * @param ctx [out] pointer to context object
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -740,9 +742,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
 /**
  * @brief Get prog object
  *
+ * The reference count of the prog remains unchanged.
+ * The user must call tinytc_prog_retain if the prog shall be used after the recipe was released.
+ *
  * @param recipe [in] recipe object
- * @param prg [out] pointer to prog object; reference count is increased so the user needs to
- * call tinytc_prog_release to clean up
+ * @param prg [out] pointer to prog object
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -752,9 +756,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recip
 /**
  * @brief Get binary
  *
+ * The reference count of the binary remains unchanged.
+ * The user must call tinytc_binary_retain if the binary shall be used after the recipe was
+ * released.
+ *
  * @param recipe [in] recipe object
- * @param bin [out] pointer to binary; reference count is increased so the user needs to
- * call tinytc_binary_release to clean up
+ * @param bin [out] pointer to binary
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -764,9 +771,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t rec
 /**
  * @brief Get recipe object
  *
+ * The reference count of the recipe remains unchanged.
+ * The user must call tinytc_recipe_retain if the recipe shall be used after the recipe handler was
+ * released.
+ *
  * @param handler [in] recipe handler object
- * @param recipe [out] pointer to recipe object; reference count is increased so the user needs
- * to call tinytc_recipe_release to clean up
+ * @param recipe [out] pointer to recipe object
  *
  * @return tinytc_status_success on success and error otherwise
  */

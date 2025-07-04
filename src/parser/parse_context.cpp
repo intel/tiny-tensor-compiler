@@ -12,7 +12,8 @@
 
 namespace tinytc {
 
-parse_context::parse_context(compiler_context compiler_ctx) : compiler_ctx_(compiler_ctx) {}
+parse_context::parse_context(shared_handle<tinytc_compiler_context_t> compiler_ctx)
+    : compiler_ctx_(std::move(compiler_ctx)) {}
 
 void parse_context::push_scope() {
     unnamed_id_map_.push_back({});

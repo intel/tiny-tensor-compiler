@@ -150,7 +150,7 @@ tinytc_status_t tinytc_prog_compile_to_spirv_and_assemble(tinytc_binary_t *bin, 
     }
     tinytc_spv_mod_t mod;
     TINYTC_CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg, info));
-    auto mod_ = spv_mod{mod}; // For clean-up
+    auto mod_ = shared_handle{mod}; // For clean-up
     TINYTC_CHECK_STATUS(tinytc_spirv_assemble(bin, mod_.get()));
     return tinytc_status_success;
 }

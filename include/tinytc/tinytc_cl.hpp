@@ -48,10 +48,10 @@ inline auto get_support_level(cl_device_id device) -> support_level {
  *
  * @return core info
  */
-inline auto make_core_info(cl_device_id device) -> core_info {
+inline auto make_core_info(cl_device_id device) -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(::tinytc_cl_core_info_create(&info, device));
-    return core_info{info};
+    return shared_handle{info};
 }
 
 ////////////////////////////
@@ -92,12 +92,12 @@ template <> struct shared_handle_traits<cl_kernel> {
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, prog prg,
+inline auto make_kernel_bundle(cl_context context, cl_device_id device, tinytc_prog_t prg,
                                tinytc_core_feature_flags_t core_features = 0)
     -> shared_handle<cl_program> {
     cl_program obj;
-    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_program(&obj, context, device, prg.get(),
-                                                             core_features));
+    CHECK_STATUS(
+        tinytc_cl_kernel_bundle_create_with_program(&obj, context, device, prg, core_features));
     return shared_handle<cl_program>{obj};
 }
 
@@ -110,10 +110,10 @@ inline auto make_kernel_bundle(cl_context context, cl_device_id device, prog prg
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, binary const &bin)
+inline auto make_kernel_bundle(cl_context context, cl_device_id device, const_tinytc_binary_t bin)
     -> shared_handle<cl_program> {
     cl_program obj;
-    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_binary(&obj, context, device, bin.get()));
+    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_binary(&obj, context, device, bin));
     return shared_handle<cl_program>{obj};
 }
 
@@ -184,41 +184,36 @@ template <> struct auto_mem_type<cl_mem> {
 };
 
 /**
- * @brief Recipe handler for the OpenCL runtime
+ * @brief Submit recipe to queue
+ *
+ * @param handler Recipe handler
+ * @param queue Command queue
+ * @param num_wait_events Number of events to wait
+ * @param wait_events Array of num_wait_events events to wait on
+ *
+ * @return Event (cl_event wrapped in shared_handle -> cleans up automatically)
  */
-class opencl_recipe_handler : public recipe_handler {
-  public:
-    using recipe_handler::recipe_handler;
-
-    /**
-     * @brief Submit recipe to queue
-     *
-     * @param queue Command queue
-     * @param num_wait_events Number of events to wait
-     * @param wait_events Array of num_wait_events events to wait on
-     *
-     * @return Event (cl_event wrapped in shared_handle -> cleans up automatically)
-     */
-    inline auto submit(cl_command_queue queue, uint32_t num_wait_events = 0,
-                       cl_event *wait_events = nullptr) -> shared_handle<cl_event> {
-        cl_event evt;
-        CHECK_STATUS(
-            tinytc_cl_recipe_handler_submit(obj_, queue, num_wait_events, wait_events, &evt));
-        return shared_handle<cl_event>{evt};
-    }
-    /**
-     * @brief Submit recipe to queue; does not return event
-     *
-     * @param queue Command queue
-     * @param num_wait_events Number of events to wait
-     * @param wait_events Array of num_wait_events events to wait on
-     */
-    inline void submit_no_event(cl_command_queue queue, uint32_t num_wait_events = 0,
-                                cl_event *wait_events = nullptr) {
-        CHECK_STATUS(
-            tinytc_cl_recipe_handler_submit(obj_, queue, num_wait_events, wait_events, NULL));
-    }
-};
+inline auto submit(tinytc_recipe_handler_t handler, cl_command_queue queue,
+                   uint32_t num_wait_events = 0, cl_event *wait_events = nullptr)
+    -> shared_handle<cl_event> {
+    cl_event evt;
+    CHECK_STATUS(
+        tinytc_cl_recipe_handler_submit(handler, queue, num_wait_events, wait_events, &evt));
+    return shared_handle<cl_event>{evt};
+}
+/**
+ * @brief Submit recipe to queue; does not return event
+ *
+ * @param handler Recipe handler
+ * @param queue Command queue
+ * @param num_wait_events Number of events to wait
+ * @param wait_events Array of num_wait_events events to wait on
+ */
+inline void submit_no_event(tinytc_recipe_handler_t handler, cl_command_queue queue,
+                            uint32_t num_wait_events = 0, cl_event *wait_events = nullptr) {
+    CHECK_STATUS(
+        tinytc_cl_recipe_handler_submit(handler, queue, num_wait_events, wait_events, NULL));
+}
 
 /**
  * @brief Make recipe handler
@@ -229,11 +224,11 @@ class opencl_recipe_handler : public recipe_handler {
  *
  * @return OpenCL recipe handler
  */
-inline auto make_recipe_handler(cl_context context, cl_device_id device, recipe const &rec)
-    -> opencl_recipe_handler {
+inline auto make_recipe_handler(cl_context context, cl_device_id device, tinytc_recipe_t rec)
+    -> shared_handle<tinytc_recipe_handler_t> {
     tinytc_recipe_handler_t handler;
-    CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec.get()));
-    return opencl_recipe_handler{handler};
+    CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec));
+    return shared_handle{handler};
 }
 
 } // namespace tinytc

@@ -80,7 +80,7 @@ void test_blas_a2(T op, typename T::alpha_type alpha, typename T::beta_type beta
     gpu_rt->memcpy_h2d(A, A_ref.data(), A_ref.size() * sizeof(typename T::A_type));
     gpu_rt->fill_buffer(B, 0, B_ref.size() * sizeof(typename T::B_type));
 
-    auto bundle = gpu_rt->get_kernel_bundle(op.make_prog());
+    auto bundle = gpu_rt->get_kernel_bundle(op.make_prog().get());
     auto kernel = gpu_rt->get_kernel(bundle, T::kernel_name);
 
     std::uint32_t i = 0;
@@ -127,7 +127,7 @@ void test_blas_a3(T op, typename T::alpha_type alpha, typename T::beta_type beta
     gpu_rt->memcpy_h2d(B, B_ref.data(), B_ref.size() * sizeof(typename T::B_type));
     gpu_rt->fill_buffer(C, 0, C_ref.size() * sizeof(typename T::C_type));
 
-    auto bundle = gpu_rt->get_kernel_bundle(op.make_prog());
+    auto bundle = gpu_rt->get_kernel_bundle(op.make_prog().get());
     auto kernel = gpu_rt->get_kernel(bundle, T::kernel_name);
 
     std::uint32_t i = 0;

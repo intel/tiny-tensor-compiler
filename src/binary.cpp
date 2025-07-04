@@ -13,8 +13,9 @@
 
 using namespace tinytc;
 
-tinytc_binary::tinytc_binary(compiler_context ctx, std::vector<std::uint8_t> data,
-                             bundle_format format, tinytc_core_feature_flags_t core_features)
+tinytc_binary::tinytc_binary(shared_handle<tinytc_compiler_context_t> ctx,
+                             std::vector<std::uint8_t> data, bundle_format format,
+                             tinytc_core_feature_flags_t core_features)
     : ctx_(std::move(ctx)), data_(std::move(data)), format_(format), core_features_(core_features) {
 }
 
@@ -28,7 +29,7 @@ tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin, tinytc_compiler_conte
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *bin = std::make_unique<tinytc_binary>(compiler_context{ctx, true},
+        *bin = std::make_unique<tinytc_binary>(shared_handle{ctx, true},
                                                std::vector<std::uint8_t>(data, data + data_size),
                                                enum_cast<bundle_format>(format), core_features)
                    .release();
@@ -51,7 +52,7 @@ tinytc_status_t tinytc_binary_get_compiler_context(const_tinytc_binary_t bin,
     if (bin == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { *ctx = bin->share_context().release(); });
+    return exception_to_status_code([&] { *ctx = bin->context(); });
 }
 
 tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,

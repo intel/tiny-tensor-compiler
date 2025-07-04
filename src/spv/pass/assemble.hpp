@@ -11,7 +11,7 @@ namespace tinytc::spv {
 
 class assembler {
   public:
-    auto run_on_module(tinytc_spv_mod const &mod) -> binary;
+    auto run_on_module(tinytc_spv_mod const &mod) -> shared_handle<tinytc_binary_t>;
 };
 
 } // namespace tinytc::spv

@@ -18,7 +18,6 @@ class opencl_test_runtime {
     using device_t = cl_device_id;
     using context_t = cl_context;
     using command_list_t = cl_command_queue;
-    using recipe_handler_t = tinytc::opencl_recipe_handler;
     using kernel_bundle_t = tinytc::shared_handle<cl_program>;
     using kernel_t = tinytc::shared_handle<cl_kernel>;
     using mem_t = cl_mem;
@@ -38,12 +37,12 @@ class opencl_test_runtime {
     void memcpy_h2d(mem_t dst, void const *src, std::size_t bytes);
     void memcpy_d2h(void *dst, const_mem_t src, std::size_t bytes);
 
-    auto get_core_info() const -> tinytc::core_info;
+    auto get_core_info() const -> tinytc::shared_handle<tinytc_core_info_t>;
     auto get_device() -> device_t;
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;
-    auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
-    auto get_kernel_bundle(tinytc::prog p, tinytc_core_feature_flags_t core_features = 0)
+    auto get_recipe_handler(tinytc_recipe_t rec) -> tinytc::shared_handle<tinytc_recipe_handler_t>;
+    auto get_kernel_bundle(tinytc_prog_t p, tinytc_core_feature_flags_t core_features = 0)
         -> kernel_bundle_t;
     auto get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t;
     void set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,

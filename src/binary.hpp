@@ -26,11 +26,14 @@ struct tinytc_binary : tinytc::reference_counted {
      * @param metadata_map Dictionary kernel name -> kernel metadata
      * @param core_features Required core features
      */
-    tinytc_binary(tinytc::compiler_context ctx, std::vector<std::uint8_t> data,
-                  tinytc::bundle_format format, tinytc_core_feature_flags_t core_features);
+    tinytc_binary(tinytc::shared_handle<tinytc_compiler_context_t> ctx,
+                  std::vector<std::uint8_t> data, tinytc::bundle_format format,
+                  tinytc_core_feature_flags_t core_features);
 
     inline auto context() const -> tinytc_compiler_context_t { return ctx_.get(); }
-    inline auto share_context() const -> tinytc::compiler_context { return ctx_; }
+    inline auto share_context() const -> tinytc::shared_handle<tinytc_compiler_context_t> {
+        return ctx_;
+    }
     //! Get raw data
     inline auto data() const noexcept -> std::uint8_t const * { return data_.data(); }
     //! Get size of raw data
@@ -43,7 +46,7 @@ struct tinytc_binary : tinytc::reference_counted {
     }
 
   private:
-    tinytc::compiler_context ctx_;
+    tinytc::shared_handle<tinytc_compiler_context_t> ctx_;
     std::vector<std::uint8_t> data_;
     tinytc::bundle_format format_;
     tinytc_core_feature_flags_t core_features_;

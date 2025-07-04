@@ -46,12 +46,15 @@ struct tinytc_spv_mod final : tinytc::reference_counted {
     using iterator = tinytc::ilist<tinytc::spv::spv_inst>::iterator;
     using const_iterator = tinytc::ilist<tinytc::spv::spv_inst>::const_iterator;
 
-    tinytc_spv_mod(tinytc::compiler_context ctx, tinytc_core_feature_flags_t core_features,
-                   std::int32_t major_version = 1, std::int32_t minor_version = 6);
+    tinytc_spv_mod(tinytc::shared_handle<tinytc_compiler_context_t> ctx,
+                   tinytc_core_feature_flags_t core_features, std::int32_t major_version = 1,
+                   std::int32_t minor_version = 6);
     ~tinytc_spv_mod();
 
     inline auto context() const -> tinytc_compiler_context_t { return ctx_.get(); }
-    inline auto share_context() const -> tinytc::compiler_context { return ctx_; }
+    inline auto share_context() const -> tinytc::shared_handle<tinytc_compiler_context_t> {
+        return ctx_;
+    }
     inline auto core_features() const -> tinytc_core_feature_flags_t { return core_features_; }
 
     auto bound() const -> std::uint32_t;
@@ -81,7 +84,7 @@ struct tinytc_spv_mod final : tinytc::reference_counted {
     }
 
   private:
-    tinytc::compiler_context ctx_;
+    tinytc::shared_handle<tinytc_compiler_context_t> ctx_;
     tinytc_core_feature_flags_t core_features_;
     std::array<tinytc::ilist<tinytc::spv::spv_inst>, tinytc::spv::num_module_sections> insts_;
     std::int32_t major_version_, minor_version_;

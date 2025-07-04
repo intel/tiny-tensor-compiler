@@ -30,7 +30,7 @@
 
 namespace tinytc {
 
-using fold_result = std::variant<tinytc_value_t, inst>;
+using fold_result = std::variant<tinytc_value_t, unique_handle<tinytc_inst_t>>;
 
 class constant_folding {
   public:
@@ -109,7 +109,7 @@ struct compute_unary_op {
     template <typename T, typename U>
     requires(is_complex_v<T>)
     auto operator()(U const &A) -> fold_result {
-        const auto neg_conj = [&](T const &a) {
+        const auto neg_conj = [&](T const &a) -> unique_handle<tinytc_inst_t> {
             T val = {};
             switch (operation) {
             case IK::IK_neg:
@@ -119,11 +119,11 @@ struct compute_unary_op {
                 val = std::conj(a);
                 break;
             default:
-                return inst{nullptr};
+                return {};
             }
             return create<constant_inst>(val, ty, loc);
         };
-        const auto abs_im_re = [&](T const &a) -> inst {
+        const auto abs_im_re = [&](T const &a) -> unique_handle<tinytc_inst_t> {
             typename T::value_type val = {};
             switch (operation) {
             case IK::IK_abs:
@@ -136,7 +136,7 @@ struct compute_unary_op {
                 val = std::real(a);
                 break;
             default:
-                return inst{nullptr};
+                return {};
             }
             auto cst_ty = component_type(ty);
             return create<constant_inst>(val, cst_ty, loc);

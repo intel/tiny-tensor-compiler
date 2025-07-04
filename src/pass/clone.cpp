@@ -26,13 +26,13 @@ auto inst_cloner::subs(tinytc_value_t val) -> tinytc_value_t {
     return val;
 }
 
-auto inst_cloner::clone_instruction(tinytc_inst &in) -> inst {
+auto inst_cloner::clone_instruction(tinytc_inst &in) -> unique_handle<tinytc_inst_t> {
     auto cloned = visit(
         [&](auto view) {
             auto tid = view.get().type_id();
             auto layout = view.get().layout();
             auto lc = view.get().loc();
-            auto clone = inst{tinytc_inst::create(tid, layout, lc)};
+            auto clone = unique_handle{tinytc_inst::create(tid, layout, lc)};
             for (std::int32_t ret_no = 0; ret_no < layout.num_results; ++ret_no) {
                 clone->result(ret_no) =
                     tinytc_value{view.get().result(ret_no).ty(), clone.get(), lc};

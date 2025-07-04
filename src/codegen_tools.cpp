@@ -42,7 +42,7 @@ auto get_core_config_and_tiling(tinytc_func const &fn, const_tinytc_core_info_t 
 
 void tile_loop_by_sgs(region_builder &bb, tinytc_value_t loop_trip_count, int sgs, int num_tiles,
                       tinytc_value_t sg_id, sgs_loop_body_builder const &body,
-                      attr for_attributes) {
+                      tinytc_attr_t for_attributes) {
     auto ity = loop_trip_count->ty();
     auto bool_ty = boolean_type::get(ity->context());
     auto c_sgs = bb.create<constant_inst>(sgs, ity);
@@ -78,7 +78,7 @@ void tile_loop_by_sgs(region_builder &bb, tinytc_value_t loop_trip_count, int sg
 
 void tile_loop_uniformly(region_builder &bb, tinytc_value_t loop_trip_count, int block_size,
                          int num_tiles, tinytc_value_t sg_id, uniform_loop_body_builder const &body,
-                         attr for_attributes) {
+                         tinytc_attr_t for_attributes) {
     auto ity = loop_trip_count->ty();
     auto bool_ty = boolean_type::get(ity->context());
     auto c0 = bb.create<constant_inst>(0, ity);
@@ -195,7 +195,8 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
     }
 }
 
-auto instant_constant_fold_add(region_builder &bb, inst i) -> tinytc_value_t {
+auto instant_constant_fold_add(region_builder &bb, unique_handle<tinytc_inst_t> &&i)
+    -> tinytc_value_t {
     auto ctx = i->context();
     if (!ctx) {
         throw compilation_error(i->loc(), status::internal_compiler_error);
@@ -203,7 +204,7 @@ auto instant_constant_fold_add(region_builder &bb, inst i) -> tinytc_value_t {
 
     auto fold = visit(constant_folding{ctx->opt_flag(optflag::unsafe_fp_math)}, *i);
     auto val = std::visit(overloaded{[](tinytc_value_t &v) -> tinytc_value_t { return v; },
-                                     [&bb](inst &j) -> tinytc_value_t {
+                                     [&bb](unique_handle<tinytc_inst_t> &j) -> tinytc_value_t {
                                          if (j) {
                                              return bb.add(std::move(j));
                                          }
@@ -285,7 +286,7 @@ void work_group_op::setup(region_builder &bb, location const &loc) {
 
 void work_group_op::teardown(region_builder &bb) {
     if (tmp_) {
-        bb.add(inst{lifetime_stop_inst::create(tmp_, {})});
+        bb.create<lifetime_stop_inst>(tmp_, location{});
     }
 }
 

@@ -48,7 +48,7 @@ void constant_propagation_pass::run_on_region(tinytc_region &reg) {
                                       update_uses(val);
                                   }
                               },
-                              [&](inst &new_constant) {
+                              [&](unique_handle<tinytc_inst_t> &new_constant) {
                                   if (new_constant) {
                                       if (new_constant->num_results() != 1) {
                                           throw status::internal_compiler_error;

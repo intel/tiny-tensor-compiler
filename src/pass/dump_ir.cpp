@@ -49,7 +49,7 @@ void dump_ir_pass::operator()(dictionary_attr const &a) {
             return false;
         }
     };
-    auto const dump_name = [&](attr a) {
+    auto const dump_name = [&](tinytc_attr_t a) {
         if (auto s = dyn_cast<string_attr>(a); s) {
             if (is_keyword(s->str())) {
                 *os_ << s->str();

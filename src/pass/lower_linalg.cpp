@@ -41,7 +41,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                       std::int32_t m_block_size, std::int32_t num_m_blocks, bool m_check,
                       tinytc_value_t n_block, std::int32_t n_block_size, std::int32_t num_n_blocks,
                       bool n_check, array_view<std::int32_t> K_block_sizes, tinytc_type_t a_ty,
-                      tinytc_type_t b_ty, tinytc_type_t c_ty, attr for_attributes,
+                      tinytc_type_t b_ty, tinytc_type_t c_ty, tinytc_attr_t for_attributes,
                       location const &loc) {
     auto ctx = m_block->context();
     auto bool_ty = boolean_type::get(ctx);
@@ -430,9 +430,8 @@ void linalg_generator::operator()(cumsum_inst in) {
         for (std::int64_t i = bt->dim() - 1; i > 1; --i) {
             auto bb = region_builder{parent_region};
             auto shape_i = bb.create<size_inst>(i, &in.B(), index_ty, loc);
-            auto for_i =
-                inst{for_inst::create(c_zero, shape_i, nullptr, array_view<tinytc_value_t>{},
-                                      array_view<tinytc_type_t>{}, loc)};
+            auto for_i = create<for_inst>(c_zero, shape_i, nullptr, array_view<tinytc_value_t>{},
+                                          array_view<tinytc_type_t>{}, loc);
             auto for_i_view = for_inst(for_i.get());
             offsets[i - 1] = &for_i_view.body().param(0);
             parent_region = &for_i_view.body();
@@ -604,7 +603,7 @@ void linalg_generator::operator()(gemm_inst in) {
             });
     } else {
         auto no_unroll = get_dictionary_attr_with_sorted(
-            ctx, named_attr{get_string_attr(ctx, "unroll"), get_boolean_attr(ctx, false)});
+            ctx, tinytc_named_attr_t{get_string_attr(ctx, "unroll"), get_boolean_attr(ctx, false)});
         tile_loop_by_sgs(
             bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
             [&](region_builder &bb, tinytc_value_t n_block, bool n_check, tinytc_value_t) {

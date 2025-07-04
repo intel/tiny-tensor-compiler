@@ -521,9 +521,10 @@ template <typename T> mutable_array_view(T *, T *) -> mutable_array_view<T>;
  *
  * @return Source id (should be set in position.source_id)
  */
-inline auto add_source(compiler_context &ctx, char const *name, char const *text) -> std::int32_t {
+inline auto add_source(tinytc_compiler_context_t ctx, char const *name, char const *text)
+    -> std::int32_t {
     std::int32_t source_id;
-    CHECK_STATUS(tinytc_compiler_context_add_source(ctx.get(), name, text, &source_id));
+    CHECK_STATUS(tinytc_compiler_context_add_source(ctx, name, text, &source_id));
     return source_id;
 }
 
@@ -532,10 +533,10 @@ inline auto add_source(compiler_context &ctx, char const *name, char const *text
  *
  * @return Compiler context
  */
-inline auto make_compiler_context() -> compiler_context {
+inline auto make_compiler_context() -> shared_handle<tinytc_compiler_context_t> {
     tinytc_compiler_context_t ctx;
     CHECK_STATUS(tinytc_compiler_context_create(&ctx));
-    return compiler_context{ctx};
+    return shared_handle{ctx};
 }
 
 /**
@@ -548,9 +549,9 @@ inline auto make_compiler_context() -> compiler_context {
  * @param reporter error reporting callback
  * @param user_data pointer to user data that is passed to the callback
  */
-inline void set_error_reporter(compiler_context &ctx, error_reporter_t reporter,
+inline void set_error_reporter(tinytc_compiler_context_t ctx, tinytc_error_reporter_t reporter,
                                void *user_data = nullptr) {
-    CHECK_STATUS(tinytc_compiler_context_set_error_reporter(ctx.get(), reporter, user_data));
+    CHECK_STATUS(tinytc_compiler_context_set_error_reporter(ctx, reporter, user_data));
 }
 
 /**
@@ -563,9 +564,9 @@ inline void set_error_reporter(compiler_context &ctx, error_reporter_t reporter,
  * @param flag optimization flag
  * @param state flag state
  */
-inline void set_optimization_flag(compiler_context &ctx, optflag flag, std::int32_t state) {
+inline void set_optimization_flag(tinytc_compiler_context_t ctx, optflag flag, std::int32_t state) {
     CHECK_STATUS(tinytc_compiler_context_set_optimization_flag(
-        ctx.get(), static_cast<tinytc_optflag_t>(flag), state));
+        ctx, static_cast<tinytc_optflag_t>(flag), state));
 }
 /**
  * @brief Set optimization level
@@ -573,8 +574,8 @@ inline void set_optimization_flag(compiler_context &ctx, optflag flag, std::int3
  * @param ctx compiler context
  * @param level optimization level
  */
-inline void set_optimization_level(compiler_context &ctx, std::int32_t level) {
-    CHECK_STATUS(tinytc_compiler_context_set_optimization_level(ctx.get(), level));
+inline void set_optimization_level(tinytc_compiler_context_t ctx, std::int32_t level) {
+    CHECK_STATUS(tinytc_compiler_context_set_optimization_level(ctx, level));
 }
 /**
  * @brief Enhance error message with compiler context; useful when builder is used
@@ -583,8 +584,8 @@ inline void set_optimization_level(compiler_context &ctx, std::int32_t level) {
  * @param loc Source location
  * @param what Error description
  */
-inline void report_error(compiler_context const &ctx, location const &loc, char const *what) {
-    CHECK_STATUS(tinytc_compiler_context_report_error(ctx.get(), &loc, what));
+inline void report_error(tinytc_compiler_context_t ctx, location const &loc, char const *what) {
+    CHECK_STATUS(tinytc_compiler_context_report_error(ctx, &loc, what));
 }
 
 ////////////////////////////
@@ -596,7 +597,7 @@ inline void report_error(compiler_context const &ctx, location const &loc, char 
  *
  * @param p program
  */
-inline void dump(prog const &p) { CHECK_STATUS(tinytc_prog_dump(p.get())); }
+inline void dump(tinytc_prog_t p) { CHECK_STATUS(tinytc_prog_dump(p)); }
 /**
  * @brief Get context
  *
@@ -604,10 +605,11 @@ inline void dump(prog const &p) { CHECK_STATUS(tinytc_prog_dump(p.get())); }
  *
  * @return Compiler context
  */
-inline auto get_compiler_context(prog const &p) -> compiler_context {
+inline auto get_compiler_context(const_tinytc_prog_t p)
+    -> shared_handle<tinytc_compiler_context_t> {
     tinytc_compiler_context_t ctx;
-    CHECK_STATUS(tinytc_prog_get_compiler_context(p.get(), &ctx));
-    return compiler_context{ctx, true};
+    CHECK_STATUS(tinytc_prog_get_compiler_context(p, &ctx));
+    return shared_handle{ctx, true};
 }
 /**
  * @brief Dump program to file
@@ -615,8 +617,8 @@ inline auto get_compiler_context(prog const &p) -> compiler_context {
  * @param p program
  * @param filename Path to file
  */
-inline void print_to_file(prog const &p, char const *filename) {
-    CHECK_STATUS(tinytc_prog_print_to_file(p.get(), filename));
+inline void print_to_file(tinytc_prog_t p, char const *filename) {
+    CHECK_STATUS(tinytc_prog_print_to_file(p, filename));
 }
 /**
  * @brief Dump program to string
@@ -625,9 +627,9 @@ inline void print_to_file(prog const &p, char const *filename) {
  *
  * @return C-string (unique handle)
  */
-inline auto print_to_string(prog const &p) -> unique_handle<char *> {
+inline auto print_to_string(tinytc_prog_t p) -> unique_handle<char *> {
     char *str;
-    CHECK_STATUS(tinytc_prog_print_to_string(p.get(), &str));
+    CHECK_STATUS(tinytc_prog_print_to_string(p, &str));
     return unique_handle<char *>{str};
 }
 
@@ -640,15 +642,15 @@ inline auto print_to_string(prog const &p) -> unique_handle<char *> {
  *
  * @param mod SPIR-V module
  */
-inline void dump(spv_mod const &mod) { CHECK_STATUS(tinytc_spv_mod_dump(mod.get())); }
+inline void dump(const_tinytc_spv_mod_t mod) { CHECK_STATUS(tinytc_spv_mod_dump(mod)); }
 /**
  * @brief Dump module to file
  *
  * @param mod SPIR-V module
  * @param filename Path to file
  */
-inline void print_to_file(spv_mod const &mod, char const *filename) {
-    CHECK_STATUS(tinytc_spv_mod_print_to_file(mod.get(), filename));
+inline void print_to_file(const_tinytc_spv_mod_t mod, char const *filename) {
+    CHECK_STATUS(tinytc_spv_mod_print_to_file(mod, filename));
 }
 /**
  * @brief Dump module to string
@@ -657,9 +659,9 @@ inline void print_to_file(spv_mod const &mod, char const *filename) {
  *
  * @return C-string (unique handle)
  */
-inline auto print_to_string(spv_mod const &mod) -> unique_handle<char *> {
+inline auto print_to_string(const_tinytc_spv_mod_t mod) -> unique_handle<char *> {
     char *str;
-    CHECK_STATUS(tinytc_spv_mod_print_to_string(mod.get(), &str));
+    CHECK_STATUS(tinytc_spv_mod_print_to_string(mod, &str));
     return unique_handle<char *>{str};
 }
 
@@ -674,10 +676,10 @@ inline auto print_to_string(spv_mod const &mod) -> unique_handle<char *> {
  *
  * @return Subgroup sizes
  */
-inline auto get_subgroup_sizes(core_info const &info) -> array_view<std::int32_t> {
+inline auto get_subgroup_sizes(const_tinytc_core_info_t info) -> array_view<std::int32_t> {
     std::size_t sgs_size = 0;
     std::int32_t const *sgs = nullptr;
-    CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(info.get(), &sgs_size, &sgs));
+    CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(info, &sgs_size, &sgs));
     return array_view(sgs, sgs_size);
 }
 
@@ -688,9 +690,9 @@ inline auto get_subgroup_sizes(core_info const &info) -> array_view<std::int32_t
  *
  * @return Register space
  */
-inline auto get_register_space(core_info const &info) -> std::int32_t {
+inline auto get_register_space(const_tinytc_core_info_t info) -> std::int32_t {
     std::int32_t space;
-    CHECK_STATUS(tinytc_core_info_get_register_space(info.get(), &space));
+    CHECK_STATUS(tinytc_core_info_get_register_space(info, &space));
     return space;
 }
 
@@ -701,8 +703,8 @@ inline auto get_register_space(core_info const &info) -> std::int32_t {
  *
  * @param flags set core features; must be 0 or a combination of tinytc_core_feature_flag_t
  */
-inline void set_core_features(core_info &info, tinytc_core_feature_flags_t flags) {
-    CHECK_STATUS(tinytc_core_info_set_core_features(info.get(), flags));
+inline void set_core_features(tinytc_core_info_t info, tinytc_core_feature_flags_t flags) {
+    CHECK_STATUS(tinytc_core_info_set_core_features(info, flags));
 }
 
 /**
@@ -712,9 +714,9 @@ inline void set_core_features(core_info &info, tinytc_core_feature_flags_t flags
  *
  * @return Core features
  */
-inline auto get_core_features(core_info const &info) -> tinytc_core_feature_flags_t {
+inline auto get_core_features(const_tinytc_core_info_t info) -> tinytc_core_feature_flags_t {
     tinytc_core_feature_flags_t flags;
-    CHECK_STATUS(tinytc_core_info_get_core_features(info.get(), &flags));
+    CHECK_STATUS(tinytc_core_info_get_core_features(info, &flags));
     return flags;
 }
 
@@ -725,9 +727,9 @@ inline auto get_core_features(core_info const &info) -> tinytc_core_feature_flag
  * @param feature SPIR-V feature
  * @param available true if feature is available and false otherwise
  */
-inline void set_spirv_feature(core_info &info, spirv_feature feature, bool available) {
+inline void set_spirv_feature(tinytc_core_info_t info, spirv_feature feature, bool available) {
     CHECK_STATUS(tinytc_core_info_set_spirv_feature(
-        info.get(), static_cast<tinytc_spirv_feature_t>(feature), available));
+        info, static_cast<tinytc_spirv_feature_t>(feature), available));
 }
 
 /**
@@ -738,10 +740,10 @@ inline void set_spirv_feature(core_info &info, spirv_feature feature, bool avail
  *
  * @return true if feature is available and false otherwise
  */
-inline auto have_spirv_feature(core_info const &info, spirv_feature feature) -> bool {
+inline auto have_spirv_feature(const_tinytc_core_info_t info, spirv_feature feature) -> bool {
     tinytc_bool_t available;
     CHECK_STATUS(tinytc_core_info_have_spirv_feature(
-        info.get(), static_cast<tinytc_spirv_feature_t>(feature), &available));
+        info, static_cast<tinytc_spirv_feature_t>(feature), &available));
     return available;
 }
 
@@ -752,9 +754,9 @@ inline auto have_spirv_feature(core_info const &info, spirv_feature feature) -> 
  *
  * @return alignment in bytes
  */
-inline auto get_default_alignment(core_info const &info) -> std::int32_t {
+inline auto get_default_alignment(const_tinytc_core_info_t info) -> std::int32_t {
     std::int32_t alignment;
-    CHECK_STATUS(tinytc_core_info_get_default_alignment(info.get(), &alignment));
+    CHECK_STATUS(tinytc_core_info_get_default_alignment(info, &alignment));
     return alignment;
 }
 
@@ -765,8 +767,8 @@ inline auto get_default_alignment(core_info const &info) -> std::int32_t {
  *
  * @param alignment alignment in bytes
  */
-inline void set_default_alignment(core_info &info, std::int32_t alignment) {
-    CHECK_STATUS(tinytc_core_info_set_default_alignment(info.get(), alignment));
+inline void set_default_alignment(tinytc_core_info_t info, std::int32_t alignment) {
+    CHECK_STATUS(tinytc_core_info_set_default_alignment(info, alignment));
 }
 
 /**
@@ -779,11 +781,12 @@ inline void set_default_alignment(core_info &info, std::int32_t alignment) {
  * @return Core info
  */
 inline auto make_core_info_generic(std::int32_t register_space, std::int32_t max_work_group_size,
-                                   array_view<std::int32_t> sgs) -> core_info {
+                                   array_view<std::int32_t> sgs)
+    -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_generic_create(&info, register_space, max_work_group_size,
                                                  sgs.size(), sgs.data()));
-    return core_info{info};
+    return shared_handle{info};
 }
 
 /**
@@ -793,11 +796,12 @@ inline auto make_core_info_generic(std::int32_t register_space, std::int32_t max
  *
  * @return Core info
  */
-inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_info {
+inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch)
+    -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create_from_arch(
         &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
-    return core_info{info};
+    return shared_handle{info};
 }
 
 /**
@@ -807,10 +811,10 @@ inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_
  *
  * @return Core info
  */
-inline auto make_core_info_intel_from_name(char const *name) -> core_info {
+inline auto make_core_info_intel_from_name(char const *name) -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create_from_name(&info, name));
-    return core_info{info};
+    return shared_handle{info};
 }
 
 /**
@@ -825,11 +829,11 @@ inline auto make_core_info_intel_from_name(char const *name) -> core_info {
  */
 inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
                                  std::int32_t num_threads_per_eu, array_view<std::int32_t> sgs)
-    -> core_info {
+    -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
                                                num_threads_per_eu, sgs.size(), sgs.data()));
-    return core_info{info};
+    return shared_handle{info};
 }
 
 ////////////////////////////
@@ -844,10 +848,11 @@ inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
  *
  * @return Program
  */
-inline auto parse_file(char const *filename, compiler_context const &ctx = {}) -> prog {
+inline auto parse_file(char const *filename, tinytc_compiler_context_t ctx = {})
+    -> shared_handle<tinytc_prog_t> {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_file(&prg, filename, ctx.get()));
-    return prog(prg);
+    CHECK_STATUS(tinytc_parse_file(&prg, filename, ctx));
+    return shared_handle{prg};
 }
 
 /**
@@ -857,10 +862,10 @@ inline auto parse_file(char const *filename, compiler_context const &ctx = {}) -
  *
  * @return Program
  */
-inline auto parse_stdin(compiler_context const &ctx = {}) -> prog {
+inline auto parse_stdin(tinytc_compiler_context_t ctx = {}) -> shared_handle<tinytc_prog_t> {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_stdin(&prg, ctx.get()));
-    return prog(prg);
+    CHECK_STATUS(tinytc_parse_stdin(&prg, ctx));
+    return shared_handle{prg};
 }
 /**
  * @brief Parse source text from string
@@ -870,10 +875,11 @@ inline auto parse_stdin(compiler_context const &ctx = {}) -> prog {
  *
  * @return Program
  */
-inline auto parse_string(std::string const &src, compiler_context const &ctx = {}) -> prog {
+inline auto parse_string(std::string const &src, tinytc_compiler_context_t ctx = {})
+    -> shared_handle<tinytc_prog_t> {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), ctx.get()));
-    return prog(prg);
+    CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), ctx));
+    return shared_handle{prg};
 }
 
 ////////////////////////////
@@ -887,10 +893,11 @@ inline auto parse_string(std::string const &src, compiler_context const &ctx = {
  *
  * @return Compiler context
  */
-inline auto get_compiler_context(binary const &bin) -> compiler_context {
+inline auto get_compiler_context(const_tinytc_binary_t bin)
+    -> shared_handle<tinytc_compiler_context_t> {
     tinytc_compiler_context_t ctx;
-    CHECK_STATUS(tinytc_binary_get_compiler_context(bin.get(), &ctx));
-    return compiler_context{ctx, true};
+    CHECK_STATUS(tinytc_binary_get_compiler_context(bin, &ctx));
+    return shared_handle{ctx, true};
 }
 /**
  * @brief Get core features
@@ -899,9 +906,9 @@ inline auto get_compiler_context(binary const &bin) -> compiler_context {
  *
  * @return Core features
  */
-inline auto get_core_features(binary const &bin) -> tinytc_core_feature_flags_t {
+inline auto get_core_features(const_tinytc_binary_t bin) -> tinytc_core_feature_flags_t {
     tinytc_core_feature_flags_t cf;
-    CHECK_STATUS(tinytc_binary_get_core_features(bin.get(), &cf));
+    CHECK_STATUS(tinytc_binary_get_core_features(bin, &cf));
     return cf;
 }
 
@@ -919,10 +926,10 @@ struct raw_binary {
  *
  * @return Raw data
  */
-inline auto get_raw(binary const &bin) -> raw_binary {
+inline auto get_raw(tinytc_binary_t bin) -> raw_binary {
     raw_binary r;
     tinytc_bundle_format_t f;
-    CHECK_STATUS(tinytc_binary_get_raw(bin.get(), &f, &r.data_size, &r.data));
+    CHECK_STATUS(tinytc_binary_get_raw(bin, &f, &r.data_size, &r.data));
     r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
     return r;
 }
@@ -939,13 +946,13 @@ inline auto get_raw(binary const &bin) -> raw_binary {
  *
  * @return Binary
  */
-inline auto make_binary(compiler_context const &ctx, bundle_format format, std::size_t data_size,
+inline auto make_binary(tinytc_compiler_context_t ctx, bundle_format format, std::size_t data_size,
                         std::uint8_t const *data, tinytc_core_feature_flags_t core_features)
-    -> binary {
+    -> shared_handle<tinytc_binary_t> {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_binary_create(&bin, ctx.get(), static_cast<tinytc_bundle_format_t>(format),
+    CHECK_STATUS(tinytc_binary_create(&bin, ctx, static_cast<tinytc_bundle_format_t>(format),
                                       data_size, data, core_features));
-    return binary{bin};
+    return shared_handle{bin};
 }
 
 /**
@@ -955,8 +962,9 @@ inline auto make_binary(compiler_context const &ctx, bundle_format format, std::
  * @param prg tensor program; modified as compiler pass is run
  * @param info core info object; might be nullptr if core info is not required for pass
  */
-inline void run_function_pass(char const *pass_name, prog prg, core_info info = {}) {
-    CHECK_STATUS(tinytc_run_function_pass(pass_name, prg.get(), info.get()));
+inline void run_function_pass(char const *pass_name, tinytc_prog_t prg,
+                              const_tinytc_core_info_t info = {}) {
+    CHECK_STATUS(tinytc_run_function_pass(pass_name, prg, info));
 }
 
 /**
@@ -977,10 +985,11 @@ inline void list_function_passes(std::size_t &names_size, char const *const *&na
  *
  * @return SPIR-V module
  */
-inline auto compile_to_spirv(prog prg, core_info const &info) -> spv_mod {
+inline auto compile_to_spirv(tinytc_prog_t prg, const_tinytc_core_info_t info)
+    -> shared_handle<tinytc_spv_mod_t> {
     tinytc_spv_mod_t mod;
-    CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg.get(), info.get()));
-    return spv_mod{mod};
+    CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg, info));
+    return shared_handle{mod};
 }
 
 /**
@@ -991,10 +1000,11 @@ inline auto compile_to_spirv(prog prg, core_info const &info) -> spv_mod {
  *
  * @return Binary
  */
-inline auto compile_to_spirv_and_assemble(prog prg, core_info const &info) -> binary {
+inline auto compile_to_spirv_and_assemble(tinytc_prog_t prg, const_tinytc_core_info_t info)
+    -> shared_handle<tinytc_binary_t> {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_prog_compile_to_spirv_and_assemble(&bin, prg.get(), info.get()));
-    return binary{bin};
+    CHECK_STATUS(tinytc_prog_compile_to_spirv_and_assemble(&bin, prg, info));
+    return shared_handle{bin};
 }
 
 /**
@@ -1004,10 +1014,10 @@ inline auto compile_to_spirv_and_assemble(prog prg, core_info const &info) -> bi
  *
  * @return Binary
  */
-inline auto spirv_assemble(spv_mod const &mod) -> binary {
+inline auto spirv_assemble(tinytc_spv_mod_t mod) -> shared_handle<tinytc_binary_t> {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_spirv_assemble(&bin, mod.get()));
-    return binary{bin};
+    CHECK_STATUS(tinytc_spirv_assemble(&bin, mod));
+    return shared_handle{bin};
 }
 
 ////////////////////////////
@@ -1091,10 +1101,10 @@ struct mem {
  *
  * @return Program
  */
-inline auto get_prog(recipe const &rec) -> prog {
+inline auto get_prog(const_tinytc_recipe_t rec) -> shared_handle<tinytc_prog_t> {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_recipe_get_prog(rec.get(), &prg));
-    return prog{prg};
+    CHECK_STATUS(tinytc_recipe_get_prog(rec, &prg));
+    return shared_handle{prg, true};
 }
 
 /**
@@ -1104,10 +1114,10 @@ inline auto get_prog(recipe const &rec) -> prog {
  *
  * @return Binary
  */
-inline auto get_binary(recipe const &rec) -> binary {
+inline auto get_binary(const_tinytc_recipe_t rec) -> shared_handle<tinytc_binary_t> {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_recipe_get_binary(rec.get(), &bin));
-    return binary{bin};
+    CHECK_STATUS(tinytc_recipe_get_binary(rec, &bin));
+    return shared_handle{bin, true};
 }
 
 /**
@@ -1117,38 +1127,32 @@ inline auto get_binary(recipe const &rec) -> binary {
  *
  * @return Recipe
  */
-inline auto get_recipe(recipe_handler const &handler) -> recipe {
+inline auto get_recipe(const_tinytc_recipe_handler_t handler) -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_handler_get_recipe(handler.get(), &rec));
-    return recipe{rec};
+    CHECK_STATUS(tinytc_recipe_handler_get_recipe(handler, &rec));
+    return shared_handle{rec, true};
 }
 
-//! @brief Reference-counting wrapper for tinytc_recipe_t
-class small_gemm_batched : public recipe {
-  public:
-    using recipe::recipe;
-
-    /**
-     * @brief Set kernel arguments
-     *
-     * @tparam T Scalar type; must match scalar_type passed to constructor
-     * @param handler Recipe handler
-     * @param howmany Batch size
-     * @param alpha @f$\alpha@f$
-     * @param A Memory object used for A-matrix
-     * @param B Memory object used for B-matrix
-     * @param beta @f$\beta@f$
-     * @param C Memory object used for C-matrix
-     */
-    template <typename T>
-    static void set_args(recipe_handler &handler, std::int64_t howmany, T alpha, mem A, mem B,
-                         T beta, mem C) {
-        CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
-            handler.get(), howmany, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type),
-            A.value, static_cast<tinytc_mem_type_t>(B.type), B.value, sizeof(beta), &beta,
-            static_cast<tinytc_mem_type_t>(C.type), C.value));
-    }
-};
+/**
+ * @brief Set kernel arguments
+ *
+ * @tparam T Scalar type; must match scalar_type passed to constructor
+ * @param handler Recipe handler
+ * @param howmany Batch size
+ * @param alpha @f$\alpha@f$
+ * @param A Memory object used for A-matrix
+ * @param B Memory object used for B-matrix
+ * @param beta @f$\beta@f$
+ * @param C Memory object used for C-matrix
+ */
+template <typename T>
+static void set_small_gemm_batched_args(tinytc_recipe_handler_t handler, std::int64_t howmany,
+                                        T alpha, mem A, mem B, T beta, mem C) {
+    CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
+        handler, howmany, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type), A.value,
+        static_cast<tinytc_mem_type_t>(B.type), B.value, sizeof(beta), &beta,
+        static_cast<tinytc_mem_type_t>(C.type), C.value));
+}
 
 /**
  * @brief Make small GEMM batched recipe
@@ -1171,47 +1175,42 @@ class small_gemm_batched : public recipe {
  *
  * @return Small GEMM batched recipe
  */
-inline auto make_small_gemm_batched(core_info const &info, tinytc_type_t number_ty, transpose tA,
+inline auto make_small_gemm_batched(tinytc_core_info_t info, tinytc_type_t number_ty, transpose tA,
                                     transpose tB, std::int64_t M, std::int64_t N, std::int64_t K,
                                     std::int64_t ldA, std::int64_t strideA, std::int64_t ldB,
                                     std::int64_t strideB, std::int64_t ldC, std::int64_t strideC)
-    -> small_gemm_batched {
+    -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
-        &rec, info.get(), number_ty, static_cast<tinytc_transpose_t>(tA),
+        &rec, info, number_ty, static_cast<tinytc_transpose_t>(tA),
         static_cast<tinytc_transpose_t>(tB), M, N, K, ldA, strideA, ldB, strideB, ldC, strideC));
-    return small_gemm_batched{rec};
+    return shared_handle{rec};
 }
 
-//! @brief Reference-counting wrapper for tinytc_recipe_t
-class tall_and_skinny : public recipe {
-  public:
-    using recipe::recipe;
-
-    /**
-     * @brief Set kernel arguments
-     *
-     * @tparam T Scalar type; must match scalar_type passed to constructor
-     * @param handler Recipe handler
-     * @param M Number of rows of A and C
-     * @param alpha @f$\alpha@f$
-     * @param A Memory object used for A-matrix
-     * @param ldA Leading dimension of A
-     * @param B Memory object used for B-matrix
-     * @param ldB Leading dimension of B
-     * @param beta @f$\beta@f$
-     * @param C Memory object used for C-matrix
-     * @param ldC Leading dimension of C
-     */
-    template <typename T>
-    static void set_args(recipe_handler &handler, std::int64_t M, T alpha, mem A, std::int64_t ldA,
-                         mem B, std::int64_t ldB, T beta, mem C, std::int64_t ldC) {
-        CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
-            handler.get(), M, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type),
-            A.value, ldA, static_cast<tinytc_mem_type_t>(B.type), B.value, ldB, sizeof(beta), &beta,
-            static_cast<tinytc_mem_type_t>(C.type), C.value, ldC));
-    }
-};
+/**
+ * @brief Set kernel arguments
+ *
+ * @tparam T Scalar type; must match scalar_type passed to constructor
+ * @param handler Recipe handler
+ * @param M Number of rows of A and C
+ * @param alpha @f$\alpha@f$
+ * @param A Memory object used for A-matrix
+ * @param ldA Leading dimension of A
+ * @param B Memory object used for B-matrix
+ * @param ldB Leading dimension of B
+ * @param beta @f$\beta@f$
+ * @param C Memory object used for C-matrix
+ * @param ldC Leading dimension of C
+ */
+template <typename T>
+static void set_tall_and_skinny_args(tinytc_recipe_handler_t handler, std::int64_t M, T alpha,
+                                     mem A, std::int64_t ldA, mem B, std::int64_t ldB, T beta,
+                                     mem C, std::int64_t ldC) {
+    CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
+        handler, M, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type), A.value, ldA,
+        static_cast<tinytc_mem_type_t>(B.type), B.value, ldB, sizeof(beta), &beta,
+        static_cast<tinytc_mem_type_t>(C.type), C.value, ldC));
+}
 
 /**
  * @brief Make tall and skinny recipe
@@ -1226,12 +1225,12 @@ class tall_and_skinny : public recipe {
  *
  * @return Tall and skinny recipe
  */
-inline auto make_tall_and_skinny(core_info const &info, tinytc_type_t number_ty, std::int64_t N,
-                                 std::int64_t K, std::int32_t M_block_size = 0) -> tall_and_skinny {
+inline auto make_tall_and_skinny(tinytc_core_info_t info, tinytc_type_t number_ty, std::int64_t N,
+                                 std::int64_t K, std::int32_t M_block_size = 0)
+    -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
-    CHECK_STATUS(
-        tinytc_recipe_tall_and_skinny_create(&rec, info.get(), number_ty, N, K, M_block_size));
-    return tall_and_skinny{rec};
+    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(&rec, info, number_ty, N, K, M_block_size));
+    return shared_handle{rec};
 }
 
 /**
@@ -1254,16 +1253,16 @@ inline auto make_tall_and_skinny(core_info const &info, tinytc_type_t number_ty,
  *
  * @return Tall and skinny recipe
  */
-inline auto make_tall_and_skinny_specialized(core_info const &info, tinytc_type_t number_ty,
+inline auto make_tall_and_skinny_specialized(tinytc_core_info_t info, tinytc_type_t number_ty,
                                              std::int64_t M, std::int64_t N, std::int64_t K,
                                              std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
                                              std::int32_t alignA, std::int32_t alignB,
                                              std::int32_t alignC, std::int32_t M_block_size = 0)
-    -> tall_and_skinny {
+    -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
-        &rec, info.get(), number_ty, M, N, K, ldA, ldB, ldC, alignA, alignB, alignC, M_block_size));
-    return tall_and_skinny{rec};
+        &rec, info, number_ty, M, N, K, ldA, ldB, ldC, alignA, alignB, alignC, M_block_size));
+    return shared_handle{rec};
 }
 
 } // namespace tinytc

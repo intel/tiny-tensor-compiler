@@ -11,16 +11,14 @@
 
 namespace tinytc {
 
-class binary;
-class prog;
-
 enum class tall_and_skinny_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const *;
 
 struct tall_and_skinny_recipe : ::tinytc_recipe {
   public:
-    tall_and_skinny_recipe(prog prg, binary bin, tinytc_type_t ty, std::int64_t M, std::int64_t ldA,
-                           std::int64_t ldB, std::int64_t ldC, std::int32_t M_block_size);
+    tall_and_skinny_recipe(shared_handle<tinytc_prog_t> prg, shared_handle<tinytc_binary_t> bin,
+                           tinytc_type_t ty, std::int64_t M, std::int64_t ldA, std::int64_t ldB,
+                           std::int64_t ldC, std::int32_t M_block_size);
     auto num_kernels() const -> int override;
     auto kernel_name(int kernel_num) const -> char const * override;
 

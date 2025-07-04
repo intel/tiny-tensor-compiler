@@ -35,7 +35,7 @@ auto get_support_level(device const &dev) -> support_level {
     return dispatch<support_level_dispatcher>(dev.get_backend(), dev);
 }
 
-auto make_core_info(device const &dev) -> core_info {
+auto make_core_info(device const &dev) -> shared_handle<tinytc_core_info_t> {
     return dispatch<core_info_dispatcher>(dev.get_backend(), dev);
 }
 

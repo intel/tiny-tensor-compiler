@@ -21,7 +21,7 @@ using namespace tinytc;
 
 TEST_CASE("suggest work group size") {
     auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
-    set_core_features(info, tinytc_core_feature_flag_large_register_file);
+    set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
     REQUIRE(info->register_space() == 64 * 256);
     auto ctx = make_compiler_context();
     auto f64_ty = get<f64_type>(ctx.get());

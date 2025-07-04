@@ -30,11 +30,11 @@ using uniform_loop_body_builder =
 
 void tile_loop_by_sgs(region_builder &bb, tinytc_value_t loop_trip_count, int sgs, int num_tiles,
                       tinytc_value_t sg_id, sgs_loop_body_builder const &body,
-                      attr for_attributes = nullptr);
+                      tinytc_attr_t for_attributes = nullptr);
 
 void tile_loop_uniformly(region_builder &bb, tinytc_value_t loop_trip_count, int block_size,
                          int num_tiles, tinytc_value_t sg_id, uniform_loop_body_builder const &body,
-                         attr for_attributes = nullptr);
+                         tinytc_attr_t for_attributes = nullptr);
 
 auto promote_binop_operands(region_builder &bb, tinytc_type_t result_ty, tinytc_value_t a,
                             tinytc_value_t b, location const &loc)
@@ -53,7 +53,8 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
                  tinytc_value_t beta, tinytc_value_t C, array_view<tinytc_value_t> index_list,
                  location const &loc);
 
-auto instant_constant_fold_add(region_builder &bb, inst i) -> tinytc_value_t;
+auto instant_constant_fold_add(region_builder &bb, unique_handle<tinytc_inst_t> &&i)
+    -> tinytc_value_t;
 auto get_bool_constant(tinytc_value_t val) -> std::optional<bool>;
 auto get_int_constant(const_tinytc_value_t val) -> std::optional<std::int64_t>;
 auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t>;

@@ -37,18 +37,21 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
     }
 
     g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx_.get()), transpose::N, transpose::N,
-                                    B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
-                                    B2_aligned_, B2_aligned_ * P_)));
+        q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
+                                    transpose::N, B2_aligned_, P_, P_, B3_aligned_,
+                                    B3_aligned_ * P_, P_, P_ * P_, B2_aligned_, B2_aligned_ * P_)
+                .get()));
     g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx_.get()), transpose::N, transpose::N,
-                                    B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
-                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)));
+        q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
+                                    transpose::N, B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
+                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)
+                .get()));
 }
 
-template <typename T> auto test_volume<T>::make_compiler_context() -> compiler_context {
+template <typename T>
+auto test_volume<T>::make_compiler_context() -> shared_handle<tinytc_compiler_context_t> {
     auto ctx = ::tinytc::make_compiler_context();
-    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+    set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });
     return ctx;
@@ -72,7 +75,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
 
         auto void_ty = get<void_type>(ctx);
         auto f = make_func("volume_kernel", param_types, void_ty);
-        auto fn_body = get_body(f);
+        auto fn_body = get_body(f.get());
 
         std::array<tinytc_value_t, 2 * dim + 2> params;
         get_parameters(fn_body, params);
@@ -155,26 +158,26 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
 
         return f;
     };
-    auto p = make_prog(ctx_);
-    add_function(p, opt_kernel(ctx_.get()));
+    auto p = make_prog(ctx_.get());
+    add_function(p.get(), opt_kernel(ctx_.get()));
     if (dump_code) {
-        dump(p);
+        dump(p.get());
     }
-    return make_kernel_bundle(q_.get_context(), q_.get_device(),
-                              compile_to_spirv_and_assemble(p, dev_info_));
+    auto bin = compile_to_spirv_and_assemble(p.get(), dev_info_.get());
+    return make_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
 }
 
 template <typename T> std::vector<event> test_volume<T>::reference() {
     auto e = std::vector<event>{};
     for (std::size_t d = 0; d < dim; ++d) {
-        small_gemm_batched::set_args(g_[0], howmany_, T(1.0), I_.get(), A_[d].get(), T(0.0),
-                                     tmp_.get());
-        e.emplace_back(g_[0].submit(q_, e));
+        set_small_gemm_batched_args(g_[0].get(), howmany_, T(1.0), I_.get(), A_[d].get(), T(0.0),
+                                    tmp_.get());
+        e.emplace_back(submit(g_[0].get(), q_, e));
         e.front() = e.back();
         e.pop_back();
-        small_gemm_batched::set_args(g_[1], howmany_, T(1.0), K_[d].get(), tmp_.get(), T(1.0),
-                                     Q_ref_.get());
-        e.emplace_back(g_[1].submit(q_, e));
+        set_small_gemm_batched_args(g_[1].get(), howmany_, T(1.0), K_[d].get(), tmp_.get(), T(1.0),
+                                    Q_ref_.get());
+        e.emplace_back(submit(g_[1].get(), q_, e));
     }
     return e;
 }

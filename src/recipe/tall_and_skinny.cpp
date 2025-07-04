@@ -35,7 +35,8 @@ auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const * {
     }
     throw status::invalid_arguments;
 }
-tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, binary bin, tinytc_type_t ty,
+tall_and_skinny_recipe::tall_and_skinny_recipe(shared_handle<tinytc_prog_t> prg,
+                                               shared_handle<tinytc_binary_t> bin, tinytc_type_t ty,
                                                std::int64_t M, std::int64_t ldA, std::int64_t ldB,
                                                std::int64_t ldC, std::int32_t M_block_size)
     : ::tinytc_recipe(std::move(prg), std::move(bin)), ty_(ty), M_dyn_(is_dynamic_value(M)),
@@ -171,16 +172,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
                 auto alignments = std::array<std::pair<std::int32_t, std::int32_t>, 3u>{
                     {{1, alignA}, {2, alignB}, {4, alignC}}};
-                auto align_attr = named_attr{get_string_attr(ctx, "align"), nullptr};
+                auto align_attr = tinytc_named_attr_t{get_string_attr(ctx, "align"), nullptr};
                 for (auto &[param_no, alignment] : alignments) {
                     if (alignment > 0) {
                         align_attr.attr = get_integer_attr(ctx, alignment);
-                        set_parameter_attr(f, param_no,
+                        set_parameter_attr(f.get(), param_no,
                                            get_dictionary_attr_with_sorted(ctx, align_attr));
                     }
                 }
 
-                auto fn_body = get_body(f);
+                auto fn_body = get_body(f.get());
                 auto params = std::array<tinytc_value_t, 5u>{};
                 get_parameters(fn_body, params);
                 set_name(params[0], "alpha");
@@ -190,24 +191,24 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 set_name(params[4], "C");
                 auto const wgs = tiling.work_group_size(sgs);
                 auto const wgs_attr =
-                    named_attr{get_string_attr(ctx, "work_group_size"),
-                               get_array_attr(ctx, {get_integer_attr(ctx, wgs[0]),
-                                                    get_integer_attr(ctx, wgs[1])})};
-                set_attr(f, get_dictionary_attr_with_sorted(ctx, wgs_attr));
+                    tinytc_named_attr_t{get_string_attr(ctx, "work_group_size"),
+                                        get_array_attr(ctx, {get_integer_attr(ctx, wgs[0]),
+                                                             get_integer_attr(ctx, wgs[1])})};
+                set_attr(f.get(), get_dictionary_attr_with_sorted(ctx, wgs_attr));
 
                 auto bb = region_builder{fn_body};
                 body(bb, params[0], params[1], params[2], is_beta_nonzero, params[3], params[4]);
                 return f;
             };
 
-            auto p = make_prog(compiler_context{ctx, true}, my_loc());
-            add_function(p,
+            auto p = make_prog(ctx, my_loc());
+            add_function(p.get(),
                          kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm), true));
             add_function(
-                p, kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0), false));
-            tinytc_binary_t bin;
-            CHECK_STATUS(tinytc_prog_compile_to_spirv_and_assemble(&bin, p.get(), info));
-            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), binary(bin), ty, M,
+                p.get(),
+                kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0), false));
+            auto bin = compile_to_spirv_and_assemble(p.get(), info);
+            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), std::move(bin), ty, M,
                                                                ldA, ldB, ldC, M_block_size)
                           .release();
         },
@@ -235,7 +236,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
     if (handler == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    auto recipe = dynamic_cast<tall_and_skinny_recipe const *>(handler->get_recipe().get());
+    auto recipe = dynamic_cast<tall_and_skinny_recipe const *>(handler->get_recipe());
     if (recipe == nullptr) {
         return tinytc_status_invalid_arguments;
     }

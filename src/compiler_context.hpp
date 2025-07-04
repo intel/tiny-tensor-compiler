@@ -32,7 +32,7 @@ struct tinytc_compiler_context : tinytc::reference_counted {
 
     inline auto cache() -> tinytc::compiler_context_cache * { return cache_.get(); }
 
-    inline void set_error_reporter(tinytc::error_reporter_t reporter, void *user_data) {
+    inline void set_error_reporter(tinytc_error_reporter_t reporter, void *user_data) {
         reporter_ = reporter;
         user_data_ = user_data;
     }
@@ -78,7 +78,7 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     }
 
     std::unique_ptr<tinytc::compiler_context_cache> cache_;
-    tinytc::error_reporter_t reporter_ = &tinytc::default_error_reporter;
+    tinytc_error_reporter_t reporter_ = &tinytc::default_error_reporter;
     void *user_data_ = nullptr;
     std::vector<source_input> sources_;
     std::array<std::int32_t, TINYTC_ENUM_NUM_OPTFLAG> opt_flags_;

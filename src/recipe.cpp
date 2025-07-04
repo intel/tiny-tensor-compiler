@@ -37,16 +37,14 @@ tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recipe, tinytc_prog
     if (recipe == nullptr || prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *prg = tinytc::prog(recipe->get_program()).release(); });
+    return tinytc::exception_to_status_code([&] { *prg = recipe->get_program(); });
 }
 
 tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe, tinytc_binary_t *bin) {
     if (recipe == nullptr || bin == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *bin = tinytc::binary(recipe->get_binary()).release(); });
+    return tinytc::exception_to_status_code([&] { *bin = recipe->get_binary(); });
 }
 
 tinytc_status_t tinytc_recipe_release(tinytc_recipe_t obj) {
@@ -73,8 +71,7 @@ tinytc_status_t tinytc_recipe_handler_get_recipe(const_tinytc_recipe_handler_t h
     if (handler == nullptr || recipe == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *recipe = tinytc::recipe(handler->get_recipe()).release(); });
+    return tinytc::exception_to_status_code([&] { *recipe = handler->get_recipe(); });
 }
 
 tinytc_status_t tinytc_recipe_handler_release(tinytc_recipe_handler_t obj) {

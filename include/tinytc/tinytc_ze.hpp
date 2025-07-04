@@ -48,10 +48,10 @@ inline auto get_support_level(ze_device_handle_t device) -> support_level {
  *
  * @return core info
  */
-inline auto make_core_info(ze_device_handle_t device) -> core_info {
+inline auto make_core_info(ze_device_handle_t device) -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(::tinytc_ze_core_info_create(&info, device));
-    return core_info{info};
+    return shared_handle{info};
 }
 
 ////////////////////////////
@@ -78,12 +78,12 @@ template <> struct unique_handle_traits<ze_module_handle_t> {
  *
  * @return Level Zero module (unique handle)
  */
-inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t device, prog prg,
-                               tinytc_core_feature_flags_t core_features = 0)
+inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t device,
+                               tinytc_prog_t prg, tinytc_core_feature_flags_t core_features = 0)
     -> unique_handle<ze_module_handle_t> {
     ze_module_handle_t obj;
-    CHECK_STATUS(tinytc_ze_kernel_bundle_create_with_program(&obj, context, device, prg.get(),
-                                                             core_features));
+    CHECK_STATUS(
+        tinytc_ze_kernel_bundle_create_with_program(&obj, context, device, prg, core_features));
     return unique_handle<ze_module_handle_t>{obj};
 }
 
@@ -97,9 +97,9 @@ inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t d
  * @return Level Zero module (unique handle)
  */
 inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t device,
-                               binary const &bin) -> unique_handle<ze_module_handle_t> {
+                               const_tinytc_binary_t bin) -> unique_handle<ze_module_handle_t> {
     ze_module_handle_t obj;
-    CHECK_STATUS(tinytc_ze_kernel_bundle_create_with_binary(&obj, context, device, bin.get()));
+    CHECK_STATUS(tinytc_ze_kernel_bundle_create_with_binary(&obj, context, device, bin));
     return unique_handle<ze_module_handle_t>{obj};
 }
 
@@ -136,28 +136,22 @@ inline auto get_group_size(ze_kernel_handle_t kernel) -> std::array<std::uint32_
 ////////////////////////////
 
 /**
- * @brief Recipe handler for the Level Zero runtime
+ * @brief Append recipe to command list
+ *
+ * Cf. @ref tinytc_ze_recipe_handler_submit
+ *
+ * @param handler Recipe handler
+ * @param list Command list
+ * @param signal_event Event to be signalled on completetion
+ * @param num_wait_events Number of wait events to wait on
+ * @param wait_events Array of num_wait_events events to wait on
  */
-class level_zero_recipe_handler : public recipe_handler {
-  public:
-    using recipe_handler::recipe_handler;
-
-    /**
-     * @brief Append recipe to command list
-     *
-     * Cf. @ref tinytc_ze_recipe_handler_submit
-     *
-     * @param list Command list
-     * @param signal_event Event to be signalled on completetion
-     * @param num_wait_events Number of wait events to wait on
-     * @param wait_events Array of num_wait_events events to wait on
-     */
-    inline void submit(ze_command_list_handle_t list, ze_event_handle_t signal_event = nullptr,
-                       uint32_t num_wait_events = 0, ze_event_handle_t *wait_events = nullptr) {
-        CHECK_STATUS(tinytc_ze_recipe_handler_submit(obj_, list, signal_event, num_wait_events,
-                                                     wait_events));
-    }
-};
+inline void submit(tinytc_recipe_handler_t handler, ze_command_list_handle_t list,
+                   ze_event_handle_t signal_event = nullptr, uint32_t num_wait_events = 0,
+                   ze_event_handle_t *wait_events = nullptr) {
+    CHECK_STATUS(
+        tinytc_ze_recipe_handler_submit(handler, list, signal_event, num_wait_events, wait_events));
+}
 
 /**
  * @brief Make recipe handler
@@ -169,10 +163,10 @@ class level_zero_recipe_handler : public recipe_handler {
  * @return Level Zero recipe handler
  */
 inline auto make_recipe_handler(ze_context_handle_t context, ze_device_handle_t device,
-                                recipe const &rec) -> level_zero_recipe_handler {
+                                tinytc_recipe_t rec) -> shared_handle<tinytc_recipe_handler_t> {
     tinytc_recipe_handler_t handler;
-    CHECK_STATUS(tinytc_ze_recipe_handler_create(&handler, context, device, rec.get()));
-    return level_zero_recipe_handler{handler};
+    CHECK_STATUS(tinytc_ze_recipe_handler_create(&handler, context, device, rec));
+    return shared_handle{handler};
 }
 
 } // namespace tinytc

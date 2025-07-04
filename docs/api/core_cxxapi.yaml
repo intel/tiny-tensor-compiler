@@ -16,19 +16,15 @@ Core C++-API:
       - tinytc::mutable_array_view
       - tinytc::shared_handle
       - tinytc::unique_handle
-    typedef:
-      - tinytc::error_reporter_t
   Binary:
     enum:
       - tinytc::bundle_format
     function:
-      - tinytc::get_compiler_context(binary const&)
-      - tinytc::get_core_features(binary const&)
+      - tinytc::get_compiler_context(const_tinytc_binary_t)
+      - tinytc::get_core_features(const_tinytc_binary_t)
       - tinytc::get_raw
       - tinytc::make_binary
       - tinytc::to_string(bundle_format)
-    class:
-      - tinytc::binary
     struct:
       - tinytc::raw_binary
   Compiler:
@@ -49,15 +45,13 @@ Core C++-API:
       - tinytc::set_optimization_level
       - tinytc::report_error
       - tinytc::to_string(optflag)
-    class:
-      - tinytc::compiler_context
   Device Info:
     enum:
       - tinytc::core_feature_flag
       - tinytc::intel_gpu_architecture
       - tinytc::spirv_feature
     function:
-      - tinytc::get_core_features(core_info const&)
+      - tinytc::get_core_features(const_tinytc_core_info_t)
       - tinytc::get_subgroup_sizes
       - tinytc::get_register_space
       - tinytc::have_spirv_feature
@@ -71,8 +65,6 @@ Core C++-API:
       - tinytc::to_string(core_feature_flag)
       - tinytc::to_string(intel_gpu_architecture)
       - tinytc::to_string(spirv_feature)
-    class:
-      - tinytc::core_info
   FP math:
     function:
       - tinytc::ieee754_extend
@@ -94,12 +86,10 @@ Core C++-API:
       - tinytc::parse_string
   Program:
     function:
-      - tinytc::dump(prog const&)
-      - tinytc::get_compiler_context(prog const&)
-      - tinytc::print_to_file(prog const&, char const*)
-      - tinytc::print_to_string(prog const&) 
-    class:
-      - tinytc::prog
+      - tinytc::dump(tinytc_prog_t)
+      - tinytc::get_compiler_context(const_tinytc_prog_t)
+      - tinytc::print_to_file(tinytc_prog_t, char const*)
+      - tinytc::print_to_string(tinytc_prog_t) 
   Recipe:
     enum:
       - tinytc::mem_type
@@ -110,12 +100,9 @@ Core C++-API:
       - tinytc::make_small_gemm_batched
       - tinytc::make_tall_and_skinny
       - tinytc::make_tall_and_skinny_specialized
+      - tinytc::set_small_gemm_batched_args
+      - tinytc::set_tall_and_skinny_args
       - tinytc::to_string(mem_type)
-    class:
-      - tinytc::recipe
-      - tinytc::recipe_handler
-      - tinytc::small_gemm_batched
-      - tinytc::tall_and_skinny
     struct:
       - tinytc::auto_mem_type
       - tinytc::auto_mem_type< T, std::enable_if_t< is_usm_pointer_type< T > > >
@@ -126,8 +113,6 @@ Core C++-API:
       - tinytc::is_usm_pointer_type
   SPIR-V module:
     function:
-      - tinytc::dump(spv_mod const&)
-      - tinytc::print_to_file(spv_mod const&, char const*)
-      - tinytc::print_to_string(spv_mod const&)
-    class:
-      - tinytc::spv_mod
+      - tinytc::dump(const_tinytc_spv_mod_t)
+      - tinytc::print_to_file(const_tinytc_spv_mod_t, char const*)
+      - tinytc::print_to_string(const_tinytc_spv_mod_t)

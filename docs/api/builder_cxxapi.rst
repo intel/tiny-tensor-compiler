@@ -225,12 +225,6 @@ Attribute
 
   * :ref:`sort_items`
 
-* Typedefs
-
-  * :ref:`tinytc::attr`
-
-  * :ref:`tinytc::named_attr`
-
 Attribute Functions
 -------------------
 
@@ -283,29 +277,14 @@ sort_items
 
 .. doxygenfunction:: sort_items
 
-Attribute Typedefs
-------------------
-
-.. _tinytc::attr:
-
-attr
-....
-
-.. doxygentypedef:: tinytc::attr
-
-.. _tinytc::named_attr:
-
-named_attr
-..........
-
-.. doxygentypedef:: tinytc::named_attr
-
 Data Type
 =========
 
 * Functions
 
   * :ref:`tinytc::get`
+
+  * :ref:`tinytc::get_compiler_context(const_tinytc_type_t)`
 
   * :ref:`tinytc::to_type`
 
@@ -352,6 +331,13 @@ get
 ...
 
 .. doxygenfunction:: tinytc::get
+
+.. _tinytc::get_compiler_context(const_tinytc_type_t):
+
+get_compiler_context(const_tinytc_type_t)
+.........................................
+
+.. doxygenfunction:: tinytc::get_compiler_context(const_tinytc_type_t)
 
 .. _tinytc::to_type:
 
@@ -484,13 +470,9 @@ Function
 
   * :ref:`tinytc::make_func`
 
-  * :ref:`tinytc::set_attr(func&,attr)`
+  * :ref:`tinytc::set_attr(tinytc_func_t,tinytc_attr_t)`
 
   * :ref:`tinytc::set_parameter_attr`
-
-* Classes
-
-  * :ref:`tinytc::func`
 
 Function Functions
 ------------------
@@ -509,12 +491,12 @@ make_func
 
 .. doxygenfunction:: tinytc::make_func
 
-.. _tinytc::set_attr(func&,attr):
+.. _tinytc::set_attr(tinytc_func_t,tinytc_attr_t):
 
-set_attr(func&,attr)
-....................
+set_attr(tinytc_func_t,tinytc_attr_t)
+.....................................
 
-.. doxygenfunction:: tinytc::set_attr(func&,attr)
+.. doxygenfunction:: tinytc::set_attr(tinytc_func_t,tinytc_attr_t)
 
 .. _tinytc::set_parameter_attr:
 
@@ -523,16 +505,6 @@ set_parameter_attr
 
 .. doxygenfunction:: tinytc::set_parameter_attr
 
-Function Classes
-----------------
-
-.. _tinytc::func:
-
-func
-....
-
-.. doxygenclass:: tinytc::func
-
 Instruction
 ===========
 
@@ -540,9 +512,7 @@ Instruction
 
   * :ref:`tinytc::create`
 
-* Classes
-
-  * :ref:`tinytc::inst`
+  * :ref:`tinytc::set_attr(tinytc_inst_t,tinytc_attr_t)`
 
 * Structures
 
@@ -722,15 +692,12 @@ create
 
 .. doxygenfunction:: tinytc::create
 
-Instruction Classes
--------------------
+.. _tinytc::set_attr(tinytc_inst_t,tinytc_attr_t):
 
-.. _tinytc::inst:
+set_attr(tinytc_inst_t,tinytc_attr_t)
+.....................................
 
-inst
-....
-
-.. doxygenclass:: tinytc::inst
+.. doxygenfunction:: tinytc::set_attr(tinytc_inst_t,tinytc_attr_t)
 
 Instruction Structures
 ----------------------
@@ -1347,6 +1314,16 @@ Region
 
 * Functions
 
+  * :ref:`tinytc::append`
+
+  * :ref:`tinytc::begin`
+
+  * :ref:`tinytc::end`
+
+  * :ref:`tinytc::get_parameters`
+
+  * :ref:`tinytc::insert`
+
   * :ref:`tinytc::next`
 
   * :ref:`tinytc::prev`
@@ -1357,6 +1334,41 @@ Region
 
 Region Functions
 ----------------
+
+.. _tinytc::append:
+
+append
+......
+
+.. doxygenfunction:: tinytc::append
+
+.. _tinytc::begin:
+
+begin
+.....
+
+.. doxygenfunction:: tinytc::begin
+
+.. _tinytc::end:
+
+end
+...
+
+.. doxygenfunction:: tinytc::end
+
+.. _tinytc::get_parameters:
+
+get_parameters
+..............
+
+.. doxygenfunction:: tinytc::get_parameters
+
+.. _tinytc::insert:
+
+insert
+......
+
+.. doxygenfunction:: tinytc::insert
 
 .. _tinytc::next:
 
