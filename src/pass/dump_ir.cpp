@@ -156,6 +156,16 @@ void dump_ir_pass::dump_blas_a3(blas_a3_inst g) {
     dump_val(g.C());
 }
 
+void dump_ir_pass::dump_memory_write(memory_write_inst s) {
+    dump_val(s.val());
+    *os_ << ", ";
+    dump_val(s.operand());
+    *os_ << "[";
+    do_with_infix(s.index_list().begin(), s.index_list().end(),
+                  [this](auto const &i) { dump_val(i); });
+    *os_ << "]";
+}
+
 void dump_ir_pass::operator()(alloca_inst a) {
     dump_val(a.result());
     *os_ << " = alloca : ";
@@ -189,6 +199,32 @@ void dump_ir_pass::operator()(arith_unary_inst a) {
     dump_val(a.a());
     *os_ << " : ";
     visit(*this, *a.result().ty());
+}
+
+void dump_ir_pass::operator()(atomic_store_inst s) {
+    *os_ << "atomic_store";
+    if (s.scope() != memory_scope::work_group) {
+        *os_ << "." << to_string(s.scope());
+    }
+    if (s.semantics() != memory_semantics::relaxed) {
+        *os_ << "." << to_string(s.semantics());
+    }
+    *os_ << " ";
+    dump_memory_write(s);
+}
+
+void dump_ir_pass::operator()(atomic_update_inst s) {
+    *os_ << to_string(s.get().type_id());
+    if (s.scope() != memory_scope::work_group) {
+        *os_ << "." << to_string(s.scope());
+    }
+    if (s.semantics() != memory_semantics::relaxed) {
+        *os_ << "." << to_string(s.semantics());
+    }
+    *os_ << " ";
+    dump_memory_write(s);
+    *os_ << " : ";
+    visit(*this, *s.result().ty());
 }
 
 void dump_ir_pass::operator()(barrier_inst b) {
@@ -614,19 +650,9 @@ void dump_ir_pass::operator()(subview_inst s) {
     visit(*this, *s.result().ty());
 }
 
-void dump_ir_pass::operator()(store_inst e) {
-    *os_ << "store";
-    if (e.flag() != store_flag::regular) {
-        *os_ << '.' << to_string(e.flag());
-    }
-    *os_ << ' ';
-    dump_val(e.val());
-    *os_ << ", ";
-    dump_val(e.operand());
-    *os_ << "[";
-    do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { dump_val(i); });
-    *os_ << "]";
+void dump_ir_pass::operator()(store_inst s) {
+    *os_ << "store ";
+    dump_memory_write(s);
 }
 
 void dump_ir_pass::operator()(sum_inst a) {

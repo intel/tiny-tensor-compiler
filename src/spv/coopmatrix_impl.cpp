@@ -185,7 +185,8 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
             val_ij = extract(layout, val, walker.component_no());
         }
 
-        make_store(*unique_, in.flag(), layout.sty, ot->addrspace(), pointer, val_ij, in.loc());
+        // make_store(*unique_, in.flag(), layout.sty, ot->addrspace(), pointer, val_ij, in.loc());
+        mod.add<OpStore>(pointer, val_ij);
     };
     auto const st_block = [&](tinytc_spv_mod &mod) {
         for (std::int64_t u = 0; u < layout.length / layout.blocks; u += cols_per_store) {

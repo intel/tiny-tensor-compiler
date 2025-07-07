@@ -105,6 +105,19 @@ lex:
         ".row"              { adv_loc(); return parser::make_REDUCE_MODE(reduce_mode::row, loc_); }
         ".column"           { adv_loc(); return parser::make_REDUCE_MODE(reduce_mode::column, loc_); }
 
+        // Memory scope
+        ".cross_device" { adv_loc(); return parser::make_MEMORY_SCOPE(memory_scope::cross_device, loc_); }
+        ".device"       { adv_loc(); return parser::make_MEMORY_SCOPE(memory_scope::device, loc_); }
+        ".work_group"   { adv_loc(); return parser::make_MEMORY_SCOPE(memory_scope::work_group, loc_); }
+        ".subgroup"     { adv_loc(); return parser::make_MEMORY_SCOPE(memory_scope::subgroup, loc_); }
+
+        // Memory semantics
+        ".relaxed"                 { adv_loc(); return parser::make_MEMORY_SEMANTICS(memory_semantics::relaxed, loc_); }
+        ".acquire"                 { adv_loc(); return parser::make_MEMORY_SEMANTICS(memory_semantics::acquire, loc_); }
+        ".release"                 { adv_loc(); return parser::make_MEMORY_SEMANTICS(memory_semantics::release, loc_); }
+        ".acquire_release"         { adv_loc(); return parser::make_MEMORY_SEMANTICS(memory_semantics::acquire_release, loc_); }
+        ".sequentially_consistent" { adv_loc(); return parser::make_MEMORY_SEMANTICS(memory_semantics::sequentially_consistent, loc_); }
+
         // constants
         "true"              { adv_loc(); return parser::make_BOOLEAN_CONSTANT(true, loc_); }
         "false"             { adv_loc(); return parser::make_BOOLEAN_CONSTANT(false, loc_); }
@@ -157,6 +170,11 @@ lex:
         ".both_checked"     { adv_loc(); return parser::make_CHECKED(checked_flag::both, loc_); }
 
         // instructions
+        "alloca"             { adv_loc(); return parser::make_ALLOCA(loc_); }
+        "atomic_store"       { adv_loc(); return parser::make_ATOMIC_STORE(loc_); }
+        "atomic_add"         { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
+        "atomic_max"         { adv_loc(); return parser::make_ATOMIC_MAX(loc_); }
+        "atomic_min"         { adv_loc(); return parser::make_ATOMIC_MIN(loc_); }
         "axpby"              { adv_loc(); return parser::make_AXPBY(loc_); }
         "barrier"            { adv_loc(); return parser::make_BARRIER(loc_); }
         "cumsum"             { adv_loc(); return parser::make_CUMSUM(loc_); }
@@ -164,7 +182,6 @@ lex:
         "gemv"               { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"                { adv_loc(); return parser::make_GER(loc_); }
         "hadamard"           { adv_loc(); return parser::make_HADAMARD(loc_); }
-        "alloca"             { adv_loc(); return parser::make_ALLOCA(loc_); }
         "cast"               { adv_loc(); return parser::make_CAST(loc_); }
         "constant"           { adv_loc(); return parser::make_CONSTANT(loc_); }
         "cooperative_matrix_apply"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_APPLY(loc_); }

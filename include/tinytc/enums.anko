@@ -162,6 +162,21 @@ enum @store_flag "Store flag" {
     case %atomic_min => 4 "Atomic fetch min"
 }
 
+enum @memory_scope "Memory scope flag" {
+    case %cross_device => 0
+    case %device => 1
+    case %work_group => 2
+    case %subgroup => 3
+}
+
+enum @memory_semantics "Memory semantics" {
+    case %relaxed                 => 0x0  "Relaxed"
+    case %acquire                 => 0x2  "Acquire"
+    case %release                 => 0x4  "Release"
+    case %acquire_release         => 0x8  "Acquire and release"
+    case %sequentially_consistent => 0x10 "Sequentially consistent"
+}
+
 enum @matrix_use "Matrix use" {
     doc_to_string
     case %a   => 0 "matrix_a"

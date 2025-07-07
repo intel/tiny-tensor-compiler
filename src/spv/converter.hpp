@@ -34,6 +34,8 @@ class inst_converter {
     void operator()(alloca_inst in);
     void operator()(arith_inst in);
     void operator()(arith_unary_inst in);
+    void operator()(atomic_store_inst in);
+    void operator()(atomic_update_inst in);
     void operator()(barrier_inst in);
     void operator()(cast_inst in);
     void operator()(compare_inst in);
@@ -83,6 +85,7 @@ class inst_converter {
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto matrix_impl() -> coopmatrix_impl &;
     auto make_matrix_impl() -> std::unique_ptr<coopmatrix_impl>;
+    auto get_pointer(memory_write_inst in) -> spv_inst *;
 
     tinytc_spv_mod_t mod_;
     tinytc_core_info const *info_;

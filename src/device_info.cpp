@@ -173,6 +173,12 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_global, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_local, false);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_global, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_local, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_global, false);
             (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, false);
             (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
             break;
@@ -192,6 +198,12 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_global, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_local, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_global, true);
             (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, true);
             (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
             break;

@@ -114,9 +114,6 @@
     ARROW           "->"
     DYNAMIC         "?"
     ATOMIC          ".atomic"
-    ATOMIC_ADD      ".atomic_add"
-    ATOMIC_MAX      ".atomic_max"
-    ATOMIC_MIN      ".atomic_min"
     INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
@@ -145,6 +142,10 @@
 
 %token
     ALLOCA                        "alloca"
+    ATOMIC_STORE                  "atomic_store"
+    ATOMIC_ADD                    "atomic_add"
+    ATOMIC_MAX                    "atomic_max"
+    ATOMIC_MIN                    "atomic_min"
     BARRIER                       "barrier"
     CAST                          "cast"
     CONSTANT                      "constant"
@@ -240,6 +241,8 @@
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
 %token <transpose> TRANSPOSE
+%token <memory_scope> MEMORY_SCOPE
+%token <memory_semantics> MEMORY_SEMANTICS
 
 %nterm <std::vector<unique_handle<tinytc_func_t>>> func_list
 %nterm <unique_handle<tinytc_func_t>> func
@@ -294,6 +297,8 @@
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> slice_list
 %nterm <std::pair<int_or_val,int_or_val>> slice
 %nterm <int_or_val> slice_size
+%nterm <memory_scope> memory_scope
+%nterm <memory_semantics> memory_semantics
 
 %%
 prog:
@@ -976,10 +981,56 @@ valued_inst:
 ;
 
 instruction:
-    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
+    STORE var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
         yytry(ctx, [&] {
-            $$ = store_inst::create($store_flag, std::move($a), std::move($b),
-                                    std::move($optional_value_list), @instruction);
+            $$ = store_inst::create(std::move($a), std::move($b), std::move($optional_value_list),
+                                    @instruction);
+        });
+    }
+;
+
+instruction:
+    ATOMIC_STORE memory_scope memory_semantics var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
+        yytry(ctx, [&] {
+            $$ = atomic_store_inst::create($memory_scope, $memory_semantics, std::move($a), std::move($b),
+                                           std::move($optional_value_list), @instruction);
+        });
+    }
+;
+
+memory_scope:
+    %empty { $$ = memory_scope::work_group; }
+  | MEMORY_SCOPE { $$ = $1; }
+;
+
+memory_semantics:
+    %empty { $$ = memory_semantics::relaxed; }
+  | MEMORY_SEMANTICS { $$ = $1; }
+;
+
+valued_inst:
+    ATOMIC_ADD memory_scope memory_semantics var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON scalar_type {
+        yytry(ctx, [&] {
+            $$ = atomic_add_inst::create($memory_scope, $memory_semantics, std::move($a), std::move($b),
+                                         std::move($optional_value_list), $scalar_type, @valued_inst);
+        });
+    }
+;
+
+valued_inst:
+    ATOMIC_MAX memory_scope memory_semantics var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON scalar_type {
+        yytry(ctx, [&] {
+            $$ = atomic_max_inst::create($memory_scope, $memory_semantics, std::move($a), std::move($b),
+                                         std::move($optional_value_list), $scalar_type, @valued_inst);
+        });
+    }
+;
+
+valued_inst:
+    ATOMIC_MIN memory_scope memory_semantics var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON scalar_type {
+        yytry(ctx, [&] {
+            $$ = atomic_min_inst::create($memory_scope, $memory_semantics, std::move($a), std::move($b),
+                                         std::move($optional_value_list), $scalar_type, @valued_inst);
         });
     }
 ;

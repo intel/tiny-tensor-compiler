@@ -174,12 +174,29 @@ inst @subview "Subview instruction" {
     ret %result                  "resulting memref type"
 }
 
-inst @store "Store instruction" {
-    prop %flag => @store_flag "store flag"
-    op %val                   "value to store"
-    op %operand               "operand"
-    op* %index_list           "indices"
+; Atomics
+
+inst @memory_write "Instruction that writes to memory" {
+    op %val         "value to store"
+    op %operand     "operand"
+    op* %index_list "indices"
 }
+
+inst @store : @memory_write "Store instruction" {}
+
+inst @atomic_store : @memory_write "Atomic store instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+
+inst @atomic_update : @memory_write "Atomic update instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+    ret %result                          "atomically updated value"
+}
+inst @atomic_add : @atomic_update "Atomic add instruction" {}
+inst @atomic_max : @atomic_update "Atomic max instruction" {}
+inst @atomic_min : @atomic_update "Atomic min instruction" {}
 
 inst @yield "Yield instruction" {
     op* %yielded_vals "yielded values"

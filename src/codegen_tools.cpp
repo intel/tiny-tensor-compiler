@@ -181,17 +181,23 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
     }
     auto alpha_ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), alpha, ab, loc);
     if (atomic) {
-        auto flag = get_atomic_store_flag(beta);
-        if (!flag) {
+        constant_inst beta_cst = dyn_cast<constant_inst>(beta->defining_inst());
+        const auto scope = memory_scope::work_group;
+        const auto semantics = memory_semantics::relaxed;
+        if (beta_cst && beta_cst.is_zero()) {
+            bb.create<atomic_store_inst>(scope, semantics, alpha_ab, C, index_list, loc);
+        } else if (beta_cst && beta_cst.is_identity()) {
+            bb.create<atomic_add_inst>(scope, semantics, alpha_ab, C, index_list, ct->element_ty(),
+                                       loc);
+        } else {
             throw compilation_error(loc, status::ir_invalid_beta);
         }
-        bb.create<store_inst>(*flag, alpha_ab, C, index_list, loc);
     } else {
         auto c = bb.create<load_inst>(C, index_list, ct->element_ty(), loc);
         auto beta_c = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), beta, c, loc);
         auto alpha_ab_plus_beta_c =
             mixed_precision_arithmetic<add_inst>(bb, ct->element_ty(), alpha_ab, beta_c, loc);
-        bb.create<store_inst>(store_flag::regular, alpha_ab_plus_beta_c, C, index_list, loc);
+        bb.create<store_inst>(alpha_ab_plus_beta_c, C, index_list, loc);
     }
 }
 
@@ -308,8 +314,7 @@ auto work_group_reduce::make(region_builder &bb, tinytc_value_t a, location cons
             is_sglid_0,
             [&](region_builder &bb) {
                 auto sgid_index = bb.create<cast_inst>(sgid, index_ty, loc);
-                bb.create<store_inst>(store_flag::regular, a_reduced, tmp_, array_view{sgid_index},
-                                      loc);
+                bb.create<store_inst>(a_reduced, tmp_, array_view{sgid_index}, loc);
             },
             loc);
         bb.create<barrier_inst>(static_cast<tinytc_address_spaces_t>(address_space::local), loc);
@@ -359,8 +364,7 @@ auto work_group_inclusive_scan::make(region_builder &bb, tinytc_value_t a, bool 
             is_last_sglid,
             [&](region_builder &bb) {
                 auto sgid_index = bb.create<cast_inst>(sgid, index_ty, loc);
-                bb.create<store_inst>(store_flag::regular, a_scan, tmp_, array_view{sgid_index},
-                                      loc);
+                bb.create<store_inst>(a_scan, tmp_, array_view{sgid_index}, loc);
             },
             loc);
         bb.create<barrier_inst>(static_cast<tinytc_address_spaces_t>(address_space::local), loc);
@@ -383,8 +387,7 @@ auto work_group_inclusive_scan::make(region_builder &bb, tinytc_value_t a, bool 
             bb.if_condition(
                 is_last_work_item,
                 [&](region_builder &bb) {
-                    bb.create<store_inst>(store_flag::regular, a_scan, tmp_,
-                                          array_view{c_num_tiles_1_index}, loc);
+                    bb.create<store_inst>(a_scan, tmp_, array_view{c_num_tiles_1_index}, loc);
                 },
                 loc);
             bb.create<barrier_inst>(static_cast<tinytc_address_spaces_t>(address_space::local),

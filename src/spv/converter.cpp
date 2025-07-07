@@ -142,6 +142,34 @@ auto inst_converter::matrix_impl() -> coopmatrix_impl & {
     throw status::internal_compiler_error;
 }
 
+auto inst_converter::get_pointer(memory_write_inst in) -> spv_inst * {
+    auto dv = get_dope_vector(in.operand());
+    if (!dv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+
+    if (auto memref_ty = dyn_cast<memref_type>(in.operand().ty()); memref_ty) {
+        auto spv_index_ty = get_spv_index_ty(unique_, memref_ty->context());
+        auto spv_pointer_ty = spv_ty(memref_ty);
+
+        if (memref_ty->dim() == 0) {
+            return val(in.operand());
+        }
+
+        auto idx0 = val(in.index_list()[0]);
+        auto offset =
+            memref_ty->stride(0) != 1 ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0)) : idx0;
+        for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
+            auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
+            offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
+        }
+
+        return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
+                                                   std::vector<spv_inst *>{});
+    }
+    throw compilation_error(in.loc(), status::ir_expected_memref);
+}
+
 void inst_converter::operator()(inst_view in) {
     // @todo
     throw compilation_error(in.loc(), status::not_implemented);
@@ -203,6 +231,37 @@ void inst_converter::operator()(arith_unary_inst in) {
         auto ty = in.a().ty();
         auto ik = in.get().type_id();
         declare(in.result(), make_unary_op(unique_, ty, ik, av, in.loc()));
+    }
+}
+
+void inst_converter::operator()(atomic_store_inst in) {
+    auto ot = get_memref_type(in.operand());
+    auto pointer = get_pointer(in);
+    make_atomic_store(unique_, in.scope(), in.semantics(), ot->element_ty(), ot->addrspace(),
+                      pointer, val(in.val()), in.loc());
+}
+
+void inst_converter::operator()(atomic_update_inst in) {
+    auto ot = get_memref_type(in.operand());
+    auto pointer = get_pointer(in);
+    auto const make = [&]<typename SpvIOp, typename SpvFOp>() {
+        declare(in.result(), make_atomic_update<SpvIOp, SpvFOp>(unique_, in.scope(), in.semantics(),
+                                                                ot->element_ty(), ot->addrspace(),
+                                                                pointer, val(in.val()), in.loc()));
+    };
+    switch (in.get().type_id()) {
+    case IK::IK_atomic_add:
+        make.template operator()<OpAtomicIAdd, OpAtomicFAddEXT>();
+        break;
+    case IK::IK_atomic_max:
+        make.template operator()<OpAtomicSMax, OpAtomicFMaxEXT>();
+        break;
+    case IK::IK_atomic_min:
+        make.template operator()<OpAtomicSMin, OpAtomicFMinEXT>();
+        break;
+    default:
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+        break;
     }
 }
 
@@ -626,38 +685,8 @@ void inst_converter::operator()(subgroup_operation_inst in) {
 }
 
 void inst_converter::operator()(store_inst in) {
-    auto spv_index_ty = get_spv_index_ty(unique_, in.operand().context());
-    auto spv_pointer_ty = spv_ty(in.operand().ty());
-    auto dv = get_dope_vector(in.operand());
-    if (!dv) {
-        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
-    }
-
-    if (auto memref_ty = dyn_cast<memref_type>(in.operand().ty()); memref_ty) {
-        const auto pointer = [&]() -> spv_inst * {
-            if (memref_ty->dim() == 0) {
-                return val(in.operand());
-            }
-
-            auto idx0 = val(in.index_list()[0]);
-            auto offset = memref_ty->stride(0) != 1
-                              ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0))
-                              : idx0;
-            for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
-                auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
-                offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
-            }
-
-            return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
-                                                       std::vector<spv_inst *>{});
-        };
-
-        auto val_ty = memref_ty->element_ty();
-        make_store(unique_, in.flag(), val_ty, memref_ty->addrspace(), pointer(), val(in.val()),
-                   in.loc());
-    } else {
-        throw compilation_error(in.loc(), status::ir_expected_memref);
-    }
+    auto pointer = get_pointer(in);
+    mod_->add<OpStore>(pointer, val(in.val()));
 }
 
 void inst_converter::operator()(subview_inst in) {

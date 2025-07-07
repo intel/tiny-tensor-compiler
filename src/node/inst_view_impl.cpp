@@ -574,7 +574,7 @@ void subview_inst::setup_and_check() {
     }
 }
 
-void store_inst::setup_and_check() {
+void memory_write_inst::setup_and_check() {
     for (auto &val : index_list()) {
         check_index_ty(loc(), val);
     }
@@ -589,6 +589,20 @@ void store_inst::setup_and_check() {
         throw compilation_error(loc(), {&operand()}, status::ir_invalid_number_of_indices);
     }
 }
+
+void store_inst::setup_and_check() { memory_write_inst::setup_and_check(); }
+void atomic_store_inst::setup_and_check() { memory_write_inst::setup_and_check(); }
+
+void atomic_update_inst::setup_and_check() {
+    memory_write_inst::setup_and_check();
+
+    if (val().ty() != result().ty()) {
+        throw compilation_error(loc(), {&val()}, status::ir_operand_type_must_match_return_type);
+    }
+}
+void atomic_add_inst::setup_and_check() { atomic_update_inst::setup_and_check(); }
+void atomic_max_inst::setup_and_check() { atomic_update_inst::setup_and_check(); }
+void atomic_min_inst::setup_and_check() { atomic_update_inst::setup_and_check(); }
 
 void yield_inst::setup_and_check() {}
 

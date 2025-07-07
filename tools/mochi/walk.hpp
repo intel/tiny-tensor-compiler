@@ -21,7 +21,7 @@ void walk_down(T *in, std::function<void(T *)> callback) {
         }
     }
     for (auto &child : in->children()) {
-        walk_down<Order>(child.get(), callback);
+        walk_down<Order, T, OnlyLeaves>(child.get(), callback);
     }
     if constexpr (Order == walk_order::post_order) {
         if (invoke_callback) {
@@ -39,7 +39,7 @@ void walk_down(T *in, std::function<void(T *)> callback,
         prepost_callback(in);
     }
     for (auto &child : in->children()) {
-        walk_down<Order>(child.get(), callback, prepost_callback);
+        walk_down<Order, T>(child.get(), callback, prepost_callback);
     }
     if constexpr (Order == walk_order::post_order) {
         callback(in);
@@ -53,7 +53,7 @@ template <walk_order Order, typename T> void walk_up(T *in, std::function<void(T
         callback(in);
     }
     if (in->parent()) {
-        walk_up<Order>(in->parent(), callback);
+        walk_up<Order, T>(in->parent(), callback);
     }
     if constexpr (Order == walk_order::post_order) {
         callback(in);

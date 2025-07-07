@@ -4,9 +4,15 @@
 #ifndef CONVERTER_AUX_20250416_HPP
 #define CONVERTER_AUX_20250416_HPP
 
+#include "error.hpp"
 #include "node/inst_view.hpp"
+#include "node/type.hpp"
+#include "number.hpp"
+#include "spv/module.hpp"
+#include "spv/uniquifier.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <functional>
 
@@ -22,6 +28,12 @@ auto get_spv_pointer_index_ty(uniquifier &unique, tinytc_compiler_context_t ctx,
 auto get_spv_ty_non_coopmatrix(uniquifier &unique, tinytc_type_t ty) -> spv_inst *;
 
 auto get_last_label(tinytc_spv_mod &mod) -> spv_inst *;
+
+auto split_re_im(uniquifier &unique, tinytc_type_t val_ty, address_space as, spv_inst *pointer,
+                 spv_inst *value) -> std::array<std::array<spv_inst *, 2u>, 2u>;
+void make_atomic_store(uniquifier &unique, memory_scope scope, memory_semantics semantics,
+                       tinytc_type_t val_ty, address_space as, spv_inst *pointer, spv_inst *value,
+                       location const &loc);
 auto make_binary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a, spv_inst *b,
                     location const &loc) -> spv_inst *;
 auto make_binary_op_mixed_precision(uniquifier &unique, tinytc_type_t result_ty, IK op,
@@ -46,12 +58,41 @@ auto make_conditional_execution(uniquifier &unique, spv_inst *return_ty, spv_ins
                                 location const &loc) -> spv_inst *;
 auto make_math_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a,
                         location const &loc) -> spv_inst *;
-void make_store(uniquifier &unique, store_flag flag, tinytc_type_t val_ty, address_space as,
-                spv_inst *pointer, spv_inst *value, location const &loc);
 auto make_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a,
                    location const &loc) -> spv_inst *;
 auto make_subgroup_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a,
                       location const &loc) -> spv_inst *;
+
+template <typename SpvIOp, typename SpvFOp>
+auto make_atomic_update(uniquifier &unique, memory_scope scope, memory_semantics semantics,
+                        tinytc_type_t val_ty, address_space as, spv_inst *pointer, spv_inst *value,
+                        location const &loc) -> spv_inst * {
+    if ((isa<i8_type>(*val_ty) || isa<i16_type>(*val_ty) || isa<bf16_type>(*val_ty))) {
+        throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
+    }
+
+    auto &mod = unique.mod();
+    auto result_ty = get_spv_ty_non_coopmatrix(unique, val_ty);
+    auto c_scope = unique.constant(static_cast<std::int32_t>(scope));
+    auto c_semantics = unique.constant(static_cast<std::int32_t>(semantics));
+    if (isa<complex_type>(*val_ty)) {
+        auto re_im = split_re_im(unique, val_ty, as, pointer, value);
+        auto component_sty = component_type(val_ty);
+        auto float_ty = get_spv_ty_non_coopmatrix(unique, component_sty);
+        auto re_up = mod.add<SpvFOp>(float_ty, re_im[0][0], c_scope, c_semantics, re_im[0][1]);
+        auto im_up = mod.add<SpvFOp>(float_ty, re_im[1][0], c_scope, c_semantics, re_im[1][1]);
+        auto dummy = mod.add<OpUndef>(result_ty);
+        auto tmp =
+            mod.add<OpCompositeInsert>(result_ty, re_up, dummy, std::vector<LiteralInteger>{0});
+        return mod.add<OpCompositeInsert>(result_ty, im_up, tmp, std::vector<LiteralInteger>{1});
+
+    } else if (isa<float_type>(*val_ty)) {
+        return mod.add<SpvFOp>(result_ty, pointer, c_scope, c_semantics, value);
+    } else if (isa<integer_type>(*val_ty)) {
+        return mod.add<SpvIOp>(result_ty, pointer, c_scope, c_semantics, value);
+    }
+    throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
+}
 
 } // namespace tinytc::spv
 

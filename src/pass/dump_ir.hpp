@@ -38,9 +38,11 @@ class dump_ir_pass {
 
     /* Inst nodes */
     void operator()(alloca_inst a);
-    void operator()(axpby_inst a);
     void operator()(arith_inst a);
     void operator()(arith_unary_inst a);
+    void operator()(atomic_store_inst s);
+    void operator()(atomic_update_inst s);
+    void operator()(axpby_inst a);
     void operator()(barrier_inst b);
     void operator()(cast_inst c);
     void operator()(compare_inst c);
@@ -94,6 +96,7 @@ class dump_ir_pass {
     void dump_region(tinytc_region &reg);
     void dump_blas_a2(blas_a2_inst g);
     void dump_blas_a3(blas_a3_inst g);
+    void dump_memory_write(memory_write_inst s);
 
     template <typename Iterator, typename Action>
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {

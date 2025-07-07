@@ -3,20 +3,14 @@
 
 #include "spv/converter_aux.hpp"
 #include "compiler_context.hpp"
-#include "error.hpp"
-#include "node/type.hpp"
 #include "node/visit.hpp"
-#include "number.hpp"
 #include "number_dispatch.hpp"
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
-#include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
-#include "spv/uniquifier.hpp"
 #include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
-#include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 #include "util/overloaded.hpp"
@@ -93,6 +87,41 @@ auto get_last_label(tinytc_spv_mod &mod) -> spv_inst * {
         }
     }
     return nullptr;
+}
+
+auto split_re_im(uniquifier &unique, tinytc_type_t val_ty, address_space as, spv_inst *pointer,
+                 spv_inst *value) -> std::array<std::array<spv_inst *, 2u>, 2u> {
+    auto &mod = unique.mod();
+    auto component_sty = component_type(val_ty);
+    auto float_ty = get_spv_ty_non_coopmatrix(unique, component_sty);
+    const auto storage_cls = address_space_to_storage_class(as);
+    auto pointer_ty = unique.pointer_ty(storage_cls, float_ty, alignment(component_sty));
+    auto c0 = unique.constant(std::int32_t{0});
+    auto c1 = unique.constant(std::int32_t{1});
+    auto re_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c0});
+    auto im_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c1});
+    auto re_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{0});
+    auto im_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{1});
+    return {{{re_ptr, re_val}, {im_ptr, im_val}}};
+}
+
+void make_atomic_store(uniquifier &unique, memory_scope scope, memory_semantics semantics,
+                       tinytc_type_t val_ty, address_space as, spv_inst *pointer, spv_inst *value,
+                       location const &loc) {
+    if ((isa<i8_type>(*val_ty) || isa<i16_type>(*val_ty) || isa<bf16_type>(*val_ty))) {
+        throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
+    }
+
+    auto &mod = unique.mod();
+    auto c_scope = unique.constant(static_cast<std::int32_t>(scope));
+    auto c_semantics = unique.constant(static_cast<std::int32_t>(semantics));
+    if (isa<complex_type>(*val_ty)) {
+        auto re_im = split_re_im(unique, val_ty, as, pointer, value);
+        mod.add<OpAtomicStore>(re_im[0][0], c_scope, c_semantics, re_im[0][1]);
+        mod.add<OpAtomicStore>(re_im[1][0], c_scope, c_semantics, re_im[1][1]);
+    } else {
+        mod.add<OpAtomicStore>(pointer, c_scope, c_semantics, value);
+    }
 }
 
 auto make_binary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a, spv_inst *b,
@@ -644,74 +673,6 @@ auto make_math_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv
         throw compilation_error(loc, status::internal_compiler_error);
     }
     return unop;
-}
-
-void make_store(uniquifier &unique, store_flag flag, tinytc_type_t val_ty, address_space as,
-                spv_inst *pointer, spv_inst *value, location const &loc) {
-    auto &mod = unique.mod();
-    auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
-        auto component_sty = component_type(val_ty);
-        auto float_ty = get_spv_ty_non_coopmatrix(unique, component_sty);
-        const auto storage_cls = address_space_to_storage_class(as);
-        auto pointer_ty = unique.pointer_ty(storage_cls, float_ty, alignment(component_sty));
-        auto c0 = unique.constant(std::int32_t{0});
-        auto c1 = unique.constant(std::int32_t{1});
-        auto re_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c0});
-        auto im_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c1});
-        auto re_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{0});
-        auto im_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{1});
-        return {{{re_ptr, re_val}, {im_ptr, im_val}}};
-    };
-    auto const make_atomic_something = [&]<typename SpvIOp, typename SpvFOp>() {
-        auto result_ty = get_spv_ty_non_coopmatrix(unique, val_ty);
-        auto scope = unique.constant(static_cast<std::int32_t>(Scope::Workgroup));
-        auto semantics = unique.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
-        if (isa<complex_type>(*val_ty)) {
-            auto re_im = split_re_im();
-            auto component_sty = component_type(val_ty);
-            auto float_ty = get_spv_ty_non_coopmatrix(unique, component_sty);
-            mod.add<SpvFOp>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
-            mod.add<SpvFOp>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
-        } else if (isa<float_type>(*val_ty)) {
-            mod.add<SpvFOp>(result_ty, pointer, scope, semantics, value);
-        } else if (isa<integer_type>(*val_ty)) {
-            mod.add<SpvIOp>(result_ty, pointer, scope, semantics, value);
-        } else {
-            throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
-        }
-    };
-
-    if (flag != store_flag::regular &&
-        (isa<i8_type>(*val_ty) || isa<i16_type>(*val_ty) || isa<bf16_type>(*val_ty))) {
-        throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
-    }
-
-    switch (flag) {
-    case store_flag::regular:
-        mod.add<OpStore>(pointer, value);
-        break;
-    case store_flag::atomic: {
-        auto scope = unique.constant(static_cast<std::int32_t>(Scope::Workgroup));
-        auto semantics = unique.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
-        if (isa<complex_type>(*val_ty)) {
-            auto re_im = split_re_im();
-            mod.add<OpAtomicStore>(re_im[0][0], scope, semantics, re_im[0][1]);
-            mod.add<OpAtomicStore>(re_im[1][0], scope, semantics, re_im[1][1]);
-        } else {
-            mod.add<OpAtomicStore>(pointer, scope, semantics, value);
-        }
-        break;
-    }
-    case store_flag::atomic_add:
-        make_atomic_something.template operator()<OpAtomicIAdd, OpAtomicFAddEXT>();
-        break;
-    case store_flag::atomic_max:
-        make_atomic_something.template operator()<OpAtomicSMax, OpAtomicFMaxEXT>();
-        break;
-    case store_flag::atomic_min:
-        make_atomic_something.template operator()<OpAtomicSMin, OpAtomicFMinEXT>();
-        break;
-    }
 }
 
 auto make_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a,
