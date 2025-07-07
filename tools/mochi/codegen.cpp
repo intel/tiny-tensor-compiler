@@ -400,6 +400,23 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
     }
 }
 
+void generate_class_list_yaml(std::ostream &os, objects const &obj) {
+    os << "enum:\n";
+    for (auto &o : obj.enums()) {
+        os << std::format("- {}\n", o->name());
+    }
+    os << "type:\n";
+    for (auto &o : obj.types()) {
+        walk_down<walk_order::pre_order, type, true>(
+            o.get(), [&](type *ty) { os << std::format("- {}\n", ty->name()); });
+    }
+    os << "inst:\n";
+    for (auto &o : obj.insts()) {
+        walk_down<walk_order::pre_order, inst, true>(
+            o.get(), [&](inst *in) { os << std::format("- {}\n", in->name()); });
+    }
+}
+
 void generate_enum_cpp(std::ostream &os, objects const &obj) {
     for (auto &e : obj.enums()) {
         os << std::format("char const* tinytc_{0}_to_string(tinytc_{0}_t val) {{", e->name());

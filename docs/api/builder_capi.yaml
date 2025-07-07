@@ -2,30 +2,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 Builder C-API:
   Common:
-    enum:
-      - tinytc_address_space_t
-      - tinytc_checked_flag_t
-      - tinytc_comp3_t
-      - tinytc_matrix_use_t
-      - tinytc_reduce_mode_t
-      - tinytc_store_flag_t
-      - tinytc_transpose_t
     define:
       - TINYTC_DYNAMIC
-    function:
-      - tinytc_address_space_to_string
-      - tinytc_checked_flag_to_string
-      - tinytc_comp3_to_string
-      - tinytc_matrix_use_to_string
-      - tinytc_reduce_mode_to_string
-      - tinytc_store_flag_to_string
-      - tinytc_transpose_to_string
     struct:
       - tinytc_named_attr
       - tinytc_location
       - tinytc_position
     typedef:
-      - tinytc_address_spaces_t
       - tinytc_attr_t
       - tinytc_func_t
       - tinytc_named_attr_t

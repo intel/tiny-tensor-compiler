@@ -16,6 +16,7 @@ enum class generator {
     api_builder_cpp = 0,
     api_builder_h,
     api_builder_hpp,
+    class_list_yaml,
     enum_cpp,
     enum_h,
     enum_hpp,

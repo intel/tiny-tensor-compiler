@@ -22,6 +22,7 @@ auto lex_generator(std::size_t str_length, char const *str) -> std::optional<gen
         "api_builder_cpp"   { return generator::api_builder_cpp; }
         "api_builder_h"     { return generator::api_builder_h; }
         "api_builder_hpp"   { return generator::api_builder_hpp; }
+        "class_list_yaml"   { return generator::class_list_yaml; }
         "enum_cpp"          { return generator::enum_cpp; }
         "enum_h"            { return generator::enum_h; }
         "enum_hpp"          { return generator::enum_hpp; }

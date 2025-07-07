@@ -19,6 +19,8 @@ auto to_string(generator g) -> char const * {
         return "api_builder_h";
     case generator::api_builder_hpp:
         return "api_builder_hpp";
+    case generator::class_list_yaml:
+        return "class_list_yaml";
     case generator::enum_cpp:
         return "enum_cpp";
     case generator::enum_h:
@@ -62,6 +64,9 @@ void please_do(std::ostream &os, action const &a, std::vector<char const *> cons
                 break;
             case generator::api_builder_hpp:
                 generate_api_builder_hpp(os, *obj);
+                break;
+            case generator::class_list_yaml:
+                generate_class_list_yaml(os, *obj);
                 break;
             case generator::enum_cpp:
                 generate_enum_cpp(os, *obj);

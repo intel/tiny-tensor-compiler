@@ -53,6 +53,8 @@ void generate_api_builder_cpp(std::ostream &os, objects const &obj);
 void generate_api_builder_h(std::ostream &os, objects const &obj);
 void generate_api_builder_hpp(std::ostream &os, objects const &obj);
 
+void generate_class_list_yaml(std::ostream &os, objects const &obj);
+
 void generate_enum_cpp(std::ostream &os, objects const &obj);
 void generate_enum_h(std::ostream &os, objects const &obj);
 void generate_enum_hpp(std::ostream &os, objects const &obj);
