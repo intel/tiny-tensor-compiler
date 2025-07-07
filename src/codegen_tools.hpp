@@ -48,7 +48,6 @@ auto mixed_precision_arithmetic(region_builder &bb, tinytc_type_t result_ty, tin
 auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tinytc_value_t b,
                                       location const &loc) -> tinytc_value_t;
 
-auto get_atomic_store_flag(tinytc_value_t beta) -> std::optional<store_flag>;
 void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_value_t ab,
                  tinytc_value_t beta, tinytc_value_t C, array_view<tinytc_value_t> index_list,
                  location const &loc);

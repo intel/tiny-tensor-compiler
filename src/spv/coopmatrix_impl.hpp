@@ -10,11 +10,15 @@
 #include "spv/defs.hpp"
 #include "tinytc/types.hpp"
 
+#include <functional>
 #include <utility>
 
 namespace tinytc {
 class arith_inst;
 class arith_unary_inst;
+class cooperative_matrix_atomic_update_inst;
+class cooperative_matrix_memory_read_inst;
+class cooperative_matrix_memory_write_inst;
 class cooperative_matrix_reduce_inst;
 } // namespace tinytc
 
@@ -24,6 +28,18 @@ class dope_vector;
 class uniquifier;
 
 class coopmatrix_impl {
+  private:
+    using ld_item_t = std::function<spv_inst *(uniquifier &, tinytc_type_t, spv_inst *)>;
+    using st_item_t =
+        std::function<void(uniquifier &, tinytc_type_t, spv_inst *, spv_inst *, std::int32_t)>;
+
+    auto memory_read(cooperative_matrix_memory_read_inst in, dope_vector const &odv,
+                     spv_inst *operand, spv_inst *pos0, spv_inst *pos1, ld_item_t ld_item)
+        -> spv_inst *;
+    void memory_write(cooperative_matrix_memory_write_inst in, dope_vector const &odv,
+                      spv_inst *val, spv_inst *operand, spv_inst *pos0, spv_inst *pos1,
+                      st_item_t st_item, const std::int32_t max_cols_per_store = 16);
+
   public:
     coopmatrix_impl(uniquifier &unique, core_config const &cfg, gcd_analysis_result g);
     virtual ~coopmatrix_impl() = default;
@@ -34,6 +50,13 @@ class coopmatrix_impl {
     auto cfg() const -> core_config const & { return cfg_; }
     inline void cfg(core_config const &cfg) { cfg_ = cfg; }
 
+    virtual auto atomic_load(cooperative_matrix_atomic_load_inst in, dope_vector const &odv,
+                             spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
+    virtual void atomic_store(cooperative_matrix_atomic_store_inst in, dope_vector const &odv,
+                              spv_inst *val, spv_inst *operand, spv_inst *pos0, spv_inst *pos1);
+    virtual auto atomic_update(cooperative_matrix_atomic_update_inst in, dope_vector const &odv,
+                               spv_inst *val, spv_inst *operand, spv_inst *pos0, spv_inst *pos1)
+        -> spv_inst *;
     virtual auto extract(cooperative_matrix_extract_inst in, spv_inst *mat) -> spv_inst *;
     virtual auto insert(cooperative_matrix_insert_inst in, spv_inst *val, spv_inst *mat)
         -> spv_inst *;
@@ -56,7 +79,6 @@ class coopmatrix_impl {
     virtual auto spv_ty(coopmatrix_type const *ct) -> spv_inst *;
 
   protected:
-    auto spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto spv_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v) -> spv_inst *;

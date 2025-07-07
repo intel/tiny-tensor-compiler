@@ -323,6 +323,33 @@ void inst_converter::operator()(constant_inst in) {
     }
 }
 
+void inst_converter::operator()(cooperative_matrix_atomic_load_inst in) {
+    auto odv = get_dope_vector(in.operand());
+    if (!odv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+    declare(in.result(),
+            matrix_impl().atomic_load(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1())));
+}
+
+void inst_converter::operator()(cooperative_matrix_atomic_store_inst in) {
+    auto odv = get_dope_vector(in.operand());
+    if (!odv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+    matrix_impl().atomic_store(in, *odv, val(in.val()), val(in.operand()), val(in.pos0()),
+                               val(in.pos1()));
+}
+
+void inst_converter::operator()(cooperative_matrix_atomic_update_inst in) {
+    auto odv = get_dope_vector(in.operand());
+    if (!odv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+    declare(in.result(), matrix_impl().atomic_update(in, *odv, val(in.val()), val(in.operand()),
+                                                     val(in.pos0()), val(in.pos1())));
+}
+
 void inst_converter::operator()(cooperative_matrix_extract_inst in) {
     declare(in.result(), matrix_impl().extract(in, val(in.mat())));
 }

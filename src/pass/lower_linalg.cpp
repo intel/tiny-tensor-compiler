@@ -197,23 +197,38 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
     const bool needs_final_cast = coopmatrix_c_ty != coopmatrix_c_acc_ty;
     if (atomic) {
-        auto flag = get_atomic_store_flag(beta);
-        if (!flag) {
-            throw compilation_error(loc, status::ir_invalid_beta);
-        }
-        for (std::int32_t n = 0; n < num_n_blocks; ++n) {
-            auto pos1_offset = bb.create<constant_inst>(n * n_block_size, index_ty, loc);
-            auto pos1 = bb.create<add_inst>(n_block, pos1_offset, index_ty, loc);
-            for (std::int32_t m = 0; m < num_m_blocks; ++m) {
-                auto pos0_offset = bb.create<constant_inst>(m * m_block_size, index_ty, loc);
-                auto pos0 = bb.create<add_inst>(m_block, pos0_offset, index_ty, loc);
-                auto alpha_ab_mn = c_acc[m + n * num_m_blocks];
-                if (needs_final_cast) {
-                    alpha_ab_mn = bb.create<cast_inst>(alpha_ab_mn, coopmatrix_c_ty, loc);
+        auto const make_stores = [&](auto &&make_store) {
+            for (std::int32_t n = 0; n < num_n_blocks; ++n) {
+                auto pos1_offset = bb.create<constant_inst>(n * n_block_size, index_ty, loc);
+                auto pos1 = bb.create<add_inst>(n_block, pos1_offset, index_ty, loc);
+                for (std::int32_t m = 0; m < num_m_blocks; ++m) {
+                    auto pos0_offset = bb.create<constant_inst>(m * m_block_size, index_ty, loc);
+                    auto pos0 = bb.create<add_inst>(m_block, pos0_offset, index_ty, loc);
+                    auto alpha_ab_mn = c_acc[m + n * num_m_blocks];
+                    if (needs_final_cast) {
+                        alpha_ab_mn = bb.create<cast_inst>(alpha_ab_mn, coopmatrix_c_ty, loc);
+                    }
+                    make_store(alpha_ab_mn, pos0, pos1);
                 }
-                bb.create<cooperative_matrix_store_inst>(transpose::N, check_c, *flag, alpha_ab_mn,
-                                                         C, pos0, pos1, loc);
             }
+        };
+        const auto scope = memory_scope::work_group;
+        const auto semantics = memory_semantics::relaxed;
+        constant_inst beta_cst = dyn_cast<constant_inst>(beta->defining_inst());
+        if (beta_cst && beta_cst.is_zero()) {
+            make_stores([&bb, &check_c, &scope, &semantics, &C, &loc](
+                            tinytc_value_t alpha_ab_mn, tinytc_value_t pos0, tinytc_value_t pos1) {
+                bb.create<cooperative_matrix_atomic_store_inst>(
+                    transpose::N, check_c, scope, semantics, alpha_ab_mn, C, pos0, pos1, loc);
+            });
+        } else if (beta_cst && beta_cst.is_identity()) {
+            make_stores([&bb, &check_c, &scope, &semantics, &C, &c_ty, &loc](
+                            tinytc_value_t alpha_ab_mn, tinytc_value_t pos0, tinytc_value_t pos1) {
+                bb.create<cooperative_matrix_atomic_add_inst>(
+                    transpose::N, check_c, scope, semantics, alpha_ab_mn, C, pos0, pos1, c_ty, loc);
+            });
+        } else {
+            throw compilation_error(loc, status::ir_invalid_beta);
         }
     } else {
         for (std::int32_t n = 0; n < num_n_blocks; ++n) {
@@ -237,7 +252,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                         return bb.create<add_inst>(alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc);
                     }
                 }();
-                bb.create<cooperative_matrix_store_inst>(transpose::N, check_c, store_flag::regular,
+                bb.create<cooperative_matrix_store_inst>(transpose::N, check_c,
                                                          alpha_ab_plus_beta_c, C, pos0, pos1, loc);
             }
         }

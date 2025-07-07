@@ -154,14 +154,6 @@ tinytc_checked_flag_rows = tinytc_checked_flag_rows | tinytc_checked_flag_none"
     case %both => 0x3 "Check for out-of-bound rows and cols"
 }
 
-enum @store_flag "Store flag" {
-    case %regular    => 0 "Non-atomic store"
-    case %atomic     => 1 "Atomic store"
-    case %atomic_add => 2 "Atomic fetch add"
-    case %atomic_max => 3 "Atomic fetch max"
-    case %atomic_min => 4 "Atomic fetch min"
-}
-
 enum @memory_scope "Memory scope flag" {
     case %cross_device => 0
     case %device => 1

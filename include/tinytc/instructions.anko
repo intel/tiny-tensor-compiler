@@ -53,14 +53,23 @@ inst @cooperative_matrix_insert "Cooperative matrix insert instruction" {
     ret %result        "result type"
 }
 
-inst @cooperative_matrix_load "Cooperative matrix load instruction" {
-    spmd
+inst @cooperative_matrix_memory_read "Cooperative matrix memory read instruction" {
     prop %t       => @transpose    "transposed load"
     prop %checked => @checked_flag "boundary check"
     op %operand                    "matrix"
     op %pos0                       "row offset"
     op %pos1                       "column offset"
     ret %result                    "result type"
+}
+inst @cooperative_matrix_load : @cooperative_matrix_memory_read
+    "Cooperative matrix load instruction" {
+    spmd
+}
+inst @cooperative_matrix_atomic_load : @cooperative_matrix_memory_read
+    "Cooperative matrix atomic load instruction" {
+    spmd
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
 }
 
 inst @cooperative_matrix_mul_add "Cooperative matrix mul add instruction" {
@@ -98,15 +107,42 @@ inst @cooperative_matrix_scale "Cooperative matrix scale instruction" {
     ret %result "result type"
 }
 
-inst @cooperative_matrix_store "Cooperative matrix store instruction" {
-    spmd
+inst @cooperative_matrix_memory_write "Cooperative matrix memory write instruction" {
     prop %t       => @transpose    "transposed store"
     prop %checked => @checked_flag "boundary check"
-    prop %flag    => @store_flag   "store mode"
     op %val                        "value to store"
     op %operand                    "matrix"
     op %pos0                       "row offset"
     op %pos1                       "column offset"
+}
+inst @cooperative_matrix_atomic_store : @cooperative_matrix_memory_write
+    "Cooperative matrix atomic store instruction" {
+    spmd
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+inst @cooperative_matrix_store : @cooperative_matrix_memory_write
+    "Cooperative matrix store instruction" {
+    spmd
+}
+
+inst @cooperative_matrix_atomic_update : @cooperative_matrix_memory_write
+    "Cooperative matrix atomic update instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+    ret %result                          "atomically updated matrix"
+}
+inst @cooperative_matrix_atomic_add : @cooperative_matrix_atomic_update
+    "Cooperative matrix atomic add instruction" {
+    spmd
+}
+inst @cooperative_matrix_atomic_max : @cooperative_matrix_atomic_update
+    "Cooperative matrix atomic max instruction" {
+    spmd
+}
+inst @cooperative_matrix_atomic_min : @cooperative_matrix_atomic_update
+    "Cooperative matrix atomic min instruction" {
+    spmd
 }
 
 

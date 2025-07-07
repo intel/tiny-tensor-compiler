@@ -175,6 +175,36 @@ void dump_ir_pass::dump_memory_write(memory_write_inst s) {
     *os_ << "]";
 }
 
+void dump_ir_pass::dump_cooperative_matrix_memory_read(cooperative_matrix_memory_read_inst l) {
+    dump_val(l.operand());
+    *os_ << "[";
+    dump_val(l.pos0());
+    *os_ << ",";
+    dump_val(l.pos1());
+    *os_ << "] : ";
+    visit(*this, *l.result().ty());
+}
+
+void dump_ir_pass::dump_cooperative_matrix_memory_write(cooperative_matrix_memory_write_inst s) {
+    dump_val(s.val());
+    *os_ << ", ";
+    dump_val(s.operand());
+    *os_ << "[";
+    dump_val(s.pos0());
+    *os_ << ",";
+    dump_val(s.pos1());
+    *os_ << "]";
+}
+
+void dump_ir_pass::dump_transpose_checked(transpose t, checked_flag c) {
+    if (t != transpose::N) {
+        *os_ << "." << to_string(t);
+    }
+    if (c != checked_flag::none) {
+        *os_ << "." << to_string(c);
+    }
+}
+
 void dump_ir_pass::operator()(alloca_inst a) {
     dump_val(a.result());
     *os_ << " = alloca : ";
@@ -235,7 +265,8 @@ void dump_ir_pass::operator()(atomic_store_inst s) {
 }
 
 void dump_ir_pass::operator()(atomic_update_inst s) {
-    *os_ << to_string(s.get().type_id());
+    dump_val(s.result());
+    *os_ << " = " << to_string(s.get().type_id());
     dump_scope_sem(s.scope(), s.semantics());
     *os_ << " ";
     dump_memory_write(s);
@@ -314,6 +345,34 @@ void dump_ir_pass::operator()(cooperative_matrix_apply_inst c) {
     dump_region(c.body());
 }
 
+void dump_ir_pass::operator()(cooperative_matrix_atomic_load_inst c) {
+    dump_val(c.result());
+    *os_ << " = cooperative_matrix_atomic_load";
+    dump_transpose_checked(c.t(), c.checked());
+    dump_scope_sem(c.scope(), c.semantics());
+    *os_ << " ";
+    dump_cooperative_matrix_memory_read(c);
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_atomic_store_inst s) {
+    *os_ << "cooperative_matrix_atomic_store";
+    dump_transpose_checked(s.t(), s.checked());
+    dump_scope_sem(s.scope(), s.semantics());
+    *os_ << " ";
+    dump_cooperative_matrix_memory_write(s);
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_atomic_update_inst s) {
+    dump_val(s.result());
+    *os_ << " = " << to_string(s.get().type_id());
+    dump_transpose_checked(s.t(), s.checked());
+    dump_scope_sem(s.scope(), s.semantics());
+    *os_ << " ";
+    dump_cooperative_matrix_memory_write(s);
+    *os_ << " : ";
+    visit(*this, *s.result().ty());
+}
+
 void dump_ir_pass::operator()(cooperative_matrix_extract_inst c) {
     dump_val(c.result());
     *os_ << " = cooperative_matrix_extract ";
@@ -335,20 +394,9 @@ void dump_ir_pass::operator()(cooperative_matrix_insert_inst c) {
 void dump_ir_pass::operator()(cooperative_matrix_load_inst c) {
     dump_val(c.result());
     *os_ << " = cooperative_matrix_load";
-    if (c.t() != transpose::N) {
-        *os_ << "." << to_string(c.t());
-    }
-    if (c.checked() != checked_flag::none) {
-        *os_ << "." << to_string(c.checked());
-    }
+    dump_transpose_checked(c.t(), c.checked());
     *os_ << " ";
-    dump_val(c.operand());
-    *os_ << "[";
-    dump_val(c.pos0());
-    *os_ << ",";
-    dump_val(c.pos1());
-    *os_ << "] : ";
-    visit(*this, *c.result().ty());
+    dump_cooperative_matrix_memory_read(c);
 }
 
 void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst c) {
@@ -399,24 +447,9 @@ void dump_ir_pass::operator()(cooperative_matrix_scale_inst c) {
 
 void dump_ir_pass::operator()(cooperative_matrix_store_inst c) {
     *os_ << "cooperative_matrix_store";
-    if (c.t() != transpose::N) {
-        *os_ << "." << to_string(c.t());
-    }
-    if (c.checked() != checked_flag::none) {
-        *os_ << "." << to_string(c.checked());
-    }
-    if (c.flag() != store_flag::regular) {
-        *os_ << '.' << to_string(c.flag());
-    }
+    dump_transpose_checked(c.t(), c.checked());
     *os_ << " ";
-    dump_val(c.val());
-    *os_ << ", ";
-    dump_val(c.operand());
-    *os_ << "[";
-    dump_val(c.pos0());
-    *os_ << ",";
-    dump_val(c.pos1());
-    *os_ << "]";
+    dump_cooperative_matrix_memory_write(c);
 }
 
 void dump_ir_pass::operator()(cumsum_inst in) {

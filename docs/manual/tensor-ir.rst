@@ -1856,6 +1856,64 @@ Example:
     }
     ; The entries of %1 are given by %1[i,j] = exp(%0[i,j]) if i <= j else 0
 
+Cooperative matrix atomic load
+..............................
+
+.. code:: abnf
+
+    value-instruction =/ "cooperative_matrix_atomic_load" [transpose] [checked-flag]
+                                                          [memory_scope] [memory_semantics]
+                         local-identifier "[" local-identifier "," local-identifier "]"
+                         ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Atomic matrix load. Atomic is meant component-wise, there is no atomicity w.r.t. to the whole matrix.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+Except for atomicity, the instruction is idential to the :ref:`cooperative matrix load` instruction.
+
+Cooperative matrix atomic store
+...............................
+
+.. code:: abnf
+
+    instruction     =/ "cooperative_matrix_atomic_store" [transpose] [checked-flag]
+                                                         [memory_scope] [memory_semantics]
+                       local-identifier "," local-identifier
+                       "[" local-identifier "," local-identifier "]"
+
+Overview
+~~~~~~~~
+
+Atomic matrix store. Atomic is meant component-wise, there is no atomicity w.r.t. to the whole matrix.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+Except for atomicity, the instruction is idential to the :ref:`cooperative matrix store` instruction.
+
+Cooperative matrix atomic update
+...............................
+
+.. code:: abnf
+
+    cooperative-matrix-atomic-update-op = "cooperative_matrix_atomic_add" /
+                                          "cooperative_matrix_atomic_max" /
+                                          "cooperative_matrix_atomic_min"
+    value-instruction =/ cooperative-matrix-atomic-update-op [transpose] [checked-flag]
+                                                             [memory_scope] [memory_semantics]
+                         local-identifier "," local-identifier
+                         "[" local-identifier "," local-identifier "]"
+                         ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Atomic matrix update. Atomic is meant component-wise, there is no atomicity w.r.t. to the whole matrix.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+See :ref:`cooperative matrix store` instruction for further description.
+
 Cooperative matrix extract
 ..........................
 
@@ -1911,6 +1969,8 @@ Op.-No. Type             Description
 2       coopmatrix-type  Cooperative matrix
 3       integer-constant Index into work-item vector
 ======= ================ ===========================
+
+.. _cooperative matrix load:
 
 Cooperative matrix load
 .......................
@@ -2128,12 +2188,14 @@ Restrictions
 * :math:`\text{type}(scalar) = \text{component_type}(matrix)`
 * :math:`\text{type}(result) = \text{type}(matrix)`
 
+.. _cooperative matrix store:
+
 Cooperative matrix store
 ........................
 
 .. code:: abnf
 
-    instruction     =/ "cooperative_matrix_store" [transpose] [checked-flag] [store-flag]
+    instruction     =/ "cooperative_matrix_store" [transpose] [checked-flag]
                        local-identifier "," local-identifier
                        "[" local-identifier "," local-identifier "]"
 
@@ -2169,12 +2231,6 @@ Flag            Description
 .n.both_checked .n.rows_checked + .n.cols_checked
 .t.both_checked .t.rows_checked + .t.cols_checked
 =============== ==============================================
-
-The store is atomic when the atomic flag is set with relaxed memory ordering.
-When the atomic_add flag is set, the coopmatrix is added to the memref atomically.
-
-When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
-for the the real and imaginary separately.
 
 Operands
 ~~~~~~~~

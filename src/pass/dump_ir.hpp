@@ -49,6 +49,9 @@ class dump_ir_pass {
     void operator()(compare_inst c);
     void operator()(constant_inst c);
     void operator()(cooperative_matrix_apply_inst c);
+    void operator()(cooperative_matrix_atomic_load_inst c);
+    void operator()(cooperative_matrix_atomic_store_inst c);
+    void operator()(cooperative_matrix_atomic_update_inst c);
     void operator()(cooperative_matrix_extract_inst c);
     void operator()(cooperative_matrix_insert_inst c);
     void operator()(cooperative_matrix_load_inst c);
@@ -100,6 +103,9 @@ class dump_ir_pass {
     void dump_memory_read(memory_read_inst l);
     void dump_memory_write(memory_write_inst s);
     void dump_scope_sem(memory_scope scope, memory_semantics semantics);
+    void dump_cooperative_matrix_memory_read(cooperative_matrix_memory_read_inst l);
+    void dump_cooperative_matrix_memory_write(cooperative_matrix_memory_write_inst l);
+    void dump_transpose_checked(transpose t, checked_flag c);
 
     template <typename Iterator, typename Action>
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {

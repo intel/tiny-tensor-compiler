@@ -91,9 +91,6 @@ lex:
         ".n"                { adv_loc(); return parser::make_TRANSPOSE(transpose::N, loc_); }
         ".t"                { adv_loc(); return parser::make_TRANSPOSE(transpose::T, loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
-        ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
-        ".atomic_max"       { adv_loc(); return parser::make_ATOMIC_MAX(loc_); }
-        ".atomic_min"       { adv_loc(); return parser::make_ATOMIC_MIN(loc_); }
         "init"              { adv_loc(); return parser::make_INIT(loc_); }
         "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
@@ -185,14 +182,19 @@ lex:
         "hadamard"           { adv_loc(); return parser::make_HADAMARD(loc_); }
         "cast"               { adv_loc(); return parser::make_CAST(loc_); }
         "constant"           { adv_loc(); return parser::make_CONSTANT(loc_); }
-        "cooperative_matrix_apply"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_APPLY(loc_); }
-        "cooperative_matrix_extract"  { adv_loc(); return parser::make_COOPERATIVE_MATRIX_EXTRACT(loc_); }
-        "cooperative_matrix_insert"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_INSERT(loc_); }
-        "cooperative_matrix_load"     { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
-        "cooperative_matrix_mul_add"  { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
-        "cooperative_matrix_prefetch" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_PREFETCH(loc_); }
-        "cooperative_matrix_scale"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); }
-        "cooperative_matrix_store"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_STORE(loc_); }
+        "cooperative_matrix_apply"        { adv_loc(); return parser::make_COOPERATIVE_MATRIX_APPLY(loc_); }
+        "cooperative_matrix_atomic_add"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_ADD(loc_); }
+        "cooperative_matrix_atomic_load"  { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_LOAD(loc_); }
+        "cooperative_matrix_atomic_max"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_MAX(loc_); }
+        "cooperative_matrix_atomic_min"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_MIN(loc_); }
+        "cooperative_matrix_atomic_store" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_STORE(loc_); }
+        "cooperative_matrix_extract"      { adv_loc(); return parser::make_COOPERATIVE_MATRIX_EXTRACT(loc_); }
+        "cooperative_matrix_insert"       { adv_loc(); return parser::make_COOPERATIVE_MATRIX_INSERT(loc_); }
+        "cooperative_matrix_load"         { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
+        "cooperative_matrix_mul_add"      { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
+        "cooperative_matrix_prefetch"     { adv_loc(); return parser::make_COOPERATIVE_MATRIX_PREFETCH(loc_); }
+        "cooperative_matrix_scale"        { adv_loc(); return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); }
+        "cooperative_matrix_store"        { adv_loc(); return parser::make_COOPERATIVE_MATRIX_STORE(loc_); }
         "expand"             { adv_loc(); return parser::make_EXPAND(loc_); }
         "fuse"               { adv_loc(); return parser::make_FUSE(loc_); }
         "load"               { adv_loc(); return parser::make_LOAD(loc_); }

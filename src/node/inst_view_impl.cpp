@@ -224,7 +224,7 @@ void cooperative_matrix_insert_inst::setup_and_check() {
     }
 }
 
-void cooperative_matrix_load_inst::setup_and_check() {
+void cooperative_matrix_memory_read_inst::setup_and_check() {
     auto rt = dyn_cast<coopmatrix_type>(result().ty());
     if (!rt) {
         throw compilation_error(loc(), status::ir_expected_coopmatrix);
@@ -240,6 +240,13 @@ void cooperative_matrix_load_inst::setup_and_check() {
 
     check_index_ty(loc(), pos0());
     check_index_ty(loc(), pos1());
+}
+
+void cooperative_matrix_atomic_load_inst::setup_and_check() {
+    cooperative_matrix_memory_read_inst::setup_and_check();
+}
+void cooperative_matrix_load_inst::setup_and_check() {
+    cooperative_matrix_memory_read_inst::setup_and_check();
 }
 
 void cooperative_matrix_mul_add_inst::setup_and_check() {
@@ -353,7 +360,7 @@ void cooperative_matrix_scale_inst::setup_and_check() {
     }
 }
 
-void cooperative_matrix_store_inst::setup_and_check() {
+void cooperative_matrix_memory_write_inst::setup_and_check() {
     auto vt = get_coopmatrix_type(loc(), val());
     auto ot = get_memref_type(loc(), operand());
     if (vt->component_ty() != ot->element_ty()) {
@@ -365,6 +372,28 @@ void cooperative_matrix_store_inst::setup_and_check() {
 
     check_index_ty(loc(), pos0());
     check_index_ty(loc(), pos1());
+}
+void cooperative_matrix_atomic_store_inst::setup_and_check() {
+    cooperative_matrix_memory_write_inst::setup_and_check();
+}
+void cooperative_matrix_store_inst::setup_and_check() {
+    cooperative_matrix_memory_write_inst::setup_and_check();
+}
+void cooperative_matrix_atomic_update_inst::setup_and_check() {
+    cooperative_matrix_memory_write_inst::setup_and_check();
+
+    if (val().ty() != result().ty()) {
+        throw compilation_error(loc(), {&val()}, status::ir_operand_type_must_match_return_type);
+    }
+}
+void cooperative_matrix_atomic_add_inst::setup_and_check() {
+    cooperative_matrix_atomic_update_inst::setup_and_check();
+}
+void cooperative_matrix_atomic_max_inst::setup_and_check() {
+    cooperative_matrix_atomic_update_inst::setup_and_check();
+}
+void cooperative_matrix_atomic_min_inst::setup_and_check() {
+    cooperative_matrix_atomic_update_inst::setup_and_check();
 }
 
 void expand_inst::setup_and_check() {

@@ -57,15 +57,16 @@ auto coopmatrix_impl::insert(cooperative_matrix_insert_inst in, spv_inst *val, s
     return insert(matl, val, mat, idx);
 }
 
-auto coopmatrix_impl::load(cooperative_matrix_load_inst in, dope_vector const &odv,
-                           spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
+auto coopmatrix_impl::memory_read(cooperative_matrix_memory_read_inst in, dope_vector const &odv,
+                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1,
+                                  ld_item_t ld_item) -> spv_inst * {
     auto ot = get_memref_type(in.operand());
     auto rt = get_coopmatrix_type(in.result());
     auto pointer_ty = get_spv_ty(*unique_, ot);
 
     auto layout = get_layout(cfg(), rt);
     auto matrix_ty = spv_ty(layout);
-    auto interface_ty = spv_interface_ty(layout);
+    auto interface_ty = get_spv_ty_non_coopmatrix(*unique_, layout.sty);
 
     auto shape = std::array<spv_inst *, 2u>{odv.shape(0), odv.shape(1)};
     auto stride = std::array<spv_inst *, 2u>{odv.stride(0), odv.stride(1)};
@@ -84,7 +85,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst in, dope_vector const &o
     const auto ld = [&](tinytc_spv_mod &mod) -> spv_inst * {
         auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, walker.offset(),
                                                          std::vector<spv_inst *>{});
-        return mod.add<OpLoad>(interface_ty, pointer);
+        return ld_item(*unique_, layout.sty, pointer);
     };
     const auto ld_chk = [&](tinytc_spv_mod &) {
         return make_conditional_execution(*unique_, interface_ty, walker.col_ok(), ld,
@@ -125,8 +126,9 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst in, dope_vector const &o
     return result;
 }
 
-void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const &odv, spv_inst *val,
-                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) {
+void coopmatrix_impl::memory_write(cooperative_matrix_memory_write_inst in, dope_vector const &odv,
+                                   spv_inst *val, spv_inst *operand, spv_inst *pos0, spv_inst *pos1,
+                                   st_item_t st_item, const std::int32_t max_cols_per_store) {
     auto ot = get_memref_type(in.operand());
     auto vt = get_coopmatrix_type(in.val());
 
@@ -144,8 +146,10 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
                                 shape[1], stride[0], stride[1], in.checked());
 
     const std::int32_t cols_per_store = [&]() -> std::int32_t {
+        if (max_cols_per_store == 1) {
+            return 1;
+        }
         std::int32_t cols_per_store = 1;
-        const std::int32_t max_cols_per_store = 16;
         const bool sty_ok = !isa<complex_type>(*layout.sty);
         const bool transpose_ok = in.t() == transpose::T;
         const bool checked_ok =
@@ -185,8 +189,7 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
             val_ij = extract(layout, val, walker.component_no());
         }
 
-        // make_store(*unique_, in.flag(), layout.sty, ot->addrspace(), pointer, val_ij, in.loc());
-        mod.add<OpStore>(pointer, val_ij);
+        st_item(*unique_, layout.sty, pointer, val_ij, walker.component_no());
     };
     auto const st_block = [&](tinytc_spv_mod &mod) {
         for (std::int64_t u = 0; u < layout.length / layout.blocks; u += cols_per_store) {
@@ -216,6 +219,82 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
             walker.advance_block();
         }
     }
+}
+
+auto coopmatrix_impl::atomic_load(cooperative_matrix_atomic_load_inst in, dope_vector const &odv,
+                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
+    auto ot = get_memref_type(in.operand());
+    return memory_read(in, odv, operand, pos0, pos1,
+                       [&](uniquifier &unique, tinytc_type_t layout_sty, spv_inst *pointer) {
+                           return make_atomic_load(unique, in.scope(), in.semantics(), layout_sty,
+                                                   ot->addrspace(), pointer, in.loc());
+                       });
+}
+
+void coopmatrix_impl::atomic_store(cooperative_matrix_atomic_store_inst in, dope_vector const &odv,
+                                   spv_inst *val, spv_inst *operand, spv_inst *pos0,
+                                   spv_inst *pos1) {
+    auto ot = get_memref_type(in.operand());
+    memory_write(
+        in, odv, val, operand, pos0, pos1,
+        [&](uniquifier &unique, tinytc_type_t layout_sty, spv_inst *pointer, spv_inst *val_ij,
+            std::int32_t) {
+            make_atomic_store(unique, in.scope(), in.semantics(), layout_sty, ot->addrspace(),
+                              pointer, val_ij, in.loc());
+        },
+        1);
+}
+
+auto coopmatrix_impl::atomic_update(cooperative_matrix_atomic_update_inst in,
+                                    dope_vector const &odv, spv_inst *val, spv_inst *operand,
+                                    spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
+    auto ot = get_memref_type(in.operand());
+
+    auto vt = get_coopmatrix_type(in.val());
+    auto layout = get_layout(cfg(), vt);
+    auto matrix_ty = spv_ty(layout);
+
+    spv_inst *result = unique_->mod().add<OpUndef>(matrix_ty);
+    auto make_st_item = [&]() -> st_item_t {
+        auto make = [&]<typename SpvIOp, typename SpvFOp>() -> st_item_t {
+            return [&](uniquifier &unique, tinytc_type_t layout_sty, spv_inst *pointer,
+                       spv_inst *val_ij, std::int32_t component_no) {
+                auto up = make_atomic_update<SpvIOp, SpvFOp>(unique, in.scope(), in.semantics(),
+                                                             layout_sty, ot->addrspace(), pointer,
+                                                             val_ij, in.loc());
+                result = insert(layout, up, result, component_no);
+            };
+        };
+        switch (in.get().type_id()) {
+        case IK::IK_cooperative_matrix_atomic_add:
+            return make.template operator()<OpAtomicIAdd, OpAtomicFAddEXT>();
+        case IK::IK_cooperative_matrix_atomic_max:
+            return make.template operator()<OpAtomicSMax, OpAtomicFMaxEXT>();
+        case IK::IK_cooperative_matrix_atomic_min:
+            return make.template operator()<OpAtomicSMin, OpAtomicFMinEXT>();
+        default:
+            break;
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    memory_write(in, odv, val, operand, pos0, pos1, make_st_item(), 1);
+    return result;
+}
+
+auto coopmatrix_impl::load(cooperative_matrix_load_inst in, dope_vector const &odv,
+                           spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
+    return memory_read(in, odv, operand, pos0, pos1,
+                       [&](uniquifier &unique, tinytc_type_t layout_sty, spv_inst *pointer) {
+                           auto interface_ty = get_spv_ty_non_coopmatrix(unique, layout_sty);
+                           return unique.mod().add<OpLoad>(interface_ty, pointer);
+                       });
+}
+
+void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const &odv, spv_inst *val,
+                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) {
+    memory_write(in, odv, val, operand, pos0, pos1,
+                 [&](uniquifier &unique, tinytc_type_t, spv_inst *pointer, spv_inst *val_ij,
+                     std::int32_t) { unique.mod().add<OpStore>(pointer, val_ij); });
 }
 
 auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, spv_inst *b,
@@ -615,10 +694,6 @@ auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
                                                       init_vector());
 }
 
-auto coopmatrix_impl::spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst * {
-    return get_spv_ty_non_coopmatrix(*unique_, layout.sty);
-}
-
 auto coopmatrix_impl::spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst * {
     if (layout.ops_per_chan > 1) {
         if (layout.ops_per_chan * size(layout.sty) != 4) {
@@ -631,7 +706,7 @@ auto coopmatrix_impl::spv_storage_ty(coopmatrix_layout const &layout) -> spv_ins
 
 auto coopmatrix_impl::spv_ty(coopmatrix_layout const &layout) -> spv_inst * {
     if (layout.length == 1) {
-        return spv_interface_ty(layout);
+        return get_spv_ty_non_coopmatrix(*unique_, layout.sty);
     }
     const auto length =
         static_cast<int>(component_count(layout.sty)) * layout.length / layout.ops_per_chan;
@@ -648,7 +723,7 @@ auto coopmatrix_impl::extract(coopmatrix_layout const &layout, spv_inst *mat, Li
     if (layout.length == 1) {
         return mat;
     }
-    const auto ty = spv_interface_ty(layout);
+    const auto ty = get_spv_ty_non_coopmatrix(*unique_, layout.sty);
     auto &mod = unique_->mod();
     if (isa<complex_type>(*layout.sty)) {
         const auto storage_ty = spv_storage_ty(layout);
@@ -688,7 +763,8 @@ auto coopmatrix_impl::insert(coopmatrix_layout const &layout, spv_inst *val, spv
             throw status::internal_compiler_error;
         }
         const auto storage_ty = spv_storage_ty(layout);
-        const auto channels_ty = unique_->vec_ty(spv_interface_ty(layout), layout.ops_per_chan);
+        const auto channels_ty =
+            unique_->vec_ty(get_spv_ty_non_coopmatrix(*unique_, layout.sty), layout.ops_per_chan);
         const auto entry_no = std::vector{v / layout.ops_per_chan};
         spv_inst *channels = layout.length > layout.ops_per_chan
                                  ? mod.add<OpCompositeExtract>(storage_ty, mat, entry_no)

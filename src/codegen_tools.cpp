@@ -161,17 +161,6 @@ auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tiny
     return bb.create<cooperative_matrix_scale_inst>(a, b, bt, loc);
 }
 
-auto get_atomic_store_flag(tinytc_value_t beta) -> std::optional<store_flag> {
-    constant_inst beta_cst = dyn_cast<constant_inst>(beta->defining_inst());
-    if (beta_cst) {
-        if (beta_cst.is_zero()) {
-            return store_flag::atomic;
-        } else if (beta_cst.is_identity()) {
-            return store_flag::atomic_add;
-        }
-    }
-    return std::nullopt;
-}
 void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_value_t ab,
                  tinytc_value_t beta, tinytc_value_t C, array_view<tinytc_value_t> index_list,
                  location const &loc) {

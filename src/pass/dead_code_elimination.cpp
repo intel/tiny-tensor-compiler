@@ -30,9 +30,12 @@ auto dead_code_analysis::operator()(inst_view in) -> bool {
      *
      * - More than one child region (if, for, foreach, parallel, ...)
      * - Instruction does not have results (barrier, GEMM, GER, ...)
+     * - Atomic update
      *
      */
-    const bool has_side_effects = in.get().num_child_regions() > 0 || in.get().num_results() == 0;
+    const bool has_side_effects = in.get().num_child_regions() > 0 || in.get().num_results() == 0 ||
+                                  isa<atomic_update_inst>(in.get()) ||
+                                  isa<cooperative_matrix_atomic_update_inst>(in.get());
 
     bool any_result_has_uses = false;
     for (auto &res : in.get().results()) {
