@@ -171,6 +171,7 @@ lex:
 
         // instructions
         "alloca"             { adv_loc(); return parser::make_ALLOCA(loc_); }
+        "atomic_load"        { adv_loc(); return parser::make_ATOMIC_LOAD(loc_); }
         "atomic_store"       { adv_loc(); return parser::make_ATOMIC_STORE(loc_); }
         "atomic_add"         { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
         "atomic_max"         { adv_loc(); return parser::make_ATOMIC_MAX(loc_); }

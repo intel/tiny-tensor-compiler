@@ -142,6 +142,7 @@
 
 %token
     ALLOCA                        "alloca"
+    ATOMIC_LOAD                   "atomic_load"
     ATOMIC_STORE                  "atomic_store"
     ATOMIC_ADD                    "atomic_add"
     ATOMIC_MAX                    "atomic_max"
@@ -979,6 +980,17 @@ valued_inst:
         });
     }
 ;
+
+valued_inst:
+    ATOMIC_LOAD memory_scope memory_semantics var LSQBR optional_value_list RSQBR COLON data_type {
+        yytry(ctx, [&] {
+            $$ = atomic_load_inst::create($memory_scope, $memory_semantics, std::move($var),
+                                          std::move($optional_value_list), std::move($data_type),
+                                          @valued_inst);
+        });
+    }
+;
+
 
 instruction:
     STORE var[a] COMMA var[b] LSQBR optional_value_list RSQBR {

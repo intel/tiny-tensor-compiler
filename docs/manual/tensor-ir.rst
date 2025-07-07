@@ -1017,22 +1017,55 @@ im   complex-type                  Extract imaginary part
 re   complex-type                  Extract real part
 ==== ============================= =============================
 
+Atomic load
+...........
+
+.. code:: abnf
+
+    value-instruction =/ "atomic_load" [memory_scope] [memory_semantics]
+                                       local-identifier "[" [local-identifier-list] "]"
+                                       ":" scalar-type
+    scope             =  ".cross_device" /
+                         ".device" /
+                         ".work_group" /
+                         ".subgroup"
+    memory_semantics  =  ".relaxed" /
+                         ".acquire" /
+                         ".release" /
+                         ".acquire_release" /
+                         ".sequentially_consistent"
+
+Overview
+~~~~~~~~
+
+Load the element given by the index list from a memref atomically.
+The number of indices must match the order of the memref
+and a single index must be given for a group.
+
+The store is atomic and the default scope is "work_group" and the default memory semantics is "relaxed".
+
+Operands
+~~~~~~~~~
+
+======= ======================== ===========
+Op.-No. Type                     Description
+======= ======================== ===========
+1       memref-type / group-type tensor
+2...    index                    index list
+======= ======================== ===========
+
+Returns
+~~~~~~~
+
+A value of the memref's element type.
+
 Atomic store
 ............
 
 .. code:: abnf
 
-    instruction     =/ "atomic_store" [scope] [memory_semantics] local-identifier ","
+    instruction     =/ "atomic_store" [memory_scope] [memory_semantics] local-identifier ","
                                       local-identifier "[" [local-identifier-list] "]"
-    scope            =  ".cross_device" /
-                        ".device" /
-                        ".work_group" /
-                        ".subgroup"
-    memory_semantics =  ".relaxed" /
-                        ".acquire" /
-                        ".release" /
-                        ".acquire_release" /
-                        ".sequentially_consistent"
 
 Overview
 ~~~~~~~~
@@ -1040,7 +1073,7 @@ Overview
 Store a scalar value (first operand) in a memref (second operand) at the position given by the index list.
 The number of indices must match the order of the memref.
 
-The store is atomic and the default scope is "work_group" and the default memory semantics are "relaxed".
+The store is atomic and the default scope is "work_group" and the default memory semantics is "relaxed".
 
 When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
 for the the real and imaginary separately.
@@ -1069,7 +1102,7 @@ Atomic update
     atomic-update-op  =  "atomic_add" /
                          "atomic_min" /
                          "atomic_max"
-    value-instruction =/ atomic-update-scope [scope] [memory_semantics] local-identifier ","
+    value-instruction =/ atomic-update-scope [memory_scope] [memory_semantics] local-identifier ","
                                              local-identifier "[" [local-identifier-list] "]"
                                              ":" number-type
 
@@ -1083,7 +1116,7 @@ element type.
 The following steps are done atomically:
 The value at the memory location is fetched, the fetched value is updated with the fetched value,
 and the resulting value is stored at the memory location.
-The default scope is "work_group" and the default memory semantics are "relaxed".
+The default scope is "work_group" and the default memory semantics is "relaxed".
 
 When storing a complex value the update may be pseudo-atomic, meaning that an atomic update is used
 for the the real and imaginary separately.

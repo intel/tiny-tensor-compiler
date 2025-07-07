@@ -31,6 +31,9 @@ auto get_last_label(tinytc_spv_mod &mod) -> spv_inst *;
 
 auto split_re_im(uniquifier &unique, tinytc_type_t val_ty, address_space as, spv_inst *pointer,
                  spv_inst *value) -> std::array<std::array<spv_inst *, 2u>, 2u>;
+auto make_atomic_load(uniquifier &unique, memory_scope scope, memory_semantics semantics,
+                      tinytc_type_t result_ty, address_space as, spv_inst *pointer,
+                      location const &loc) -> spv_inst *;
 void make_atomic_store(uniquifier &unique, memory_scope scope, memory_semantics semantics,
                        tinytc_type_t val_ty, address_space as, spv_inst *pointer, spv_inst *value,
                        location const &loc);
@@ -77,15 +80,13 @@ auto make_atomic_update(uniquifier &unique, memory_scope scope, memory_semantics
     auto c_semantics = unique.constant(static_cast<std::int32_t>(semantics));
     if (isa<complex_type>(*val_ty)) {
         auto re_im = split_re_im(unique, val_ty, as, pointer, value);
-        auto component_sty = component_type(val_ty);
-        auto float_ty = get_spv_ty_non_coopmatrix(unique, component_sty);
-        auto re_up = mod.add<SpvFOp>(float_ty, re_im[0][0], c_scope, c_semantics, re_im[0][1]);
-        auto im_up = mod.add<SpvFOp>(float_ty, re_im[1][0], c_scope, c_semantics, re_im[1][1]);
+        auto float_ty = component_type(val_ty);
+        auto spv_float_ty = get_spv_ty_non_coopmatrix(unique, float_ty);
+        auto re = mod.add<SpvFOp>(spv_float_ty, re_im[0][0], c_scope, c_semantics, re_im[0][1]);
+        auto im = mod.add<SpvFOp>(spv_float_ty, re_im[1][0], c_scope, c_semantics, re_im[1][1]);
         auto dummy = mod.add<OpUndef>(result_ty);
-        auto tmp =
-            mod.add<OpCompositeInsert>(result_ty, re_up, dummy, std::vector<LiteralInteger>{0});
-        return mod.add<OpCompositeInsert>(result_ty, im_up, tmp, std::vector<LiteralInteger>{1});
-
+        auto tmp = mod.add<OpCompositeInsert>(result_ty, re, dummy, std::vector<LiteralInteger>{0});
+        return mod.add<OpCompositeInsert>(result_ty, im, tmp, std::vector<LiteralInteger>{1});
     } else if (isa<float_type>(*val_ty)) {
         return mod.add<SpvFOp>(result_ty, pointer, c_scope, c_semantics, value);
     } else if (isa<integer_type>(*val_ty)) {

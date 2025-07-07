@@ -40,6 +40,7 @@ class dump_ir_pass {
     void operator()(alloca_inst a);
     void operator()(arith_inst a);
     void operator()(arith_unary_inst a);
+    void operator()(atomic_load_inst l);
     void operator()(atomic_store_inst s);
     void operator()(atomic_update_inst s);
     void operator()(axpby_inst a);
@@ -59,7 +60,7 @@ class dump_ir_pass {
     void operator()(cumsum_inst a);
     void operator()(expand_inst e);
     void operator()(fuse_inst f);
-    void operator()(load_inst e);
+    void operator()(load_inst l);
     void operator()(lifetime_stop_inst l);
     void operator()(gemm_inst g);
     void operator()(gemv_inst g);
@@ -96,7 +97,9 @@ class dump_ir_pass {
     void dump_region(tinytc_region &reg);
     void dump_blas_a2(blas_a2_inst g);
     void dump_blas_a3(blas_a3_inst g);
+    void dump_memory_read(memory_read_inst l);
     void dump_memory_write(memory_write_inst s);
+    void dump_scope_sem(memory_scope scope, memory_semantics semantics);
 
     template <typename Iterator, typename Action>
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {

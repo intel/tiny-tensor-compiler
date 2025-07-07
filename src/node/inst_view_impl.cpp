@@ -468,32 +468,37 @@ auto if_inst::is_otherwise_empty() -> bool { return otherwise().insts().empty();
 
 void lifetime_stop_inst::setup_and_check() {}
 
-void load_inst::setup_and_check() {
-    auto ty = result().ty();
+void memory_read_inst::setup_and_check() {
+    if (auto mr = dyn_cast<memref_type>(operand().ty()); mr) {
+        if (mr->element_ty() != result().ty()) {
+            throw compilation_error(loc(), {&operand()},
+                                    status::ir_operand_type_must_match_return_type);
+        }
+        if (mr->dim() != static_cast<std::int64_t>(index_list().size())) {
+            throw compilation_error(loc(), status::ir_invalid_number_of_indices);
+        }
+    } else {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+}
 
-    visit(
-        overloaded{[&](group_type &g) {
-                       if (g.element_ty() != ty) {
-                           throw compilation_error(loc(), {&operand()},
-                                                   status::ir_operand_type_must_match_return_type);
-                       }
-                       if (static_cast<std::int64_t>(index_list().size()) != 1) {
-                           throw compilation_error(loc(), status::ir_invalid_number_of_indices);
-                       }
-                   },
-                   [&](memref_type &m) {
-                       if (m.element_ty() != ty) {
-                           throw compilation_error(loc(), {&operand()},
-                                                   status::ir_operand_type_must_match_return_type);
-                       }
-                       if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
-                           throw compilation_error(loc(), status::ir_invalid_number_of_indices);
-                       }
-                   },
-                   [&](tinytc_type &) {
-                       throw compilation_error(loc(), status::ir_expected_memref_or_group);
-                   }},
-        *operand().ty());
+void atomic_load_inst::setup_and_check() { memory_read_inst::setup_and_check(); }
+void load_inst::setup_and_check() {
+    if (!isa<group_type>(*operand().ty()) && !isa<memref_type>(*operand().ty())) {
+        throw compilation_error(loc(), {&operand()}, status::ir_expected_memref_or_group);
+    }
+
+    if (auto gr = dyn_cast<group_type>(operand().ty()); gr) {
+        if (gr->element_ty() != result().ty()) {
+            throw compilation_error(loc(), {&operand()},
+                                    status::ir_operand_type_must_match_return_type);
+        }
+        if (static_cast<std::int64_t>(index_list().size()) != 1) {
+            throw compilation_error(loc(), status::ir_invalid_number_of_indices);
+        }
+    } else {
+        memory_read_inst::setup_and_check();
+    }
 }
 
 void parallel_inst::setup_and_check() {

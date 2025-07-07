@@ -138,12 +138,16 @@ inst @lifetime_stop "Lifetime stop instruction" {
     op %object "stack object whose lifetime ends"
 }
 
-
-inst @load "Load instruction" {
+inst @memory_read "Memory read instruction" {
     op %operand     "tensor or group of tensors"
     op* %index_list "indices"
     ret %result     "result type"
 }
+inst @atomic_load : @memory_read "Atomic load instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+inst @load : @memory_read "Load instruction" {}
 
 inst @parallel "Parallel instruction" {
     collective

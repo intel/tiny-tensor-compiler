@@ -156,6 +156,15 @@ void dump_ir_pass::dump_blas_a3(blas_a3_inst g) {
     dump_val(g.C());
 }
 
+void dump_ir_pass::dump_memory_read(memory_read_inst l) {
+    dump_val(l.operand());
+    *os_ << "[";
+    do_with_infix(l.index_list().begin(), l.index_list().end(),
+                  [this](auto const &i) { dump_val(i); });
+    *os_ << "] : ";
+    visit(*this, *l.result().ty());
+}
+
 void dump_ir_pass::dump_memory_write(memory_write_inst s) {
     dump_val(s.val());
     *os_ << ", ";
@@ -201,26 +210,33 @@ void dump_ir_pass::operator()(arith_unary_inst a) {
     visit(*this, *a.result().ty());
 }
 
+void dump_ir_pass::dump_scope_sem(memory_scope scope, memory_semantics semantics) {
+    if (scope != memory_scope::work_group) {
+        *os_ << "." << to_string(scope);
+    }
+    if (semantics != memory_semantics::relaxed) {
+        *os_ << "." << to_string(semantics);
+    }
+}
+
+void dump_ir_pass::operator()(atomic_load_inst l) {
+    dump_val(l.result());
+    *os_ << " = atomic_load";
+    dump_scope_sem(l.scope(), l.semantics());
+    *os_ << " ";
+    dump_memory_read(l);
+}
+
 void dump_ir_pass::operator()(atomic_store_inst s) {
     *os_ << "atomic_store";
-    if (s.scope() != memory_scope::work_group) {
-        *os_ << "." << to_string(s.scope());
-    }
-    if (s.semantics() != memory_semantics::relaxed) {
-        *os_ << "." << to_string(s.semantics());
-    }
+    dump_scope_sem(s.scope(), s.semantics());
     *os_ << " ";
     dump_memory_write(s);
 }
 
 void dump_ir_pass::operator()(atomic_update_inst s) {
     *os_ << to_string(s.get().type_id());
-    if (s.scope() != memory_scope::work_group) {
-        *os_ << "." << to_string(s.scope());
-    }
-    if (s.semantics() != memory_semantics::relaxed) {
-        *os_ << "." << to_string(s.semantics());
-    }
+    dump_scope_sem(s.scope(), s.semantics());
     *os_ << " ";
     dump_memory_write(s);
     *os_ << " : ";
@@ -448,15 +464,10 @@ void dump_ir_pass::operator()(fuse_inst f) {
     visit(*this, *f.result().ty());
 }
 
-void dump_ir_pass::operator()(load_inst e) {
-    dump_val(e.result());
+void dump_ir_pass::operator()(load_inst l) {
+    dump_val(l.result());
     *os_ << " = load ";
-    dump_val(e.operand());
-    *os_ << "[";
-    do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { dump_val(i); });
-    *os_ << "] : ";
-    visit(*this, *e.result().ty());
+    dump_memory_read(l);
 }
 
 void dump_ir_pass::operator()(lifetime_stop_inst l) {

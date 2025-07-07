@@ -142,7 +142,8 @@ auto inst_converter::matrix_impl() -> coopmatrix_impl & {
     throw status::internal_compiler_error;
 }
 
-auto inst_converter::get_pointer(memory_write_inst in) -> spv_inst * {
+template <typename MemoryReadWriteInst>
+auto inst_converter::get_pointer_helper(MemoryReadWriteInst in) -> spv_inst * {
     auto dv = get_dope_vector(in.operand());
     if (!dv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
@@ -150,24 +151,31 @@ auto inst_converter::get_pointer(memory_write_inst in) -> spv_inst * {
 
     if (auto memref_ty = dyn_cast<memref_type>(in.operand().ty()); memref_ty) {
         auto spv_index_ty = get_spv_index_ty(unique_, memref_ty->context());
-        auto spv_pointer_ty = spv_ty(memref_ty);
+        auto spv_pointer_ty = spv_ty(in.operand().ty());
 
         if (memref_ty->dim() == 0) {
             return val(in.operand());
         }
 
         auto idx0 = val(in.index_list()[0]);
-        auto offset =
+        spv_inst *offset =
             memref_ty->stride(0) != 1 ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0)) : idx0;
         for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
             auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
             offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
         }
-
         return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
                                                    std::vector<spv_inst *>{});
     }
     throw compilation_error(in.loc(), status::ir_expected_memref);
+}
+
+auto inst_converter::get_pointer(memory_read_inst in) -> spv_inst * {
+    return get_pointer_helper(in);
+}
+
+auto inst_converter::get_pointer(memory_write_inst in) -> spv_inst * {
+    return get_pointer_helper(in);
 }
 
 void inst_converter::operator()(inst_view in) {
@@ -232,6 +240,13 @@ void inst_converter::operator()(arith_unary_inst in) {
         auto ik = in.get().type_id();
         declare(in.result(), make_unary_op(unique_, ty, ik, av, in.loc()));
     }
+}
+
+void inst_converter::operator()(atomic_load_inst in) {
+    auto ot = get_memref_type(in.operand());
+    auto pointer = get_pointer(in);
+    declare(in.result(), make_atomic_load(unique_, in.scope(), in.semantics(), in.result().ty(),
+                                          ot->addrspace(), pointer, in.loc()));
 }
 
 void inst_converter::operator()(atomic_store_inst in) {
@@ -589,16 +604,17 @@ void inst_converter::operator()(if_inst in) {
 void inst_converter::operator()(lifetime_stop_inst) {}
 
 void inst_converter::operator()(load_inst in) {
-    auto spv_index_ty = get_spv_index_ty(unique_, in.operand().context());
-    auto spv_pointer_index_ty = get_spv_pointer_index_ty(unique_, in.operand().context());
-    auto spv_pointer_ty = spv_ty(in.operand().ty());
     auto spv_result_ty = spv_ty(in.result().ty());
-    auto dv = get_dope_vector(in.operand());
-    if (!dv) {
-        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
-    }
 
     if (auto group_ty = dyn_cast<group_type>(in.operand().ty()); group_ty) {
+        auto spv_index_ty = get_spv_index_ty(unique_, in.operand().context());
+        auto spv_pointer_index_ty = get_spv_pointer_index_ty(unique_, in.operand().context());
+        auto spv_pointer_ty = spv_ty(in.operand().ty());
+        auto dv = get_dope_vector(in.operand());
+        if (!dv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+        }
+
         auto offset = mod_->add<OpIAdd>(spv_index_ty, dv->offset(), val(in.index_list()[0]));
         auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
                                                            offset, std::vector<spv_inst *>{});
@@ -619,29 +635,9 @@ void inst_converter::operator()(load_inst in) {
         for (std::int64_t i = 0; i < rdv->dim(); ++i) {
             rdv->stride(i, make_dope_par(dv->static_stride(i), dv->stride(i)));
         }
-    } else if (auto memref_ty = dyn_cast<memref_type>(in.operand().ty()); memref_ty) {
-        const auto pointer = [&](spv_inst *additional_offset0 = nullptr) -> spv_inst * {
-            if (memref_ty->dim() == 0) {
-                return val(in.operand());
-            }
-
-            auto idx0 = val(in.index_list()[0]);
-            spv_inst *offset = memref_ty->stride(0) != 1
-                                   ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0))
-                                   : idx0;
-            for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
-                auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
-                offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
-            }
-            if (additional_offset0) {
-                offset = mod_->add<OpIAdd>(spv_index_ty, offset, additional_offset0);
-            }
-            return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
-                                                       std::vector<spv_inst *>{});
-        };
-        declare(in.result(), mod_->add<OpLoad>(spv_result_ty, pointer()));
     } else {
-        throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
+        auto pointer = get_pointer(in);
+        declare(in.result(), mod_->add<OpLoad>(spv_result_ty, pointer));
     }
 }
 

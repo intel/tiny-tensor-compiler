@@ -92,17 +92,48 @@ auto get_last_label(tinytc_spv_mod &mod) -> spv_inst * {
 auto split_re_im(uniquifier &unique, tinytc_type_t val_ty, address_space as, spv_inst *pointer,
                  spv_inst *value) -> std::array<std::array<spv_inst *, 2u>, 2u> {
     auto &mod = unique.mod();
-    auto component_sty = component_type(val_ty);
-    auto float_ty = get_spv_ty_non_coopmatrix(unique, component_sty);
+    auto float_ty = component_type(val_ty);
+    auto spv_float_ty = get_spv_ty_non_coopmatrix(unique, float_ty);
     const auto storage_cls = address_space_to_storage_class(as);
-    auto pointer_ty = unique.pointer_ty(storage_cls, float_ty, alignment(component_sty));
+    auto pointer_ty = unique.pointer_ty(storage_cls, spv_float_ty, alignment(float_ty));
     auto c0 = unique.constant(std::int32_t{0});
     auto c1 = unique.constant(std::int32_t{1});
     auto re_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c0});
     auto im_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c1});
-    auto re_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{0});
-    auto im_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{1});
+    auto re_val = mod.add<OpCompositeExtract>(spv_float_ty, value, std::vector<LiteralInteger>{0});
+    auto im_val = mod.add<OpCompositeExtract>(spv_float_ty, value, std::vector<LiteralInteger>{1});
     return {{{re_ptr, re_val}, {im_ptr, im_val}}};
+}
+
+auto make_atomic_load(uniquifier &unique, memory_scope scope, memory_semantics semantics,
+                      tinytc_type_t result_ty, address_space as, spv_inst *pointer,
+                      location const &loc) -> spv_inst * {
+    if ((isa<i8_type>(*result_ty) || isa<i16_type>(*result_ty) || isa<bf16_type>(*result_ty))) {
+        throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
+    }
+
+    auto &mod = unique.mod();
+    auto spv_result_ty = get_spv_ty_non_coopmatrix(unique, result_ty);
+    auto c_scope = unique.constant(static_cast<std::int32_t>(scope));
+    auto c_semantics = unique.constant(static_cast<std::int32_t>(semantics));
+    if (isa<complex_type>(*result_ty)) {
+        auto float_ty = component_type(result_ty);
+        auto spv_float_ty = get_spv_ty_non_coopmatrix(unique, float_ty);
+        const auto storage_cls = address_space_to_storage_class(as);
+        auto pointer_ty = unique.pointer_ty(storage_cls, spv_float_ty, alignment(float_ty));
+        auto c0 = unique.constant(std::int32_t{0});
+        auto c1 = unique.constant(std::int32_t{1});
+        auto re_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c0});
+        auto im_ptr = mod.add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c1});
+        auto re = mod.add<OpAtomicLoad>(spv_float_ty, re_ptr, c_scope, c_semantics);
+        auto im = mod.add<OpAtomicLoad>(spv_float_ty, im_ptr, c_scope, c_semantics);
+        auto dummy = mod.add<OpUndef>(spv_result_ty);
+        auto tmp =
+            mod.add<OpCompositeInsert>(spv_result_ty, re, dummy, std::vector<LiteralInteger>{0});
+        return mod.add<OpCompositeInsert>(spv_result_ty, im, tmp, std::vector<LiteralInteger>{1});
+    } else {
+        return mod.add<OpAtomicLoad>(spv_result_ty, pointer, c_scope, c_semantics);
+    }
 }
 
 void make_atomic_store(uniquifier &unique, memory_scope scope, memory_semantics semantics,

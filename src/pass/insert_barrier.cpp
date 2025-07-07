@@ -151,7 +151,7 @@ void insert_barrier_pass::run_on_region(tinytc_region &reg, aa_results const &aa
                              emplace_read(in.B());
                              emplace_write(in.C());
                          },
-                         [&](load_inst in) { emplace_read(in.operand()); },
+                         [&](memory_read_inst in) { emplace_read(in.operand()); },
                          [&](memory_write_inst in) { emplace_write(in.operand()); },
                          [](inst_view) {}},
               in);
