@@ -29,12 +29,12 @@ In the :ref:`tensor language <tensor language>` we can implement the kernel as f
                        %P: memref<f32x56x9x?>,
                        %A: group<memref<f32x9x9>x?>,
                        %Q: memref<f32x56x9x?>) {
-        %gid = builtin.group_id : index                   ; Get our index e
-
+        %gid = group_id.x : index                         ; Get our index e
+    
         %p = subview %P[0:56,0:9,%gid] : memref<f32x56x9> ; Get view on submatrix
         %a = load %A[%gid]             : memref<f32x9x9>  ; Load matrix from group
         %q = subview %Q[0:56,0:9,%gid] : memref<f32x56x9> ; Get view on submatrix
-
+    
         %tmp = alloca : memref<f32x56x9,local>            ; Reserve temporary memory
                                                           ; in the Shared Local Memory
         %c0 = constant 0.0 : f32
@@ -53,23 +53,23 @@ For example, running the insert-lifetime-stop, insert-barrier, and work-group-si
 we get
 
 .. code-block::
-   :emphasize-lines: 4, 13, 15
+    :emphasize-lines: 4, 13, 15
 
     func @fused_kernel(%K: memref<f32x56x56>,
                        %P: memref<f32x56x9x?>,
                        %A: group<memref<f32x9x9>x?>,
                        %Q: memref<f32x56x9x?>) attributes{subgroup_size=32, work_group_size=[64,1]} {
-      %gid = builtin.group_id : index
-      %p = subview %P[0:56,0:9,%gid] : memref<f32x56x9>
-      %a = load %A[%gid] : memref<f32x9x9>
-      %q = subview %Q[0:56,0:9,%gid] : memref<f32x56x9>
-      %tmp = alloca : memref<f32x56x9,local>
-      %c0 = constant 0x0p+0 : f32
-      %c1 = constant 0x1p+0 : f32
-      gemm.n.n %c1, %K, %p, %c0, %tmp
-      barrier.local
-      gemm.n.n %c1, %tmp, %a, %c1, %q
-      lifetime_stop %tmp
+        %gid = group_id.x : index
+        %p = subview %P[0:56,0:9,%gid] : memref<f32x56x9>
+        %a = load %A[%gid] : memref<f32x9x9>
+        %q = subview %Q[0:56,0:9,%gid] : memref<f32x56x9>
+        %tmp = alloca : memref<f32x56x9,local>
+        %c0 = constant 0x0p+0 : f32
+        %c1 = constant 0x1p+0 : f32
+        gemm %c1, %K, %p, %c0, %tmp
+        barrier.local
+        gemm %c1, %tmp, %a, %c1, %q
+        lifetime_stop %tmp
     }
 
 We observe that
@@ -84,41 +84,40 @@ When using SYCL, we can run the kernel using the following pseudo-code:
 
 .. code-block:: cpp
 
+    #include <sycl/sycl.hpp>
     #include <tinytc/tinytc.hpp>
     #include <tinytc/tinytc_sycl.hpp>
-    #include <sycl/sycl.hpp>
 
     #include <iostream>
 
     auto ctx = tinytc::make_compiler_context();
-    ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
-                              void *) { std::cerr << what << std::endl; },
-                           nullptr);
+    set_error_reporter([](ctx.get(), char const *what, const tinytc_location_t *,
+                          void *) { std::cerr << what << std::endl; },
+                       nullptr);
     try {
         // Parse tensor program
-        auto prog = tinytc::parse_file("fused_kernel.ir", ctx);
+        auto prog = tinytc::parse_file("fused_kernel.ir", ctx.get());
 
         // Initialize tensors
-        float* K = ...;
-        float* P = ...;
-        float** A = ...;
-        float* Q = ...;
+        float *K = ...;
+        float *P = ...;
+        float **A = ...;
+        float *Q = ...;
 
         // JIT compile program
         auto q = sycl::queue{};
-        auto bundle = tinytc::make_kernel_bundle(q.get_context(), q.get_device(), prog);
+        auto bundle = tinytc::create_kernel_bundle(q.get_context(), q.get_device(), prog.get());
 
-        auto kernel = tinytc::make_kernel(bundle, "fused_kernel");
-        auto exe_range = tinytc::get_execution_range(kernel, howmany);
+        auto kernel = tinytc::create_kernel(bundle, "fused_kernel");
+        auto exe_range = tinytc::get_execution_range(kernel, sycl_range<3u>{1, 1, howmany});
         for (int timestep = 0; timestep < num_timesteps; ++timestep) {
             q.submit([&](sycl::handler &h) {
-                h.set_args(K, P, howmany, A, howmany, Q, howmany);
-                h.parallel_for(exe_range, kernel);
-            }).wait();
+                 h.set_args(K, P, howmany, A, howmany, Q, howmany);
+                 h.parallel_for(exe_range, kernel);
+             }).wait();
         }
-    } catch (tinytc::status const& st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): "
-                  << tinytc::to_string(st) << std::endl;
+    } catch (tinytc::status const &st) {
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::to_string(st) << std::endl;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
     }

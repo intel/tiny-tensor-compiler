@@ -36,23 +36,8 @@ Builder C-API:
       - tinytc_string_attr_get
   Data Type:
     function:
-      - tinytc_boolean_type_get
-      - tinytc_i8_type_get
-      - tinytc_i16_type_get
-      - tinytc_i32_type_get
-      - tinytc_i64_type_get
-      - tinytc_index_type_get
-      - tinytc_f16_type_get
-      - tinytc_bf16_type_get
-      - tinytc_f32_type_get
-      - tinytc_f64_type_get
-      - tinytc_c32_type_get
-      - tinytc_c64_type_get
-      - tinytc_coopmatrix_type_get
-      - tinytc_group_type_get
-      - tinytc_memref_type_get
-      - tinytc_void_type_get
       - tinytc_type_get_compiler_context
+  Data Type Builder: {}
   Function:
     function:
       - tinytc_func_create
@@ -62,99 +47,19 @@ Builder C-API:
       - tinytc_func_set_parameter_attr
   Instruction:
     function:
-      - tinytc_alloca_inst_create
-      - tinytc_barrier_inst_create
-      - tinytc_cast_inst_create
+      - tinytc_inst_get_parent_region
+      - tinytc_inst_get_regions
+      - tinytc_inst_get_values
+      - tinytc_inst_destroy
+      - tinytc_inst_set_attr
+  Instruction Builder:
+    function:
       - tinytc_constant_inst_create_boolean
       - tinytc_constant_inst_create_complex
       - tinytc_constant_inst_create_float
       - tinytc_constant_inst_create_int
       - tinytc_constant_inst_create_one
       - tinytc_constant_inst_create_zero
-      - tinytc_cooperative_matrix_apply_inst_create
-      - tinytc_cooperative_matrix_extract_inst_create
-      - tinytc_cooperative_matrix_insert_inst_create
-      - tinytc_cooperative_matrix_load_inst_create
-      - tinytc_cooperative_matrix_mul_add_inst_create
-      - tinytc_cooperative_matrix_reduce_add_inst_create
-      - tinytc_cooperative_matrix_reduce_max_inst_create
-      - tinytc_cooperative_matrix_reduce_min_inst_create
-      - tinytc_cooperative_matrix_prefetch_inst_create
-      - tinytc_cooperative_matrix_scale_inst_create
-      - tinytc_cooperative_matrix_store_inst_create
-      - tinytc_expand_inst_create
-      - tinytc_fuse_inst_create
-      - tinytc_if_inst_create
-      - tinytc_lifetime_stop_inst_create
-      - tinytc_load_inst_create
-      - tinytc_parallel_inst_create
-      - tinytc_size_inst_create
-      - tinytc_subgroup_broadcast_inst_create
-      - tinytc_store_inst_create
-      - tinytc_subview_inst_create
-      - tinytc_yield_inst_create
-      - tinytc_add_inst_create
-      - tinytc_sub_inst_create
-      - tinytc_mul_inst_create
-      - tinytc_div_inst_create
-      - tinytc_rem_inst_create
-      - tinytc_shl_inst_create
-      - tinytc_shr_inst_create
-      - tinytc_and_inst_create
-      - tinytc_or_inst_create
-      - tinytc_xor_inst_create
-      - tinytc_min_inst_create
-      - tinytc_max_inst_create
-      - tinytc_abs_inst_create
-      - tinytc_neg_inst_create
-      - tinytc_not_inst_create
-      - tinytc_conj_inst_create
-      - tinytc_im_inst_create
-      - tinytc_re_inst_create
-      - tinytc_axpby_inst_create
-      - tinytc_cumsum_inst_create
-      - tinytc_sum_inst_create
-      - tinytc_gemm_inst_create
-      - tinytc_gemv_inst_create
-      - tinytc_ger_inst_create
-      - tinytc_hadamard_inst_create
-      - tinytc_group_id_inst_create
-      - tinytc_num_groups_inst_create
-      - tinytc_num_subgroups_inst_create
-      - tinytc_subgroup_size_inst_create
-      - tinytc_subgroup_id_inst_create
-      - tinytc_subgroup_linear_id_inst_create
-      - tinytc_subgroup_local_id_inst_create
-      - tinytc_cos_inst_create
-      - tinytc_sin_inst_create
-      - tinytc_exp_inst_create
-      - tinytc_exp2_inst_create
-      - tinytc_native_cos_inst_create
-      - tinytc_native_sin_inst_create
-      - tinytc_native_exp_inst_create
-      - tinytc_native_exp2_inst_create
-      - tinytc_subgroup_exclusive_scan_add_inst_create
-      - tinytc_subgroup_exclusive_scan_max_inst_create
-      - tinytc_subgroup_exclusive_scan_min_inst_create
-      - tinytc_subgroup_inclusive_scan_add_inst_create
-      - tinytc_subgroup_inclusive_scan_max_inst_create
-      - tinytc_subgroup_inclusive_scan_min_inst_create
-      - tinytc_subgroup_reduce_add_inst_create
-      - tinytc_subgroup_reduce_max_inst_create
-      - tinytc_subgroup_reduce_min_inst_create
-      - tinytc_equal_inst_create
-      - tinytc_not_equal_inst_create
-      - tinytc_greater_than_inst_create
-      - tinytc_greater_than_equal_inst_create
-      - tinytc_less_than_inst_create
-      - tinytc_less_than_equal_inst_create
-      - tinytc_for_inst_create
-      - tinytc_foreach_inst_create
-      - tinytc_inst_get_parent_region
-      - tinytc_inst_get_regions
-      - tinytc_inst_get_values
-      - tinytc_inst_destroy
-      - tinytc_inst_set_attr
   Program:
     function:
       - tinytc_prog_create

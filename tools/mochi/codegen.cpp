@@ -407,13 +407,19 @@ void generate_class_list_yaml(std::ostream &os, objects const &obj) {
     }
     os << "type:\n";
     for (auto &o : obj.types()) {
-        walk_down<walk_order::pre_order, type, true>(
-            o.get(), [&](type *ty) { os << std::format("- {}\n", ty->name()); });
+        walk_down<walk_order::pre_order, type, true>(o.get(), [&](type *ty) {
+            if (!ty->is_set(inst_flag::skip_builder)) {
+                os << std::format("- {}\n", ty->name());
+            }
+        });
     }
     os << "inst:\n";
     for (auto &o : obj.insts()) {
-        walk_down<walk_order::pre_order, inst, true>(
-            o.get(), [&](inst *in) { os << std::format("- {}\n", in->name()); });
+        walk_down<walk_order::pre_order, inst, true>(o.get(), [&](inst *in) {
+            if (!in->is_set(inst_flag::skip_builder)) {
+                os << std::format("- {}\n", in->name());
+            }
+        });
     }
 }
 

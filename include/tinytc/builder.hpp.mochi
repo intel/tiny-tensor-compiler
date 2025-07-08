@@ -263,6 +263,19 @@ inline auto get_values(tinytc_inst_t in, mutable_array_view<tinytc_value_t> vals
 }
 
 /**
+ * @brief Get parent region of instruction
+ *
+ * @param in Instruction
+ *
+ * @return Region
+ */
+inline auto get_parent_region(tinytc_inst_t in) -> tinytc_region_t {
+    tinytc_region_t reg;
+    CHECK_STATUS(tinytc_inst_get_parent_region(in, &reg));
+    return reg;
+}
+
+/**
  * @brief Get child regions
  *
  * May be called with empty view (vals = {}) to get the number of child regions.

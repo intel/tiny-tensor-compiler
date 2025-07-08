@@ -8,13 +8,9 @@ then
     exit
 fi
 
-echo $1
-
 dir="$(dirname "$(realpath "$0")")"
 
-cd $dir
-./pregenerate.py $1
-cd -
+$dir/pregenerate.py $1 $dir
 
 files=('builder_capi' 'builder_cxxapi' 'core_capi' 'core_cxxapi' 'cl/capi' 'cl/cxxapi' 'sycl/cxxapi' 'ze/capi' 'ze/cxxapi')
 for f in "${files[@]}"

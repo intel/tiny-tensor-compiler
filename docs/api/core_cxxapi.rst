@@ -1,4 +1,4 @@
-.. Copyright (C) 2024 Intel Corporation
+.. Copyright (C) 2025 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
 .. _Core C++-API:
@@ -9,24 +9,6 @@ Core C++-API
 
 Common
 ======
-
-* Enumerations
-
-  * :ref:`tinytc::mem_type`
-
-  * :ref:`tinytc::status`
-
-  * :ref:`tinytc::support_level`
-
-* Functions
-
-  * :ref:`tinytc::CHECK_STATUS`
-
-  * :ref:`tinytc::CHECK_STATUS_LOC`
-
-  * :ref:`tinytc::to_string(status)`
-
-  * :ref:`tinytc::to_string(support_level)`
 
 * Classes
 
@@ -39,6 +21,78 @@ Common
   * :ref:`tinytc::shared_handle`
 
   * :ref:`tinytc::unique_handle`
+
+* Enumerations
+
+  * :ref:`tinytc::address_space`
+
+  * :ref:`tinytc::bundle_format`
+
+  * :ref:`tinytc::checked_flag`
+
+  * :ref:`tinytc::comp3`
+
+  * :ref:`tinytc::core_feature_flag`
+
+  * :ref:`tinytc::intel_gpu_architecture`
+
+  * :ref:`tinytc::matrix_use`
+
+  * :ref:`tinytc::mem_type`
+
+  * :ref:`tinytc::memory_scope`
+
+  * :ref:`tinytc::memory_semantics`
+
+  * :ref:`tinytc::optflag`
+
+  * :ref:`tinytc::reduce_mode`
+
+  * :ref:`tinytc::spirv_feature`
+
+  * :ref:`tinytc::status`
+
+  * :ref:`tinytc::support_level`
+
+  * :ref:`tinytc::transpose`
+
+* Functions
+
+  * :ref:`tinytc::CHECK_STATUS`
+
+  * :ref:`tinytc::CHECK_STATUS_LOC`
+
+  * :ref:`tinytc::to_string(address_space)`
+
+  * :ref:`tinytc::to_string(bundle_format)`
+
+  * :ref:`tinytc::to_string(checked_flag)`
+
+  * :ref:`tinytc::to_string(comp3)`
+
+  * :ref:`tinytc::to_string(core_feature_flag)`
+
+  * :ref:`tinytc::to_string(intel_gpu_architecture)`
+
+  * :ref:`tinytc::to_string(matrix_use)`
+
+  * :ref:`tinytc::to_string(mem_type)`
+
+  * :ref:`tinytc::to_string(memory_scope)`
+
+  * :ref:`tinytc::to_string(memory_semantics)`
+
+  * :ref:`tinytc::to_string(optflag)`
+
+  * :ref:`tinytc::to_string(reduce_mode)`
+
+  * :ref:`tinytc::to_string(spirv_feature)`
+
+  * :ref:`tinytc::to_string(status)`
+
+  * :ref:`tinytc::to_string(support_level)`
+
+  * :ref:`tinytc::to_string(transpose)`
 
 * Structures
 
@@ -55,61 +109,6 @@ Common
   * :ref:`tinytc::is_supported_scalar_type`
 
   * :ref:`tinytc::is_usm_pointer_type`
-
-Common Enumerations
--------------------
-
-.. _tinytc::mem_type:
-
-mem_type
-........
-
-.. doxygenenum:: tinytc::mem_type
-
-.. _tinytc::status:
-
-status
-......
-
-.. doxygenenum:: tinytc::status
-
-.. _tinytc::support_level:
-
-support_level
-.............
-
-.. doxygenenum:: tinytc::support_level
-
-Common Functions
-----------------
-
-.. _tinytc::CHECK_STATUS:
-
-CHECK_STATUS
-............
-
-.. doxygenfunction:: tinytc::CHECK_STATUS
-
-.. _tinytc::CHECK_STATUS_LOC:
-
-CHECK_STATUS_LOC
-................
-
-.. doxygenfunction:: tinytc::CHECK_STATUS_LOC
-
-.. _tinytc::to_string(status):
-
-to_string(status)
-.................
-
-.. doxygenfunction:: tinytc::to_string(status)
-
-.. _tinytc::to_string(support_level):
-
-to_string(support_level)
-........................
-
-.. doxygenfunction:: tinytc::to_string(support_level)
 
 Common Classes
 --------------
@@ -148,6 +147,250 @@ unique_handle
 .............
 
 .. doxygenclass:: tinytc::unique_handle
+
+Common Enumerations
+-------------------
+
+.. _tinytc::address_space:
+
+address_space
+.............
+
+.. doxygenenum:: tinytc::address_space
+
+.. _tinytc::bundle_format:
+
+bundle_format
+.............
+
+.. doxygenenum:: tinytc::bundle_format
+
+.. _tinytc::checked_flag:
+
+checked_flag
+............
+
+.. doxygenenum:: tinytc::checked_flag
+
+.. _tinytc::comp3:
+
+comp3
+.....
+
+.. doxygenenum:: tinytc::comp3
+
+.. _tinytc::core_feature_flag:
+
+core_feature_flag
+.................
+
+.. doxygenenum:: tinytc::core_feature_flag
+
+.. _tinytc::intel_gpu_architecture:
+
+intel_gpu_architecture
+......................
+
+.. doxygenenum:: tinytc::intel_gpu_architecture
+
+.. _tinytc::matrix_use:
+
+matrix_use
+..........
+
+.. doxygenenum:: tinytc::matrix_use
+
+.. _tinytc::mem_type:
+
+mem_type
+........
+
+.. doxygenenum:: tinytc::mem_type
+
+.. _tinytc::memory_scope:
+
+memory_scope
+............
+
+.. doxygenenum:: tinytc::memory_scope
+
+.. _tinytc::memory_semantics:
+
+memory_semantics
+................
+
+.. doxygenenum:: tinytc::memory_semantics
+
+.. _tinytc::optflag:
+
+optflag
+.......
+
+.. doxygenenum:: tinytc::optflag
+
+.. _tinytc::reduce_mode:
+
+reduce_mode
+...........
+
+.. doxygenenum:: tinytc::reduce_mode
+
+.. _tinytc::spirv_feature:
+
+spirv_feature
+.............
+
+.. doxygenenum:: tinytc::spirv_feature
+
+.. _tinytc::status:
+
+status
+......
+
+.. doxygenenum:: tinytc::status
+
+.. _tinytc::support_level:
+
+support_level
+.............
+
+.. doxygenenum:: tinytc::support_level
+
+.. _tinytc::transpose:
+
+transpose
+.........
+
+.. doxygenenum:: tinytc::transpose
+
+Common Functions
+----------------
+
+.. _tinytc::CHECK_STATUS:
+
+CHECK_STATUS
+............
+
+.. doxygenfunction:: tinytc::CHECK_STATUS
+
+.. _tinytc::CHECK_STATUS_LOC:
+
+CHECK_STATUS_LOC
+................
+
+.. doxygenfunction:: tinytc::CHECK_STATUS_LOC
+
+.. _tinytc::to_string(address_space):
+
+to_string(address_space)
+........................
+
+.. doxygenfunction:: tinytc::to_string(address_space)
+
+.. _tinytc::to_string(bundle_format):
+
+to_string(bundle_format)
+........................
+
+.. doxygenfunction:: tinytc::to_string(bundle_format)
+
+.. _tinytc::to_string(checked_flag):
+
+to_string(checked_flag)
+.......................
+
+.. doxygenfunction:: tinytc::to_string(checked_flag)
+
+.. _tinytc::to_string(comp3):
+
+to_string(comp3)
+................
+
+.. doxygenfunction:: tinytc::to_string(comp3)
+
+.. _tinytc::to_string(core_feature_flag):
+
+to_string(core_feature_flag)
+............................
+
+.. doxygenfunction:: tinytc::to_string(core_feature_flag)
+
+.. _tinytc::to_string(intel_gpu_architecture):
+
+to_string(intel_gpu_architecture)
+.................................
+
+.. doxygenfunction:: tinytc::to_string(intel_gpu_architecture)
+
+.. _tinytc::to_string(matrix_use):
+
+to_string(matrix_use)
+.....................
+
+.. doxygenfunction:: tinytc::to_string(matrix_use)
+
+.. _tinytc::to_string(mem_type):
+
+to_string(mem_type)
+...................
+
+.. doxygenfunction:: tinytc::to_string(mem_type)
+
+.. _tinytc::to_string(memory_scope):
+
+to_string(memory_scope)
+.......................
+
+.. doxygenfunction:: tinytc::to_string(memory_scope)
+
+.. _tinytc::to_string(memory_semantics):
+
+to_string(memory_semantics)
+...........................
+
+.. doxygenfunction:: tinytc::to_string(memory_semantics)
+
+.. _tinytc::to_string(optflag):
+
+to_string(optflag)
+..................
+
+.. doxygenfunction:: tinytc::to_string(optflag)
+
+.. _tinytc::to_string(reduce_mode):
+
+to_string(reduce_mode)
+......................
+
+.. doxygenfunction:: tinytc::to_string(reduce_mode)
+
+.. _tinytc::to_string(spirv_feature):
+
+to_string(spirv_feature)
+........................
+
+.. doxygenfunction:: tinytc::to_string(spirv_feature)
+
+.. _tinytc::to_string(status):
+
+to_string(status)
+.................
+
+.. doxygenfunction:: tinytc::to_string(status)
+
+.. _tinytc::to_string(support_level):
+
+to_string(support_level)
+........................
+
+.. doxygenfunction:: tinytc::to_string(support_level)
+
+.. _tinytc::to_string(transpose):
+
+to_string(transpose)
+....................
+
+.. doxygenfunction:: tinytc::to_string(transpose)
 
 Common Structures
 -----------------
@@ -200,10 +443,6 @@ is_usm_pointer_type
 Binary
 ======
 
-* Enumerations
-
-  * :ref:`tinytc::bundle_format`
-
 * Functions
 
   * :ref:`tinytc::create_binary`
@@ -214,21 +453,9 @@ Binary
 
   * :ref:`tinytc::get_raw`
 
-  * :ref:`tinytc::to_string(bundle_format)`
-
 * Structures
 
   * :ref:`tinytc::raw_binary`
-
-Binary Enumerations
--------------------
-
-.. _tinytc::bundle_format:
-
-bundle_format
-.............
-
-.. doxygenenum:: tinytc::bundle_format
 
 Binary Functions
 ----------------
@@ -260,13 +487,6 @@ get_raw
 .......
 
 .. doxygenfunction:: tinytc::get_raw
-
-.. _tinytc::to_string(bundle_format):
-
-to_string(bundle_format)
-........................
-
-.. doxygenfunction:: tinytc::to_string(bundle_format)
 
 Binary Structures
 -----------------
@@ -334,10 +554,6 @@ spirv_assemble
 Compiler Context
 ================
 
-* Enumerations
-
-  * :ref:`tinytc::optflag`
-
 * Functions
 
   * :ref:`tinytc::add_source`
@@ -351,18 +567,6 @@ Compiler Context
   * :ref:`tinytc::set_optimization_level`
 
   * :ref:`tinytc::report_error`
-
-  * :ref:`tinytc::to_string(optflag)`
-
-Compiler Context Enumerations
------------------------------
-
-.. _tinytc::optflag:
-
-optflag
-.......
-
-.. doxygenenum:: tinytc::optflag
 
 Compiler Context Functions
 --------------------------
@@ -409,23 +613,8 @@ report_error
 
 .. doxygenfunction:: tinytc::report_error
 
-.. _tinytc::to_string(optflag):
-
-to_string(optflag)
-..................
-
-.. doxygenfunction:: tinytc::to_string(optflag)
-
 Device Info
 ===========
-
-* Enumerations
-
-  * :ref:`tinytc::core_feature_flag`
-
-  * :ref:`tinytc::intel_gpu_architecture`
-
-  * :ref:`tinytc::spirv_feature`
 
 * Functions
 
@@ -450,36 +639,6 @@ Device Info
   * :ref:`tinytc::set_default_alignment`
 
   * :ref:`tinytc::set_spirv_feature`
-
-  * :ref:`tinytc::to_string(core_feature_flag)`
-
-  * :ref:`tinytc::to_string(intel_gpu_architecture)`
-
-  * :ref:`tinytc::to_string(spirv_feature)`
-
-Device Info Enumerations
-------------------------
-
-.. _tinytc::core_feature_flag:
-
-core_feature_flag
-.................
-
-.. doxygenenum:: tinytc::core_feature_flag
-
-.. _tinytc::intel_gpu_architecture:
-
-intel_gpu_architecture
-......................
-
-.. doxygenenum:: tinytc::intel_gpu_architecture
-
-.. _tinytc::spirv_feature:
-
-spirv_feature
-.............
-
-.. doxygenenum:: tinytc::spirv_feature
 
 Device Info Functions
 ---------------------
@@ -561,39 +720,18 @@ set_spirv_feature
 
 .. doxygenfunction:: tinytc::set_spirv_feature
 
-.. _tinytc::to_string(core_feature_flag):
-
-to_string(core_feature_flag)
-............................
-
-.. doxygenfunction:: tinytc::to_string(core_feature_flag)
-
-.. _tinytc::to_string(intel_gpu_architecture):
-
-to_string(intel_gpu_architecture)
-.................................
-
-.. doxygenfunction:: tinytc::to_string(intel_gpu_architecture)
-
-.. _tinytc::to_string(spirv_feature):
-
-to_string(spirv_feature)
-........................
-
-.. doxygenfunction:: tinytc::to_string(spirv_feature)
-
 FP math
 =======
+
+* Classes
+
+  * :ref:`tinytc::lp_float`
 
 * Functions
 
   * :ref:`tinytc::ieee754_extend`
 
   * :ref:`tinytc::ieee754_truncate`
-
-* Classes
-
-  * :ref:`tinytc::lp_float`
 
 * Structures
 
@@ -611,6 +749,16 @@ FP math
 
   * :ref:`tinytc::half`
 
+FP math Classes
+---------------
+
+.. _tinytc::lp_float:
+
+lp_float
+........
+
+.. doxygenclass:: tinytc::lp_float
+
 FP math Functions
 -----------------
 
@@ -627,16 +775,6 @@ ieee754_truncate
 ................
 
 .. doxygenfunction:: tinytc::ieee754_truncate
-
-FP math Classes
----------------
-
-.. _tinytc::lp_float:
-
-lp_float
-........
-
-.. doxygenclass:: tinytc::lp_float
 
 FP math Structures
 ------------------

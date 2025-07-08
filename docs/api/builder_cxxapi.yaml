@@ -2,23 +2,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 Builder C++-API:
   Common:
-    enum:
-      - tinytc::address_space
-      - tinytc::checked_flag
-      - tinytc::comp3
-      - tinytc::matrix_use
-      - tinytc::reduce_mode
-      - tinytc::store_flag
-      - tinytc::transpose
     function:
       - tinytc::is_dynamic_value
-      - tinytc::to_string(address_space)
-      - tinytc::to_string(checked_flag)
-      - tinytc::to_string(comp3)
-      - tinytc::to_string(matrix_use)
-      - tinytc::to_string(reduce_mode)
-      - tinytc::to_string(store_flag)
-      - tinytc::to_string(transpose)
     class:
       - tinytc::builder_error
     typedef:
@@ -38,26 +23,11 @@ Builder C++-API:
       - tinytc::getter< string_attr >
   Data Type:
     function:
-      - tinytc::get
       - tinytc::get_compiler_context(const_tinytc_type_t)
       - tinytc::to_type
-    struct:
-      - tinytc::getter< boolean_type >
-      - tinytc::getter< i8_type >
-      - tinytc::getter< i16_type >
-      - tinytc::getter< i32_type >
-      - tinytc::getter< i64_type >
-      - tinytc::getter< index_type >
-      - tinytc::getter< f16_type >
-      - tinytc::getter< bf16_type >
-      - tinytc::getter< f32_type >
-      - tinytc::getter< f64_type >
-      - tinytc::getter< c32_type >
-      - tinytc::getter< c64_type >
-      - tinytc::getter< coopmatrix_type >
-      - tinytc::getter< group_type >
-      - tinytc::getter< memref_type >
-      - tinytc::getter< void_type >
+  Data Type Builder:
+    function:
+      - tinytc::get
   Function:
     function:
       - tinytc::create_func
@@ -66,92 +36,15 @@ Builder C++-API:
       - tinytc::set_parameter_attr
   Instruction:
     function:
-      - tinytc::create
+      - tinytc::get_parent_region
+      - tinytc::get_regions
+      - tinytc::get_values
       - tinytc::set_attr(tinytc_inst_t,tinytc_attr_t)
+  Instruction Builder:
+    function:
+      - tinytc::create
     struct:
-      - tinytc::creator< alloca_inst >
-      - tinytc::creator< barrier_inst >
-      - tinytc::creator< cast_inst >
       - tinytc::creator< constant_inst >
-      - tinytc::creator< cooperative_matrix_apply_inst >
-      - tinytc::creator< cooperative_matrix_extract_inst >
-      - tinytc::creator< cooperative_matrix_insert_inst >
-      - tinytc::creator< cooperative_matrix_load_inst >
-      - tinytc::creator< cooperative_matrix_mul_add_inst >
-      - tinytc::creator< cooperative_matrix_prefetch_inst >
-      - tinytc::creator< cooperative_matrix_reduce_add_inst >
-      - tinytc::creator< cooperative_matrix_reduce_max_inst >
-      - tinytc::creator< cooperative_matrix_reduce_min_inst >
-      - tinytc::creator< cooperative_matrix_scale_inst >
-      - tinytc::creator< cooperative_matrix_store_inst >
-      - tinytc::creator< expand_inst >
-      - tinytc::creator< fuse_inst >
-      - tinytc::creator< if_inst >
-      - tinytc::creator< lifetime_stop_inst >
-      - tinytc::creator< load_inst >
-      - tinytc::creator< parallel_inst >
-      - tinytc::creator< size_inst >
-      - tinytc::creator< subgroup_broadcast_inst >
-      - tinytc::creator< subview_inst >
-      - tinytc::creator< store_inst >
-      - tinytc::creator< yield_inst >
-      - tinytc::creator< add_inst >
-      - tinytc::creator< sub_inst >
-      - tinytc::creator< mul_inst >
-      - tinytc::creator< div_inst >
-      - tinytc::creator< rem_inst >
-      - tinytc::creator< shl_inst >
-      - tinytc::creator< shr_inst >
-      - tinytc::creator< and_inst >
-      - tinytc::creator< or_inst >
-      - tinytc::creator< xor_inst >
-      - tinytc::creator< min_inst >
-      - tinytc::creator< max_inst >
-      - tinytc::creator< abs_inst >
-      - tinytc::creator< neg_inst >
-      - tinytc::creator< not_inst >
-      - tinytc::creator< conj_inst >
-      - tinytc::creator< im_inst >
-      - tinytc::creator< re_inst >
-      - tinytc::creator< axpby_inst >
-      - tinytc::creator< cumsum_inst >
-      - tinytc::creator< sum_inst >
-      - tinytc::creator< gemm_inst >
-      - tinytc::creator< gemv_inst >
-      - tinytc::creator< ger_inst >
-      - tinytc::creator< hadamard_inst >
-      - tinytc::creator< group_id_inst >
-      - tinytc::creator< num_groups_inst >
-      - tinytc::creator< num_subgroups_inst >
-      - tinytc::creator< subgroup_size_inst >
-      - tinytc::creator< subgroup_id_inst >
-      - tinytc::creator< subgroup_linear_id_inst >
-      - tinytc::creator< subgroup_local_id_inst >
-      - tinytc::creator< equal_inst >
-      - tinytc::creator< not_equal_inst >
-      - tinytc::creator< greater_than_inst >
-      - tinytc::creator< greater_than_equal_inst >
-      - tinytc::creator< less_than_inst >
-      - tinytc::creator< less_than_equal_inst >
-      - tinytc::creator< for_inst >
-      - tinytc::creator< foreach_inst >
-      - tinytc::creator< cos_inst >
-      - tinytc::creator< sin_inst >
-      - tinytc::creator< exp_inst >
-      - tinytc::creator< exp2_inst >
-      - tinytc::creator< native_cos_inst >
-      - tinytc::creator< native_sin_inst >
-      - tinytc::creator< native_exp_inst >
-      - tinytc::creator< native_exp2_inst >
-      - tinytc::creator< subgroup_exclusive_scan_add_inst >
-      - tinytc::creator< subgroup_exclusive_scan_max_inst >
-      - tinytc::creator< subgroup_exclusive_scan_min_inst >
-      - tinytc::creator< subgroup_inclusive_scan_add_inst >
-      - tinytc::creator< subgroup_inclusive_scan_max_inst >
-      - tinytc::creator< subgroup_inclusive_scan_min_inst >
-      - tinytc::creator< subgroup_reduce_add_inst >
-      - tinytc::creator< subgroup_reduce_max_inst >
-      - tinytc::creator< subgroup_reduce_min_inst >
   Program:
     function:
       - tinytc::add_function
@@ -166,7 +59,6 @@ Builder C++-API:
       - tinytc::get_recipe
       - tinytc::set_small_gemm_batched_args
       - tinytc::set_tall_and_skinny_args
-      - tinytc::to_string(mem_type)
   Region:
     function:
       - tinytc::append

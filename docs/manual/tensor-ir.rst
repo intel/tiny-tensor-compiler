@@ -1893,7 +1893,7 @@ The default scope is "work_group" and the default memory semantics is "relaxed".
 Except for atomicity, the instruction is idential to the :ref:`cooperative matrix store` instruction.
 
 Cooperative matrix atomic update
-...............................
+................................
 
 .. code:: abnf
 
@@ -2341,36 +2341,3 @@ integer-type  Largest integer representable by integer type
 floating-type :math:`+\infty`
 complex type  Forbidden
 ============= =============================================
-
-
-Sample code
-===========
-
-The following sample implements the kernel
-
-.. math::
-
-    D := \alpha A B^T C + D \text{ with }
-        A \in \mathbb{R}^{16\times 8},
-        B \in \mathbb{R}^{8\times 8},
-        C \in \mathbb{R}^{8\times 16},
-        D \in \mathbb{R}^{16\times 16}
-
-where B and C are constant matrices and A and D are matrix batches.
-
-.. code::
-
-    func @fused_kernel(%alpha: f32,
-                         %A: group<memref<f32x16x8>x?>,
-                         %B: memref<f32x8x8>,
-                         %C: memref<f32x8x16>,
-                         %D: memref<f32x16x16x?>) {
-      %0 = group_id : index
-      %1 = load %A[%0]        : memref<f32x16x8>
-      %2 = subview %D[:,:,%0] : memref<f32x16x16>
-      %tmp0 = alloca : memref<f32x16x8>
-      %zero = constant 0.0 : f32
-      %one = constant 1.0 : f32
-      gemm.n.t %one, %1, %B, %zero, %tmp0
-      gemm.n.n %alpha, %tmp0, %C, %one, %2
-    }
