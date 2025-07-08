@@ -8,18 +8,20 @@
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
 #include "number.hpp"
+#include "spv/defs.hpp"
+#include "spv/instructions.hpp"
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 
+#include <array>
+#include <cstdint>
 #include <functional>
+#include <vector>
 
 namespace tinytc::spv {
-
-class spv_inst;
-class uniquifier;
 
 auto get_spv_index_ty(uniquifier &unique, tinytc_compiler_context_t ctx) -> spv_inst *;
 auto get_spv_ty(uniquifier &unique, memref_type const *ty) -> spv_inst *;

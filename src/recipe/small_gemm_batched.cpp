@@ -6,6 +6,7 @@
 #include "node/type.hpp"
 #include "number.hpp"
 #include "recipe.hpp"
+#include "tinytc/builder.h"
 #include "tinytc/builder.hpp"
 #include "tinytc/core.h"
 #include "tinytc/core.hpp"

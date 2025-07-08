@@ -13,6 +13,7 @@
 #include "support/walk.hpp"
 #include "tiling.hpp"
 #include "tinytc/builder.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/overloaded.hpp"
 

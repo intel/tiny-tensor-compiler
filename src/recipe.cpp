@@ -4,7 +4,7 @@
 #include "recipe.hpp"
 #include "error.hpp"
 #include "number_dispatch.hpp"
-#include "tinytc/core.h"
+#include "tinytc/builder.h"
 
 #include <algorithm>
 #include <complex>

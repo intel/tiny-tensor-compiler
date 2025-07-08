@@ -8,8 +8,10 @@
 #include "coopmatrix_layout.hpp" // IWYU pragma: keep
 #include "device_info.hpp"
 #include "spv/defs.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <utility>
 

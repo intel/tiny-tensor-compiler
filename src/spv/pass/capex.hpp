@@ -6,6 +6,7 @@
 
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
+#include "spv/instructions.hpp"
 #include "tinytc/types.h"
 
 #include <array>
