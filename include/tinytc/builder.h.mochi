@@ -527,6 +527,243 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_create(tinytc_prog_t *prg, tinytc_comp
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun);
 
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+/**
+ * @brief Returns a small batched GEMM recipe
+ *
+ * The program contains a kernel for @f$\beta=0@f$ called "gemm_beta0" and a kernel for
+ * @f$\beta\neq 0@f$ called "gemm". All matrix shapes and strides are known at compile-time.
+ *
+ * The signature of the generated kernels gemm and gemm_beta0 is (if A and B are not transposed)
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x{M}x{K}x?,strided<1,{ldA},{strideA}>>,
+ *              %B: memref<{ty.B}x{K}x{N}x?,strided<1,{ldB},{strideB}>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x{M}x{N}x?,strided<1,{ldC},{strideC}>>)
+ * @endcode
+ *
+ * meaning that its kernels need arguments in the following order:
+ *
+ * @code
+ * alpha, A_ptr, howmany, B_ptr, howmany, beta, C_ptr, howmany
+ * @endcode
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param number_ty [in] Number types of alpha, A, B, beta, C
+ * @param tA [in] Transpose A
+ * @param tB [in] Transpose B
+ * @param M [in] Number of rows of A, C
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param ldA [in] Leading dimension of A
+ * @param strideA [in] Number of elements between A-matrices
+ * @param ldB [in] Leading dimension of B
+ * @param strideB [in] Number of elements between B-matrices
+ * @param ldC [in] Leading dimension of C
+ * @param strideC [in] Number of elements between C-matrices
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty,
+    tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
+    int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC);
+
+/**
+ * @brief Set kernel arguments for small GEMM batched recipe
+ *
+ * @param handler [inout] Recipe handler object
+ * @param howmany [in] Group size
+ * @param alpha_size [in] Size of alpha argument
+ * @param alpha_value [in] Pointer to data used for alpha; data is copied
+ * @param A_type [in] Type of memory object used for A-matrix
+ * @param A_value [in] Memory object used for A-matrix
+ * @param B_type [in] Type of memory object used for B-matrix
+ * @param B_value [in] Memory object used for B-matrix
+ * @param beta_size [in] Size of beta argument
+ * @param beta_value [in] Pointer to data used for beta; data is copied
+ * @param C_type [in] Type of memory object used for C-matrix
+ * @param C_value [in] Memory object used for C-matrix
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
+    tinytc_recipe_handler_t handler, int64_t howmany, size_t alpha_size, const void *alpha_value,
+    tinytc_mem_type_t A_type, const void *A_value, tinytc_mem_type_t B_type, const void *B_value,
+    size_t beta_size, const void *beta_value, tinytc_mem_type_t C_type, const void *C_value);
+
+/**
+ * @brief Returns a tall and skinny recipe
+ *
+ * The program contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0
+ * called "gemm". M (= number of rows of A, C) and strides are dynamic.
+ *
+ * The signature of the generated kernels gemm and gemm_beta0 is
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x?x{K},strided<1,?>>,
+ *              %B: memref<{ty.B}x{K}x{N},strided<1,?>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x?x{N},strided<1,?>>)
+ * @endcode
+ *
+ * meaning that its kernels need arguments in the following order:
+ *
+ * @code
+ * alpha, A_ptr, M, ldA, B_ptr, ldB, beta, C_ptr, M, ldC
+ * @endcode
+ *
+ * where ldA, ldB, ldC is the size of stride[1] of A, B, C, respectively.
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param number_ty [in] Number type of alpha, A, B, beta, C
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
+ * the parameter auto-selected
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
+                                                                   const_tinytc_core_info_t info,
+                                                                   tinytc_type_t number_ty,
+                                                                   int64_t N, int64_t K,
+                                                                   int32_t M_block_size);
+
+/**
+ * @brief Returns a tall and skinny recipe with additional specialization constants
+ *
+ * Similar to tinytc_recipe_tall_and_skinny_create but with the additional specialization
+ * constants M, ldA, ldB, and ldC.
+ * The specialization constants may be either set to a fixed value or to TINYTC_DYNAMIC.
+ * Note that if a specialization constant is set to a fixed value then the parameter with the
+ * same name in tinytc_recipe_tall_and_skinny_set_args is ignored.
+ *
+ * Furthermore, the memory alignment may be passed with alignA, alignB, and alignC or set to 0 to
+ * use the default memory alignment (= size of scalar type).
+ *
+ * The generated kernels have the following signature:
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x{M}x{K},strided<1,{ldA}>>,
+ *              %B: memref<{ty.B}x{K}x{N},strided<1,{ldB}>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x{M}x{N},strided<1,{ldC}>>)
+ * @endcode
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param number_ty [in] Number type of alpha, A, B, beta, C
+ * @param M [in] Number of rows of A, C; can be TINYTC_DYNAMIC
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param ldA [in] Leading dimension of A; can be TINYTC_DYNAMIC
+ * @param ldB [in] Leading dimension of B; can be TINYTC_DYNAMIC
+ * @param ldC [in] Leading dimension of C; can be TINYTC_DYNAMIC
+ * @param alignA [in] Memory alignment of A; can be 0
+ * @param alignB [in] Memory alignment of B; can be 0
+ * @param alignC [in] Memory alignment of C; can be 0
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
+ * the parameter auto-selected
+ *
+ * @return
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty, int64_t M,
+    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
+    int32_t alignC, int32_t M_block_size);
+
+/**
+ * @brief Suggest an M block size for tall and skinny recipe
+ *
+ * @param info [in] core info object
+ * @param M_block_size [out] pointer to block size
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(
+    const_tinytc_core_info_t info, int32_t *M_block_size);
+
+/**
+ * @brief Set kernel arguments for tall and skinny GEMM recipe
+ *
+ * @param handler [inout] Recipe handler object
+ * @param M [in] Size of M-mode
+ * @param alpha_size [in] Size of alpha argument
+ * @param alpha_value [in] Pointer to data used for alpha; data is copied
+ * @param A_type [in] Type of memory object used for A-matrix
+ * @param A_value [in] Memory object used for A-matrix
+ * @param ldA [in] Leading dimension of A
+ * @param B_type [in] Type of memory object used for B-matrix
+ * @param B_value [in] Memory object used for B-matrix
+ * @param ldB [in] Leading dimension of B
+ * @param beta_size [in] Size of beta argument
+ * @param beta_value [in] Pointer to data used for beta; data is copied
+ * @param C_type [in] Type of memory object used for C-matrix
+ * @param C_value [in] Memory object used for C-matrix
+ * @param ldC [in] Leading dimension of C
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
+    tinytc_recipe_handler_t handler, int64_t M, size_t alpha_size, const void *alpha_value,
+    tinytc_mem_type_t A_type, const void *A_value, int64_t ldA, tinytc_mem_type_t B_type,
+    const void *B_value, int64_t ldB, size_t beta_size, const void *beta_value,
+    tinytc_mem_type_t C_type, const void *C_value, int64_t ldC);
+
+/**
+ * @brief Get prog object
+ *
+ * The reference count of the prog remains unchanged.
+ * The user must call tinytc_prog_retain if the prog shall be used after the recipe was released.
+ *
+ * @param recipe [in] recipe object
+ * @param prg [out] pointer to prog object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recipe,
+                                                     tinytc_prog_t *prg);
+
+/**
+ * @brief Get binary
+ *
+ * The reference count of the binary remains unchanged.
+ * The user must call tinytc_binary_retain if the binary shall be used after the recipe was
+ * released.
+ *
+ * @param recipe [in] recipe object
+ * @param bin [out] pointer to binary
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe,
+                                                       tinytc_binary_t *bin);
+
+/**
+ * @brief Get recipe object
+ *
+ * The reference count of the recipe remains unchanged.
+ * The user must call tinytc_recipe_retain if the recipe shall be used after the recipe handler was
+ * released.
+ *
+ * @param handler [in] recipe handler object
+ * @param recipe [out] pointer to recipe object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_recipe_handler_get_recipe(const_tinytc_recipe_handler_t handler, tinytc_recipe_t *recipe);
+
 #ifdef __cplusplus
 }
 #endif

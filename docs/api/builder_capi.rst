@@ -1467,6 +1467,131 @@ tinytc_prog_add_function
 
 .. doxygenfunction:: tinytc_prog_add_function
 
+Recipe
+======
+
+* Functions
+
+  * :ref:`tinytc_recipe_get_binary`
+
+  * :ref:`tinytc_recipe_get_prog`
+
+  * :ref:`tinytc_recipe_handler_get_recipe`
+
+  * :ref:`tinytc_recipe_small_gemm_batched_create`
+
+  * :ref:`tinytc_recipe_small_gemm_batched_set_args`
+
+  * :ref:`tinytc_recipe_tall_and_skinny_create`
+
+  * :ref:`tinytc_recipe_tall_and_skinny_create_specialized`
+
+  * :ref:`tinytc_recipe_tall_and_skinny_set_args`
+
+  * :ref:`tinytc_recipe_tall_and_skinny_suggest_block_size`
+
+  * :ref:`tinytc_recipe_release`
+
+  * :ref:`tinytc_recipe_retain`
+
+  * :ref:`tinytc_recipe_handler_release`
+
+  * :ref:`tinytc_recipe_handler_retain`
+
+Recipe Functions
+----------------
+
+.. _tinytc_recipe_get_binary:
+
+tinytc_recipe_get_binary
+........................
+
+.. doxygenfunction:: tinytc_recipe_get_binary
+
+.. _tinytc_recipe_get_prog:
+
+tinytc_recipe_get_prog
+......................
+
+.. doxygenfunction:: tinytc_recipe_get_prog
+
+.. _tinytc_recipe_handler_get_recipe:
+
+tinytc_recipe_handler_get_recipe
+................................
+
+.. doxygenfunction:: tinytc_recipe_handler_get_recipe
+
+.. _tinytc_recipe_small_gemm_batched_create:
+
+tinytc_recipe_small_gemm_batched_create
+.......................................
+
+.. doxygenfunction:: tinytc_recipe_small_gemm_batched_create
+
+.. _tinytc_recipe_small_gemm_batched_set_args:
+
+tinytc_recipe_small_gemm_batched_set_args
+.........................................
+
+.. doxygenfunction:: tinytc_recipe_small_gemm_batched_set_args
+
+.. _tinytc_recipe_tall_and_skinny_create:
+
+tinytc_recipe_tall_and_skinny_create
+....................................
+
+.. doxygenfunction:: tinytc_recipe_tall_and_skinny_create
+
+.. _tinytc_recipe_tall_and_skinny_create_specialized:
+
+tinytc_recipe_tall_and_skinny_create_specialized
+................................................
+
+.. doxygenfunction:: tinytc_recipe_tall_and_skinny_create_specialized
+
+.. _tinytc_recipe_tall_and_skinny_set_args:
+
+tinytc_recipe_tall_and_skinny_set_args
+......................................
+
+.. doxygenfunction:: tinytc_recipe_tall_and_skinny_set_args
+
+.. _tinytc_recipe_tall_and_skinny_suggest_block_size:
+
+tinytc_recipe_tall_and_skinny_suggest_block_size
+................................................
+
+.. doxygenfunction:: tinytc_recipe_tall_and_skinny_suggest_block_size
+
+.. _tinytc_recipe_release:
+
+tinytc_recipe_release
+.....................
+
+.. doxygenfunction:: tinytc_recipe_release
+
+.. _tinytc_recipe_retain:
+
+tinytc_recipe_retain
+....................
+
+.. doxygenfunction:: tinytc_recipe_retain
+
+.. _tinytc_recipe_handler_release:
+
+tinytc_recipe_handler_release
+.............................
+
+.. doxygenfunction:: tinytc_recipe_handler_release
+
+.. _tinytc_recipe_handler_retain:
+
+tinytc_recipe_handler_retain
+............................
+
+.. doxygenfunction:: tinytc_recipe_handler_retain
+
 Region
 ======
 

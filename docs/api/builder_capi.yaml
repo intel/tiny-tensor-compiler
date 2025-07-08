@@ -64,6 +64,21 @@ Builder C-API:
     function:
       - tinytc_prog_create
       - tinytc_prog_add_function
+  Recipe:
+    function:
+      - tinytc_recipe_get_binary
+      - tinytc_recipe_get_prog
+      - tinytc_recipe_handler_get_recipe
+      - tinytc_recipe_small_gemm_batched_create
+      - tinytc_recipe_small_gemm_batched_set_args
+      - tinytc_recipe_tall_and_skinny_create
+      - tinytc_recipe_tall_and_skinny_create_specialized
+      - tinytc_recipe_tall_and_skinny_set_args
+      - tinytc_recipe_tall_and_skinny_suggest_block_size
+      - tinytc_recipe_release
+      - tinytc_recipe_retain
+      - tinytc_recipe_handler_release
+      - tinytc_recipe_handler_retain
   Region:
     function:
       - tinytc_region_append
