@@ -1146,7 +1146,7 @@ void foreach_tile_inst::setup_and_check() {
     if (from_.size() == 0 || from_.size() != to_.size()) {
         throw compilation_error(loc(), status::ir_from_to_mismatch);
     }
-    if (from_.size() != tile_shape().size()) {
+    if (from_.size() != static_cast<std::int64_t>(tile_shape().size())) {
         throw compilation_error(loc(), status::ir_from_tile_shape_mismatch);
     }
 
