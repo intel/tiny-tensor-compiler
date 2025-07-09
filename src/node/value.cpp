@@ -3,8 +3,10 @@
 
 #include "node/value.hpp"
 #include "error.hpp"
+#include "node/attr.hpp"
 #include "tinytc/builder.h"
 #include "tinytc/types.h"
+#include "util/casting.hpp"
 
 #include <cassert>
 #include <string>
@@ -16,6 +18,20 @@ tinytc_value::tinytc_value(tinytc_type_t ty, tinytc_inst_t def_inst, location co
 
 tinytc_value::~tinytc_value() {
     assert(!has_uses() && "Destructor called for value that still has uses");
+}
+
+auto tinytc_value::name() const -> char const * {
+    if (auto name = dyn_cast<string_attr>(name_); name) {
+        return name->c_str();
+    }
+    return "";
+}
+
+void tinytc_value::name(std::string_view name) {
+    if (!ty_) {
+        throw compilation_error(loc_, status::internal_compiler_error, "Value has no type");
+    }
+    name_ = string_attr::get(ty_->context(), std::move(name));
 }
 
 auto tinytc_value::use_begin() -> use_iterator { return {first_use_}; }
@@ -110,14 +126,14 @@ tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char const *name) {
     if (vl == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { vl->name(std::string(name)); });
+    return exception_to_status_code([&] { vl->name(std::string_view(name)); });
 }
 
 tinytc_status_t tinytc_value_set_name_n(tinytc_value_t vl, size_t name_length, char const *name) {
     if (vl == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { vl->name(std::string(name, name_length)); });
+    return exception_to_status_code([&] { vl->name(std::string_view(name, name_length)); });
 }
 
 tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, char const **name) {

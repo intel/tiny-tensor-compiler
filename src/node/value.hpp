@@ -39,9 +39,9 @@ struct alignas(8) tinytc_value final {
 
     inline auto context() const -> tinytc_compiler_context_t { return ty_->context(); }
 
-    inline auto name() const -> char const * { return name_.c_str(); }
-    inline void name(std::string name) { name_ = std::move(name); }
-    auto has_name() const -> bool { return !name_.empty(); }
+    auto name() const -> char const *;
+    void name(std::string_view name);
+    auto has_name() const -> bool { return name_ != nullptr; }
 
     auto use_begin() -> tinytc::use_iterator;
     auto use_end() -> tinytc::use_iterator;
@@ -59,7 +59,7 @@ struct alignas(8) tinytc_value final {
     tinytc_type_t ty_;
     tinytc::location loc_;
     tinytc_inst_t def_inst_ = nullptr;
-    std::string name_;
+    tinytc_attr_t name_ = nullptr;
 
     friend class tinytc::use;
     tinytc::use *first_use_ = nullptr;

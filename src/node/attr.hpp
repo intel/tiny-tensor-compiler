@@ -119,6 +119,7 @@ class string_attr : public tinytc_attr {
     static auto get(tinytc_compiler_context_t ctx, std::string_view str) -> tinytc_attr_t;
 
     inline auto str() const -> std::string_view { return str_; }
+    inline auto c_str() const -> char const * { return str_.c_str(); }
 
   protected:
     string_attr(tinytc_compiler_context_t ctx, std::string str);
