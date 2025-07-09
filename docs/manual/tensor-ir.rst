@@ -662,9 +662,82 @@ The loop range is defined as the cartesian product of the half-open intervals
     [\text{from}_N; \text{to}_N)
 
 The integer type of a "from" and "to" pair must match.
-The integer type of a loop variable follows the integer type of its corresponding "from" and "to" pair.
 
 The mapping of trip count to work-item is implementation-defined.
+
+Foreach tile
+............
+
+.. code:: abnf
+
+    instruction     =/ "foreach_tile" "(" local-identifier-list ")" "="
+                       "(" local-identifier-list ")" "," "(" local-identifier-list ")"
+                       "as" "(" local-identifier-list ")" "<=" "(" integer-list ")"
+                       region
+    integer-list    = integer-constant *("," integer-constant)
+
+Overview
+~~~~~~~~
+
+A foreach loop that partitions the loop range into tiles.
+The region of a foreach_tile is a *spmd region*.
+
+The first three local identifier lists define the loop range and the local identifiers that
+make the tile offset available within the loop body.
+All three lists must have the same length and have the following format:
+
+.. math::
+
+    (\text{var}_1, \dots, \text{var}_N) = (\text{from}_1, \dots, \text{from}_N),
+                                          (\text{to}_1, \dots, \text{to}_N),
+
+where :math:`N` is the common length of each of the three lists and
+the integer type of a "from" and "to" pair must match.
+After "as" comes an identifier list that makes the tile shape available in the loop body
+and the constant upper bound for the tile shape, following the format
+
+.. math::
+
+    (\text{size}_1, \dots, \text{size}_N) \leq (\text{tile_shape}_1, \dots, \text{tile_shape}_N).
+
+The number of tiles in mode :math:`i=1,\dots,N`
+is given by :math:`K_i = \lceil(\text{to}_i-\text{from}_i) / \text{tile_shape}_i\rceil`
+and the tile offset takes the following values:
+
+.. math::
+
+    \text{var}_i = \text{from}_i+k\cdot \text{tile_shape}_i, \quad k=0,\dots,K_i-1.
+
+The size variable is given by
+
+.. math::
+
+    \text{size}_i = \min(\text{tile_shape}_i, \text{to}_i - \text{var}_i).
+
+Therefore, the size is equal to the tile shape except for the loop remainder.
+
+Restrictions
+~~~~~~~~~~~~
+
+The first entry of the tile shape (:math:`\text{tile_shape}_1`) **must** be a multiple of the subgroup size.
+The tile offsets (:math:`\text{var}_i`) **must** be *dynamically uniform*.
+
+Example
+~~~~~~~
+
+.. code::
+
+    foreach_tile (%i,%j)=(%c0,%c0),(%c70,%c64) as (%ti,%tj)<=(32,32) {
+        %c32 = constant 32 : index
+        %is_remainder = less_than %ti, %c32 : bool
+        if %is_remainder {
+            %tile = cooperative_matrix_load.rows_checked %A[%i,%j] : coopmatrix<f32x32x32,matrix_acc>
+            cooperative_matrix_store.rows_checked %tile, %B[%i,%j]
+        } else {
+            %tile = cooperative_matrix_load %A[%i,%j] : coopmatrix<f32x32x32,matrix_acc>
+            cooperative_matrix_store %tile, %B[%i,%j]
+        }
+    }
 
 GEMM
 ....
@@ -1419,7 +1492,7 @@ Example:
     %to = constant 6 : i32
     %f0 = constant 0 : i64
     %f1 = constant 1 : i64
-    %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
+    %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
         %fn = arith.add %fn_2, %fn_1 : i64
         yield (%fn_1, %fn)
     }

@@ -1,0 +1,121 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -plower-foreach -pconstant-propagation -pdead-code-elimination < %s | filecheck %s
+
+func @foreach_tile1d(%A: memref<f32x64>) attributes{subgroup_size=16,work_group_size=[32,2]} {
+    %c0 = constant 0 : index
+    %s0 = size %A[0] : index
+    foreach_tile (%i)=(%c0),(%s0) as (%ti)<=(16) {
+        %sglid = subgroup_local_id : i32
+        %sglid_idx = cast %sglid : index
+        %in_bounds = less_than %sglid_idx, %ti : bool
+        if %in_bounds {
+            %c42 = constant 42.0 : f32
+            %I = add %i, %sglid_idx : index
+            store %c42, %A[%I]
+        }
+    }
+}
+; CHECK-LABEL: func @foreach_tile1d({{.*}}
+; CHECK:      parallel {
+; CHECK-NEXT:     %0 = subgroup_linear_id : i32
+; CHECK-NEXT:     %1 = constant 16 : index
+; CHECK-NEXT:     %2 = constant 64 : index
+; CHECK-NEXT:     %3 = cast %0 : index
+; CHECK-NEXT:     %4 = mul %1, %3 : index
+; CHECK-NEXT:     %5 = constant 64 : index
+; CHECK-NEXT:     for %6=%4,%5,%2 {
+; CHECK-NEXT:         %7 = subgroup_local_id : i32
+; CHECK-NEXT:         %8 = cast %7 : index
+; CHECK-NEXT:         %9 = less_than %8, %1 : bool
+; CHECK-NEXT:         if %9 {
+; CHECK-NEXT:             %10 = constant 0x1.5p+5 : f32
+; CHECK-NEXT:             %11 = add %6, %8 : index
+; CHECK-NEXT:             store %10, %A[%11]
+; CHECK-NEXT:         }
+; CHECK-NEXT:     }
+; CHECK-NEXT: }
+
+func @foreach_tile2d(%A: memref<f32x130x128>, %B: memref<f32x160x128>) attributes{subgroup_size=16,work_group_size=[32,2]} {
+    %c0 = constant 0 : index
+    %s0 = size %A[0] : index
+    %s1 = size %A[1] : index
+    foreach_tile (%i,%j)=(%c0,%c0),(%s0,%s1) as (%ti,%tj)<=(32,32) {
+        %c32 = constant 32 : index
+        %is_remainder = less_than %ti, %c32 : bool
+        %tile = if %is_remainder -> (coopmatrix<f32x32x32,matrix_acc>) {
+            %0 = cooperative_matrix_load.rows_checked %A[%i,%j] : coopmatrix<f32x32x32,matrix_acc>
+            yield (%0)
+        } else {
+            %0 = cooperative_matrix_load %A[%i,%j] : coopmatrix<f32x32x32,matrix_acc>
+            yield (%0)
+        }
+        cooperative_matrix_store %tile, %B[%i,%j]
+    }
+}
+; CHECK-LABEL: func @foreach_tile2d({{.*}}
+; CHECK:      parallel {
+; CHECK-NEXT:     %0 = subgroup_id.x : i32
+; CHECK-NEXT:     %1 = subgroup_id.y : i32
+; CHECK-NEXT:     %2 = constant 32 : index
+; CHECK-NEXT:     %3 = constant 64 : index
+; CHECK-NEXT:     %4 = cast %1 : index
+; CHECK-NEXT:     %5 = mul %2, %4 : index
+; CHECK-NEXT:     %6 = constant 128 : index
+; CHECK-NEXT:     for %7=%5,%6,%3 {
+; CHECK-NEXT:         %8 = constant 32 : index
+; CHECK-NEXT:         %9 = constant 64 : index
+; CHECK-NEXT:         %10 = constant 1 : index
+; CHECK-NEXT:         %11 = cast %0 : index
+; CHECK-NEXT:         %12 = mul %8, %11 : index
+; CHECK-NEXT:         %13 = constant 128 : index
+; CHECK-NEXT:         for %14=%12,%13,%9 {
+; CHECK-NEXT:             %15 = cooperative_matrix_load %A[%14,%7] : coopmatrix<f32x32x32,matrix_acc>
+; CHECK-NEXT:             cooperative_matrix_store %15, %B[%14,%7]
+; CHECK-NEXT:         }
+; CHECK-NEXT:         %16 = equal %11, %10 : bool
+; CHECK-NEXT:         if %16 {
+; CHECK-NEXT:             %17 = constant 128 : index
+; CHECK-NEXT:             %18 = cooperative_matrix_load.rows_checked %A[%17,%7] : coopmatrix<f32x32x32,matrix_acc>
+; CHECK-NEXT:             cooperative_matrix_store %18, %B[%17,%7]
+; CHECK-NEXT:         }
+; CHECK-NEXT:     }
+; CHECK-NEXT: }
+
+func @foreach_tile3d(%A: memref<f32x64x64x33>) attributes{subgroup_size=16,work_group_size=[32,2]} {
+    %c0 = constant 0 : index
+    %s0 = size %A[0] : index
+    %s1 = size %A[1] : index
+    %s2 = size %A[2] : index
+    foreach_tile (%i,%j,%k)=(%c0,%c0,%c0),(%s0,%s1,%s2) as (%ti,%tj,%tk)<=(32,16,16) {
+        %tk_f32 = cast %tk : f32
+        store %tk_f32, %A[%i,%j,%k]
+    }
+}
+; CHECK-LABEL: func @foreach_tile3d({{.*}}
+; CHECK:      parallel {
+; CHECK-NEXT:     %1 = subgroup_id.x : i32
+; CHECK-NEXT:     %2 = subgroup_id.y : i32
+; CHECK-NEXT:     %3 = constant 16 : index
+; CHECK-NEXT:     %4 = constant 32 : index
+; CHECK-NEXT:     %5 = cast %2 : index
+; CHECK-NEXT:     %6 = mul %3, %5 : index
+; CHECK-NEXT:     %7 = constant 64 : index
+; CHECK-NEXT:     for %8=%6,%7,%4 {
+; CHECK-NEXT:         %9 = constant 32 : index
+; CHECK-NEXT:         %10 = constant 64 : index
+; CHECK-NEXT:         %11 = cast %1 : index
+; CHECK-NEXT:         %12 = mul %9, %11 : index
+; CHECK-NEXT:         %13 = constant 64 : index
+; CHECK-NEXT:         for %14=%12,%13,%10 {
+; CHECK-NEXT:             %15 = constant 16 : index
+; CHECK-NEXT:             for %16=%c0,%0,%15 {
+; CHECK-NEXT:                 %17 = sub %0, %16 : index
+; CHECK-NEXT:                 %18 = min %17, %15 : index
+; CHECK-NEXT:                 %19 = cast %18 : f32
+; CHECK-NEXT:                 store %19, %A[%14,%8,%16]
+; CHECK-NEXT:             }
+; CHECK-NEXT:         }
+; CHECK-NEXT:     }
+; CHECK-NEXT: }

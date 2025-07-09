@@ -518,6 +518,8 @@ Instruction Builder
 
   * :ref:`tinytc::creator\< foreach_inst \>`
 
+  * :ref:`tinytc::creator\< foreach_tile_inst \>`
+
   * :ref:`tinytc::creator\< fuse_inst \>`
 
   * :ref:`tinytc::creator\< gemm_inst \>`
@@ -911,6 +913,13 @@ creator<foreach_inst>
 .....................
 
 .. doxygenstruct:: tinytc::creator< foreach_inst >
+
+.. _tinytc::creator\< foreach_tile_inst \>:
+
+creator<foreach_tile_inst>
+..........................
+
+.. doxygenstruct:: tinytc::creator< foreach_tile_inst >
 
 .. _tinytc::creator\< fuse_inst \>:
 

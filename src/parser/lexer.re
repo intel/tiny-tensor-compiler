@@ -72,6 +72,7 @@ lex:
 
         // symbols
         "="                 { adv_loc(); return parser::make_EQUALS(loc_); }
+        "<="                { adv_loc(); return parser::make_LESS_EQUAL(loc_); }
         ","                 { adv_loc(); return parser::make_COMMA(loc_); }
         "x"                 { adv_loc(); return parser::make_TIMES(loc_); }
         ":"                 { adv_loc(); return parser::make_COLON(loc_); }
@@ -85,6 +86,7 @@ lex:
         "]"                 { adv_loc(); return parser::make_RSQBR(loc_); }
 
         // keywords
+        "as"                { adv_loc(); return parser::make_AS(loc_); }
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
         "->"                { adv_loc(); return parser::make_ARROW(loc_); }
         "?"                 { adv_loc(); return parser::make_DYNAMIC(loc_); }
@@ -200,6 +202,7 @@ lex:
         "load"               { adv_loc(); return parser::make_LOAD(loc_); }
         "for"                { adv_loc(); return parser::make_FOR(loc_); }
         "foreach"            { adv_loc(); return parser::make_FOREACH(loc_); }
+        "foreach_tile"       { adv_loc(); return parser::make_FOREACH_TILE(loc_); }
         "if"                 { adv_loc(); return parser::make_IF(loc_); }
         "parallel"           { adv_loc(); return parser::make_PARALLEL(loc_); }
         "else"               { adv_loc(); return parser::make_ELSE(loc_); }

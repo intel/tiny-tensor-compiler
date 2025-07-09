@@ -201,7 +201,7 @@ void dump_ir_pass::dump_transpose_checked(transpose t, checked_flag c) {
         *os_ << "." << to_string(t);
     }
     if (c != checked_flag::none) {
-        *os_ << "." << to_string(c);
+        *os_ << "." << to_string(c) << "_checked";
     }
 }
 
@@ -589,6 +589,24 @@ void dump_ir_pass::operator()(foreach_inst in) {
     do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
     *os_ << "),(";
     do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ") ";
+    dump_region(in.body());
+}
+
+void dump_ir_pass::operator()(foreach_tile_inst in) {
+    *os_ << "foreach_tile (";
+    auto loop_vars = in.loop_vars();
+    do_with_infix(loop_vars.begin(), loop_vars.end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ")=(";
+    do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
+    *os_ << "),(";
+    do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ") as (";
+    auto sizes = in.sizes();
+    do_with_infix(sizes.begin(), sizes.end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ")<=(";
+    do_with_infix(in.tile_shape().begin(), in.tile_shape().end(),
+                  [this](auto const &i) { *os_ << i; });
     *os_ << ") ";
     dump_region(in.body());
 }

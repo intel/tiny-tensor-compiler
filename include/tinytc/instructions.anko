@@ -403,6 +403,16 @@ inst @foreach : @loop "Create foreach loop" {
     cxx "inline auto loop_vars() { return body().params(); }"
 }
 
+inst @foreach_tile : @loop "Create tiled foreach loop" {
+    collective
+    prop* %tile_shape => i64 "tile shape"
+    op* %from "array of loop begin (inclusive)"
+    op* %to   "array of loop end (exclusive)"
+    cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
+    cxx "inline auto loop_vars() { return iterator_range_wrapper{body().param_begin(), body().param_begin()+dim()}; }"
+    cxx "inline auto sizes() { return iterator_range_wrapper{body().param_begin()+dim(), body().param_end()}; }"
+}
+
 ; Math
 
 inst @math_unary "Math instruction" {

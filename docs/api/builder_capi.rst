@@ -644,6 +644,8 @@ Instruction Builder
 
   * :ref:`tinytc_foreach_inst_create`
 
+  * :ref:`tinytc_foreach_tile_inst_create`
+
   * :ref:`tinytc_fuse_inst_create`
 
   * :ref:`tinytc_gemm_inst_create`
@@ -1062,6 +1064,13 @@ tinytc_foreach_inst_create
 ..........................
 
 .. doxygenfunction:: tinytc_foreach_inst_create
+
+.. _tinytc_foreach_tile_inst_create:
+
+tinytc_foreach_tile_inst_create
+...............................
+
+.. doxygenfunction:: tinytc_foreach_tile_inst_create
 
 .. _tinytc_fuse_inst_create:
 

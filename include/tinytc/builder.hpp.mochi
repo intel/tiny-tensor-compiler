@@ -830,6 +830,36 @@ class region_builder {
         auto bb = region_builder{reg};
         f(bb, array_view<tinytc_value_t>(params));
     }
+    /**
+     * @brief Build foreach-loop with functor f(region_builder&, array_view<tinytc_value_t>,
+     * array_view<tinytc_value_t>) -> void
+     *
+     * @tparam F Functor type
+     * @param tile_shape Tile shape
+     * @param from Loop variable start list
+     * @param to Loop variable bound list
+     * @param f functor (1. region builder, 2. tile offset, 3. size)
+     * @param loc Source code location
+     */
+    template <typename F>
+    void foreach_tile_loop(array_view<std::int64_t> tile_shape, array_view<tinytc_value_t> from,
+                           array_view<tinytc_value_t> to, F &&f, location const &loc = {}) {
+        auto fi = creator<foreach_tile_inst>{}(std::move(tile_shape), std::move(from),
+                                               std::move(to), loc);
+        auto reg = tinytc_region_t{};
+        get_regions(fi.get(), reg);
+        auto num_params = get_parameters(reg, {});
+        auto params = std::vector<tinytc_value_t>(num_params);
+        get_parameters(reg, params);
+        auto dim = tile_shape.size();
+        if (!reg || num_params != 2 * dim) {
+            throw status::internal_compiler_error;
+        }
+        insert(reg_, ip_, std::move(fi));
+        auto bb = region_builder{reg};
+        f(bb, array_view<tinytc_value_t>(params.data(), dim),
+          array_view<tinytc_value_t>(params.data() + dim, dim));
+    }
 
     /**
      * @brief Build if with functor then(region_builder&) -> void

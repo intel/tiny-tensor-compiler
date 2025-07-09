@@ -69,7 +69,8 @@ class dump_ir_pass {
     void operator()(gemv_inst g);
     void operator()(ger_inst g);
     void operator()(for_inst p);
-    void operator()(foreach_inst p);
+    void operator()(foreach_inst in);
+    void operator()(foreach_tile_inst in);
     void operator()(hadamard_inst g);
     void operator()(if_inst in);
     void operator()(math_unary_inst in);

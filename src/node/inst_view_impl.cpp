@@ -1138,6 +1138,33 @@ void foreach_inst::setup_and_check() {
     }
 }
 
+void foreach_tile_inst::setup_and_check() {
+    loop_inst::setup_and_check();
+
+    auto from_ = from();
+    auto to_ = to();
+    if (from_.size() == 0 || from_.size() != to_.size()) {
+        throw compilation_error(loc(), status::ir_from_to_mismatch);
+    }
+    if (from_.size() != tile_shape().size()) {
+        throw compilation_error(loc(), status::ir_from_tile_shape_mismatch);
+    }
+
+    auto num_lv = from_.size();
+    body().kind(region_kind::spmd);
+    body().set_num_params(2 * num_lv);
+    for (std::int64_t i = 0; i < num_lv; ++i) {
+        if (!isa<integer_type>(*from_[i].ty())) {
+            throw compilation_error(loc(), {&from_[i]}, status::ir_expected_int);
+        }
+        if (from_[i].ty() != to_[i].ty()) {
+            throw compilation_error(loc(), {&from_[i], &to_[i]}, status::ir_number_mismatch);
+        }
+        body().set_param(i, from_[i].ty());
+        body().set_param(num_lv + i, from_[i].ty());
+    }
+}
+
 void math_unary_inst::setup_and_check() {}
 void math_unary_inst::setup_and_check(support_flags support) {
     if (!isa<number_type>(*a().ty())) {

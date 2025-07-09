@@ -98,6 +98,7 @@
 %define api.token.prefix {TOK_}
 %token
     EQUALS          "="
+    LESS_EQUAL      "<="
     COMMA           ","
     TIMES           "x"
     COLON           ":"
@@ -109,6 +110,7 @@
     RCHEV           ">"
     LSQBR           "["
     RSQBR           "]"
+    AS              "as"
     FUNC            "func"
     ATTRIBUTES      "attributes"
     ARROW           "->"
@@ -217,6 +219,7 @@
     LESS_THAN_EQUAL                 "less_than_equal"
     FOR                             "for"
     FOREACH                         "foreach"
+    FOREACH_TILE                    "foreach_tile"
     COS                             "cos"
     SIN                             "sin"
     EXP                             "exp"
@@ -304,6 +307,7 @@
 %nterm <int_or_val> slice_size
 %nterm <memory_scope> memory_scope
 %nterm <memory_semantics> memory_semantics
+%nterm <std::vector<std::int64_t>> integer_list
 
 %%
 prog:
@@ -710,6 +714,38 @@ instruction:
         ctx.pop_scope();
         $$ = std::move($loop_header);
     }
+;
+
+instruction:
+    FOREACH_TILE LPAREN identifier_list[loop_var] RPAREN EQUALS
+            LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN
+            AS LPAREN identifier_list[size] RPAREN LESS_EQUAL LPAREN integer_list[tile_shape] RPAREN[header_end]
+            <unique_handle<tinytc_inst_t>>{
+        yytry(ctx, [&] {
+            location loc = @FOREACH_TILE;
+            loc.end = @header_end.end;
+            $$ = foreach_tile_inst::create($tile_shape, $from, $to, loc);
+            auto inode = foreach_tile_inst($$.get());
+            ctx.push_scope();
+            auto loop_vars = inode.loop_vars().begin();
+            auto sizes = inode.sizes().begin();
+            const auto dim = inode.dim();
+            for (std::int64_t i = 0; i < dim; ++i) {
+                ctx.val($loop_var[i], loop_vars[i], @loop_var);
+                ctx.val($size[i], sizes[i], @size);
+            }
+            ctx.push_region(&inode.body());
+        });
+    }[loop_header] region {
+        ctx.pop_region();
+        ctx.pop_scope();
+        $$ = std::move($loop_header);
+    }
+;
+
+integer_list:
+    INTEGER_CONSTANT { $$.push_back($INTEGER_CONSTANT); }
+  | integer_list COMMA INTEGER_CONSTANT { $$ = std::move($1); $$.push_back($INTEGER_CONSTANT); }
 ;
 
 instruction:
