@@ -576,7 +576,7 @@ void dump_ir_pass::operator()(for_inst in) {
     *os_ << " ";
     dump_region(in.body());
     if (in.get().attr()) {
-        *os_ << " ";
+        *os_ << " attributes";
         visit(*this, *in.get().attr());
     }
 }

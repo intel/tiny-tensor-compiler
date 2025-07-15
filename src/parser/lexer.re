@@ -41,6 +41,7 @@ lex:
         local_unnamed_identifier = "%" unnamed_identifier;
         local_named_identifier   = "%" named_identifier;
         global_identifier     = "@" (unnamed_identifier | named_identifier);
+        def_identifier        = "$" (unnamed_identifier | named_identifier);
         string                = "\"" [^\"]* "\"";
         digit                 = [0-9];
         hexdigit              = [0-9a-fA-F];
@@ -69,6 +70,11 @@ lex:
             auto id = std::string(b + 1, YYCURSOR);
             return parser::make_GLOBAL_IDENTIFIER(std::move(id), loc_);
         }
+        def_identifier   {
+            adv_loc();
+            auto id = std::string(b + 1, YYCURSOR);
+            return parser::make_DEF_IDENTIFIER(std::move(id), loc_);
+        }
 
         // symbols
         "="                 { adv_loc(); return parser::make_EQUALS(loc_); }
@@ -84,6 +90,12 @@ lex:
         ">"                 { adv_loc(); return parser::make_RCHEV(loc_); }
         "["                 { adv_loc(); return parser::make_LSQBR(loc_); }
         "]"                 { adv_loc(); return parser::make_RSQBR(loc_); }
+        "^"                 { adv_loc(); return parser::make_CIRCUMFLEX(loc_); }
+        "-"                 { adv_loc(); return parser::make_MINUS(loc_); }
+        "+"                 { adv_loc(); return parser::make_PLUS(loc_); }
+        "*"                 { adv_loc(); return parser::make_STAR(loc_); }
+        "/"                 { adv_loc(); return parser::make_SLASH(loc_); }
+        "%"                 { adv_loc(); return parser::make_PERCENT(loc_); }
 
         // keywords
         "as"                { adv_loc(); return parser::make_AS(loc_); }
@@ -280,6 +292,9 @@ lex:
 
         // other strings
         string              { adv_loc(); return parser::make_STRING(std::string(b+1, YYCURSOR-1), loc_); }
+
+        // macros
+        "!calc"             { adv_loc(); return parser::make_M_CALC(loc_); }
 
 
         whitespace          { adv_loc(); goto lex; }

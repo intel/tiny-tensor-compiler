@@ -105,9 +105,9 @@ func @for4() {
   %lb = constant 0 : i16
   %ub = constant 10 : i16
   for %0=%lb,%ub {
-  } {unroll=false}
+  } attributes{unroll=false}
   for %2=%lb,%ub {
-  } {unroll=true}
+  } attributes{unroll=true}
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:                               OpLoopMerge %[[#]] %[[#]] DontUnroll
 ; CHECK:                               OpLoopMerge %[[#]] %[[#]] Unroll

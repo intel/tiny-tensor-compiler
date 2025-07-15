@@ -1447,7 +1447,7 @@ For
     multi-value-instruction = "for" local-identifier "="
                                     local-identifier "," local-identifier ["," local-identifier]
                               ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ] region
-                              [dictionary-attribute]
+                              ["attributes" dictionary-attribute]
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
     return-type-list        = return-type *("," return-type)
