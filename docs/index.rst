@@ -29,6 +29,7 @@ Table of contents
    manual/builder
    manual/calling_convention
    manual/tensor-ir
+   manual/preprocessor
    manual/tutorial_matrix_chain
 
 .. toctree::

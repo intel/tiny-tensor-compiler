@@ -56,6 +56,7 @@ set(DOC_FILES
     manual/builder.rst
     manual/calling_convention.rst
     manual/core.rst
+    manual/preprocessor.rst
     manual/tensor-ir.rst
     manual/tutorial_matrix_chain.rst
 )
