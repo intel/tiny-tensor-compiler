@@ -126,9 +126,6 @@ tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, size_t *result
     }
     return exception_to_status_code([&] {
         auto const num_results = reg->num_params();
-        if (num_results < 0) {
-            throw std::out_of_range("number of results must not be negative");
-        }
         auto num = static_cast<std::size_t>(num_results);
         if (*result_list_size > 0) {
             auto results = reg->param_begin();

@@ -89,9 +89,10 @@ tinytc_status_t tinytc_ze_get_support_level(ze_device_handle_t device,
     }
     *level = tinytc_support_level_basic;
 
-    const auto is_arch = [&dev_ip_ver](auto arch) {
-        return arch <= dev_ip_ver.ipVersion &&
-               dev_ip_ver.ipVersion <= arch + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
+    const auto is_arch = [&dev_ip_ver](tinytc_intel_gpu_architecture_t arch) {
+        auto arch_u = static_cast<std::uint32_t>(arch);
+        return arch_u <= dev_ip_ver.ipVersion &&
+               dev_ip_ver.ipVersion <= arch_u + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
     };
     if (is_arch(tinytc_intel_gpu_architecture_pvc) || is_arch(tinytc_intel_gpu_architecture_bmg)) {
         *level = tinytc_support_level_tuned;

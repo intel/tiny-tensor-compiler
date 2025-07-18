@@ -135,8 +135,10 @@ tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_
     cl_version ip_ver = 0;
     cl_int err =
         clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr);
-    const auto is_arch = [&ip_ver](auto arch) {
-        return arch <= ip_ver && ip_ver <= arch + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
+    const auto is_arch = [&ip_ver](tinytc_intel_gpu_architecture_t arch) {
+        auto arch_u = static_cast<std::uint32_t>(arch);
+        return arch_u <= ip_ver &&
+               ip_ver <= arch_u + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
     };
     if (err == CL_SUCCESS && (is_arch(tinytc_intel_gpu_architecture_pvc) ||
                               is_arch(tinytc_intel_gpu_architecture_bmg))) {

@@ -41,6 +41,7 @@ auto to_c_type(builtin_type ty) -> char const * {
     case builtin_type::value_t:
         return "tinytc_value_t";
     }
+    return "unknown";
 }
 auto to_cxx_type(builtin_type ty) -> char const * {
     switch (ty) {
@@ -57,6 +58,7 @@ auto to_cxx_type(builtin_type ty) -> char const * {
     case builtin_type::value_t:
         return "tinytc_value_t";
     }
+    return "unknown";
 }
 
 void generate_c_type(std::ostream &os, cxx_type const &ty) {
@@ -545,6 +547,7 @@ public:
         case quantifier::optional:
             os << std::format("inline auto has_{}() -> bool {{ return {} < {}; }}\n", it->name,
                               offset, next_offset);
+            [[fallthrough]];
         case quantifier::single:
             os << std::format("inline auto {0}() -> tinytc_value & {{ return get().op({1}); }}\n",
                               it->name, offset);

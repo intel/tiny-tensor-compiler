@@ -799,11 +799,16 @@ auto make_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst
     return unop;
 }
 
+template <typename T>
+concept spv_ops = requires() {
+    typename T::i;
+    typename T::f;
+};
 auto make_subgroup_op(uniquifier &unique, tinytc_type_t op_ty, IK op, spv_inst *a,
                       location const &loc) -> spv_inst * {
     auto &mod = unique.mod();
-    auto const make_impl = [&]<typename Ops>(tinytc_type_t op_ty, GroupOperation group_op,
-                                             spv_inst *ty, spv_inst *a) -> spv_inst * {
+    auto const make_impl = [&]<spv_ops Ops>(tinytc_type_t op_ty, GroupOperation group_op,
+                                            spv_inst *ty, spv_inst *a) -> spv_inst * {
         auto scope = unique.constant(static_cast<std::int32_t>(Scope::Subgroup));
         auto unop = visit(overloaded{[&](integer_type &) -> spv_inst * {
                                          return mod.add<typename Ops::i>(ty, scope, group_op, a);

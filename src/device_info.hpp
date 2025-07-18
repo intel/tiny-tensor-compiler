@@ -117,8 +117,9 @@ class core_info_intel : public core_info_common {
 
   private:
     inline auto is_arch(tinytc_intel_gpu_architecture_t arch) const -> bool {
-        return arch <= ip_version_ &&
-               ip_version_ <= arch + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
+        auto arch_u = static_cast<std::uint32_t>(arch);
+        return arch_u <= ip_version_ &&
+               ip_version_ <= arch_u + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
     }
     auto num_reg_small_grf() const -> std::int32_t;
     auto num_reg_large_grf() const -> std::int32_t;
