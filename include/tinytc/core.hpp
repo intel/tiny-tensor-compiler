@@ -109,9 +109,9 @@ using f32_format = ieee754_format<8, 23>;
  * @return bit pattern of low precision number
  */
 template <typename F16f, typename F32f>
-constexpr auto ieee754_truncate(typename F32f::bits_type x) -> F16f::bits_type {
-    using UI = F32f::bits_type;
-    using UITrunc = F16f::bits_type;
+constexpr auto ieee754_truncate(typename F32f::bits_type x) -> typename F16f::bits_type {
+    using UI = typename F32f::bits_type;
+    using UITrunc = typename F16f::bits_type;
     constexpr UI num_shift_bits = F32f::mantissa_bits - F16f::mantissa_bits;
     auto const round_nearest_even_and_truncate = [](UI mantissa32) {
         constexpr UI midpoint = (1 << num_shift_bits) / 2;
@@ -166,8 +166,8 @@ constexpr auto ieee754_truncate(typename F32f::bits_type x) -> F16f::bits_type {
  * @return bit pattern of high precision number
  */
 template <typename F32f, typename F16f>
-constexpr auto ieee754_extend(typename F16f::bits_type x) -> F32f::bits_type {
-    using UIExt = F32f::bits_type;
+constexpr auto ieee754_extend(typename F16f::bits_type x) -> typename F32f::bits_type {
+    using UIExt = typename F32f::bits_type;
     const UIExt sign = (x & F16f::sign_mask) << (F32f::num_bits - F16f::num_bits);
     const UIExt exponent16 = (x & F16f::exponent_mask) >> F16f::mantissa_bits;
     const UIExt mantissa16 = x & F16f::mantissa_mask;
