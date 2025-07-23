@@ -4,6 +4,7 @@
 #ifndef REGION_20250626_HPP
 #define REGION_20250626_HPP
 
+#include "node/inst.hpp"
 #include "node/value.hpp"
 #include "tinytc/core.hpp"
 #include "tinytc/types.h"

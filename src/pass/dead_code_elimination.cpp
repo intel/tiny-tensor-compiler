@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <iterator>
+#include <string>
 #include <variant>
 
 namespace tinytc {

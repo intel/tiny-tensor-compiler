@@ -152,6 +152,11 @@ void tinytc_inst::result(std::size_t pos, tinytc_type_t ty) {
     *result_ptr(pos) = tinytc_value{ty, this, loc()};
 }
 
+auto tinytc_inst::child_region_ptr(std::int32_t no) -> tinytc_region_t {
+    std::uint8_t *props_end = static_cast<std::uint8_t *>(props()) + layout_.sizeof_properties;
+    return reinterpret_cast<tinytc_region_t>(props_end) + no;
+}
+
 extern "C" {
 
 void tinytc_inst_destroy(tinytc_inst_t obj) { tinytc_inst::destroy(obj); }

@@ -8,7 +8,6 @@
     #include "parser/parse_context.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
-    #include <complex>
     #include <cstddef>
     #include <cstdint>
     #include <functional>
@@ -19,7 +18,6 @@
     #include <variant>
 
     namespace tinytc {
-        class parse_context;
         class lexer;
 
         using int_or_val = std::variant<std::int64_t, tinytc_value_t>;
@@ -50,6 +48,8 @@
     #include "util/iterator.hpp"
     #include "util/overloaded.hpp"
 
+    #include <algorithm>
+    #include <complex>
     #include <cstdint>
     #include <initializer_list>
     #include <iterator>

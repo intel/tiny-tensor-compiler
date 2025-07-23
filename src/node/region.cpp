@@ -10,7 +10,6 @@
 #include "util/ilist.hpp"
 
 #include <algorithm>
-#include <stdexcept>
 #include <vector>
 
 using namespace tinytc;

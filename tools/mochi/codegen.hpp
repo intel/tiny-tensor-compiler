@@ -6,11 +6,14 @@
 
 #include "object.hpp"
 
+#include <cstdio>
 #include <functional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
-#include <string_view>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace mochi {
 

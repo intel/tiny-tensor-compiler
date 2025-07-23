@@ -5,6 +5,7 @@
 #include "compiler_context.hpp"
 #include "location.hpp"
 #include "node/func.hpp"
+#include "node/region.hpp" // IWYU pragma: keep
 #include "node/value.hpp"
 #include "parser/parser_impl.hpp"
 #include "tinytc/builder.hpp"

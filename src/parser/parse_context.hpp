@@ -7,7 +7,6 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
-#include <complex>
 #include <cstdint>
 #include <stack>
 #include <string>

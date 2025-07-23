@@ -4,7 +4,6 @@
 #ifndef INST_20250626_HPP
 #define INST_20250626_HPP
 
-#include "node/region.hpp"
 #include "node/value.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -120,10 +119,7 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     inline auto use_ptr(std::int32_t no) -> tinytc::use * {
         return reinterpret_cast<tinytc::use *>(this + 1) + no;
     }
-    inline auto child_region_ptr(std::int32_t no) -> tinytc_region_t {
-        std::uint8_t *props_end = static_cast<std::uint8_t *>(props()) + layout_.sizeof_properties;
-        return reinterpret_cast<tinytc_region_t>(props_end) + no;
-    }
+    auto child_region_ptr(std::int32_t no) -> tinytc_region_t;
 
     tinytc::IK tid_;
     tinytc::inst_layout layout_;
