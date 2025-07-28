@@ -59,13 +59,16 @@ if(SPIRVTools_FOUND)
         lit/spv/arith_unary.ir
         lit/spv/barrier.ir
         lit/spv/builtin.ir
-        lit/spv/cast.ir
         lit/spv/calling_convention.ir
+        lit/spv/cast.ir
         lit/spv/compare.ir
-        #lit/spv/cooperative_matrix_mul_add.ir
         lit/spv/constant.ir
+        lit/spv/cooperative_matrix_construct.ir
+        lit/spv/cooperative_matrix_extract.ir
+        lit/spv/cooperative_matrix_insert.ir
         lit/spv/expand.ir
         lit/spv/for.ir
+        lit/spv/func_attributes.ir
         lit/spv/fuse.ir
         lit/spv/if.ir
         lit/spv/load.ir

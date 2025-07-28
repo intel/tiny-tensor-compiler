@@ -52,6 +52,7 @@ class dump_ir_pass {
     void operator()(cooperative_matrix_atomic_load_inst c);
     void operator()(cooperative_matrix_atomic_store_inst c);
     void operator()(cooperative_matrix_atomic_update_inst c);
+    void operator()(cooperative_matrix_construct_inst c);
     void operator()(cooperative_matrix_extract_inst c);
     void operator()(cooperative_matrix_insert_inst c);
     void operator()(cooperative_matrix_load_inst c);

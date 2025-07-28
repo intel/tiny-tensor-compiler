@@ -694,6 +694,55 @@ auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
                                                       init_vector());
 }
 
+auto coopmatrix_impl::construct(cooperative_matrix_construct_inst in, spv_inst *number)
+    -> spv_inst * {
+    auto rt = get_coopmatrix_type(in.result());
+    auto rl = get_layout(cfg(), rt);
+    auto sty = rt->component_ty();
+    auto spv_result_ty = spv_ty(rl);
+
+    if (rl.length == 1) {
+        return number;
+    }
+
+    auto &mod = unique().mod();
+    auto const init_vector = [&]() {
+        if (isa<complex_type>(*sty)) {
+            auto comp_ty = get_spv_ty_non_coopmatrix(*unique_, component_type(sty));
+            auto re = mod.add<OpCompositeExtract>(comp_ty, number, std::vector<LiteralInteger>{0});
+            auto im = mod.add<OpCompositeExtract>(comp_ty, number, std::vector<LiteralInteger>{1});
+            auto vec = std::vector<spv_inst *>(2 * rl.length);
+            for (std::int64_t v = 0; v < rl.length; ++v) {
+                vec[2 * v] = re;
+                vec[2 * v + 1] = im;
+            }
+            return vec;
+        } else if (rl.ops_per_chan > 1) {
+            if (rl.blocks1 != 1) {
+                throw status::internal_compiler_error;
+            }
+            const auto storage_ty = spv_storage_ty(rl);
+            const auto number_ty = get_spv_ty_non_coopmatrix(*unique_, rl.sty);
+            const auto channels_ty = unique_->vec_ty(number_ty, rl.ops_per_chan);
+
+            spv_inst *channels = mod.add<OpUndef>(channels_ty);
+            auto entry = std::vector<LiteralInteger>{0};
+            for (std::int32_t i = 0; i < rl.ops_per_chan; ++i) {
+                entry[0] = i;
+                channels = mod.add<OpCompositeInsert>(channels_ty, number, channels, entry);
+            }
+            channels = mod.add<OpBitcast>(storage_ty, channels);
+            return std::vector<spv_inst *>(rl.length / rl.ops_per_chan, channels);
+        }
+        return std::vector<spv_inst *>(rl.length, number);
+    };
+    auto init = init_vector();
+    if (init.size() == 1) {
+        return init[0];
+    }
+    return unique_->mod().add<OpCompositeConstruct>(spv_result_ty, std::move(init));
+}
+
 auto coopmatrix_impl::spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst * {
     if (layout.ops_per_chan > 1) {
         if (layout.ops_per_chan * size(layout.sty) != 4) {

@@ -77,6 +77,7 @@ class coopmatrix_impl {
     virtual auto arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst *;
     virtual auto cast(cast_inst in, spv_inst *a) -> spv_inst *;
     virtual auto constant(constant_inst in) -> spv_inst *;
+    virtual auto construct(cooperative_matrix_construct_inst in, spv_inst *number) -> spv_inst *;
 
     virtual auto spv_ty(coopmatrix_type const *ct) -> spv_inst *;
 

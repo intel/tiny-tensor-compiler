@@ -350,6 +350,9 @@ void inst_converter::operator()(cooperative_matrix_atomic_update_inst in) {
                                                      val(in.pos0()), val(in.pos1())));
 }
 
+void inst_converter::operator()(cooperative_matrix_construct_inst in) {
+    declare(in.result(), matrix_impl().construct(in, val(in.number())));
+}
 void inst_converter::operator()(cooperative_matrix_extract_inst in) {
     declare(in.result(), matrix_impl().extract(in, val(in.mat())));
 }

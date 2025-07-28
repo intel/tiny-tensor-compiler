@@ -1987,6 +1987,33 @@ The default scope is "work_group" and the default memory semantics is "relaxed".
 
 See :ref:`cooperative matrix store` instruction for further description.
 
+Cooperative matrix construct
+............................
+
+.. code:: abnf
+
+    value-instruction       =/ "cooperative_matrix_construct" local-identifier ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Returns a coopmatrix whose entries are initialized to the given *dynamically uniform* number.
+The type of the number must match the component type of the coopmatrix type.
+
+Operands
+~~~~~~~~~
+
+======= ================ ===========================
+Op.-No. Type             Description
+======= ================ ===========================
+1       number-type      Number
+======= ================ ===========================
+
+Restrictions
+~~~~~~~~~~~~
+
+The number **must** be *dynamically uniform*.
+
 Cooperative matrix extract
 ..........................
 

@@ -201,6 +201,15 @@ void cooperative_matrix_apply_inst::setup_and_check() {
     body().set_param(2, at->component_ty());
 }
 
+void cooperative_matrix_construct_inst::setup_and_check() {
+    auto ty = result().ty();
+
+    auto ct = get_coopmatrix_type(loc(), ty);
+    if (ct->component_ty() != number().ty()) {
+        throw compilation_error(loc(), {&number()}, status::ir_number_mismatch);
+    }
+}
+
 void cooperative_matrix_extract_inst::setup_and_check() {
     auto ty = result().ty();
 

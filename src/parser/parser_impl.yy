@@ -165,6 +165,7 @@
     COOPERATIVE_MATRIX_ATOMIC_MAX   "cooperative_matrix_atomic_max"
     COOPERATIVE_MATRIX_ATOMIC_MIN   "cooperative_matrix_atomic_min"
     COOPERATIVE_MATRIX_ATOMIC_STORE "cooperative_matrix_atomic_store"
+    COOPERATIVE_MATRIX_CONSTRUCT    "cooperative_matrix_construct"
     COOPERATIVE_MATRIX_EXTRACT      "cooperative_matrix_extract"
     COOPERATIVE_MATRIX_INSERT       "cooperative_matrix_insert"
     COOPERATIVE_MATRIX_LOAD         "cooperative_matrix_load"
@@ -965,6 +966,15 @@ valued_inst:
             $$ = cooperative_matrix_atomic_load_inst::create(
                 $ta, $checked, $memory_scope, $memory_semantics, std::move($op), std::move($p0),
                 std::move($p1), std::move($result_ty), @valued_inst);
+        });
+    }
+;
+
+valued_inst:
+    COOPERATIVE_MATRIX_CONSTRUCT var[number] COLON data_type[ty]  {
+        yytry(ctx, [&] {
+            $$ = cooperative_matrix_construct_inst::create(std::move($number), std::move($ty),
+                                                           @valued_inst);
         });
     }
 ;

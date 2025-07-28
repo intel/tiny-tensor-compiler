@@ -373,6 +373,14 @@ void dump_ir_pass::operator()(cooperative_matrix_atomic_update_inst s) {
     visit(*this, *s.result().ty());
 }
 
+void dump_ir_pass::operator()(cooperative_matrix_construct_inst c) {
+    dump_val(c.result());
+    *os_ << " = cooperative_matrix_construct ";
+    dump_val(c.number());
+    *os_ << " : ";
+    visit(*this, *c.result().ty());
+}
+
 void dump_ir_pass::operator()(cooperative_matrix_extract_inst c) {
     dump_val(c.result());
     *os_ << " = cooperative_matrix_extract ";

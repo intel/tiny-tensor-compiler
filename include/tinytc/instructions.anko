@@ -38,6 +38,12 @@ inst @cooperative_matrix_apply "Cooperative matrix apply instruction" {
     cxx "inline auto val() -> tinytc_value & { return body().param(2); }"
 }
 
+inst @cooperative_matrix_construct "Cooperative matrix construct instruction" {
+    spmd
+    op %number  "number"
+    ret %result "result type"
+}
+
 inst @cooperative_matrix_extract "Cooperative matrix extract instruction" {
     spmd
     prop %index => i64 "index"

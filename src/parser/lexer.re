@@ -202,6 +202,7 @@ lex:
         "cooperative_matrix_atomic_max"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_MAX(loc_); }
         "cooperative_matrix_atomic_min"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_MIN(loc_); }
         "cooperative_matrix_atomic_store" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_ATOMIC_STORE(loc_); }
+        "cooperative_matrix_construct"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_CONSTRUCT(loc_); }
         "cooperative_matrix_extract"      { adv_loc(); return parser::make_COOPERATIVE_MATRIX_EXTRACT(loc_); }
         "cooperative_matrix_insert"       { adv_loc(); return parser::make_COOPERATIVE_MATRIX_INSERT(loc_); }
         "cooperative_matrix_load"         { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
