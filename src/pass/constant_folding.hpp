@@ -317,6 +317,8 @@ struct compute_binop_identities {
                 return create<constant_inst>(T{0}, operand.ty(), loc);
             } else if (a == T{1}) { // operand * 1 or 1 * operand
                 return &operand;
+            } else if (a == T{-1}) { // operand * (-1) or (-1) * operand
+                return create<neg_inst>(&operand, operand.ty(), loc);
             }
             break;
         case IK::IK_div:
@@ -376,6 +378,8 @@ struct compute_binop_identities {
                 return create<constant_inst>(T{0}, operand.ty(), loc);
             } else if (a == T{1}) { // operand * 1 or 1 * operand
                 return &operand;
+            } else if (a == T{-1}) { // operand * (-1) or (-1) * operand
+                return create<neg_inst>(&operand, operand.ty(), loc);
             }
             break;
         case IK::IK_div:

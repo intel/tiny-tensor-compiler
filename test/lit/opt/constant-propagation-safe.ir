@@ -41,6 +41,17 @@ func @identity_imul1(%a: i32) {
 ; CHECK:       %2 = mul %a, %a : i32
 }
 
+func @identity_imul_1(%a: i32) {
+    %c_1 = constant -1 : i32
+    %0 = mul %a, %c_1 : i32
+    %1 = mul %c_1, %a : i32
+    %2 = mul %0, %1 : i32
+; CHECK-LABEL: func @identity_imul_1({{.*}}
+; CHECK:       %0 = neg %a : i32
+; CHECK:       %2 = neg %a : i32
+; CHECK:       %4 = mul %0, %2 : i32
+}
+
 func @identity_idiv(%a: i32) {
     %c1 = constant 1 : i32
     %0 = div %a, %c1 : i32
