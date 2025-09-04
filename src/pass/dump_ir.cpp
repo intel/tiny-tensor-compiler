@@ -209,6 +209,9 @@ void dump_ir_pass::operator()(alloca_inst a) {
     dump_val(a.result());
     *os_ << " = alloca : ";
     visit(*this, *a.result().ty());
+    if (a.stack_ptr() >= 0) {
+        *os_ << " ; stack_ptr: " << a.stack_ptr();
+    }
 }
 
 void dump_ir_pass::operator()(axpby_inst a) {
@@ -740,7 +743,8 @@ void dump_ir_pass::operator()(yield_inst y) {
     *os_ << "yield (";
     auto vals = y.yielded_vals();
     if (vals.size() > 0) {
-        do_with_infix(vals.begin(), vals.end(), [this](auto const &i) { dump_val(i); }, ", ");
+        do_with_infix(
+            vals.begin(), vals.end(), [this](auto const &i) { dump_val(i); }, ", ");
     }
     *os_ << ")";
 }
