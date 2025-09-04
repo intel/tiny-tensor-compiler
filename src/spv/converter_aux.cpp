@@ -391,16 +391,43 @@ auto make_cast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_
 auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b)
     -> spv_inst * {
     auto &mod = unique.mod();
-    const auto is_imag_zero = [&](spv_inst *a) -> bool {
-        // We capture the case here if "a" stems from a non-complex -> complex cast
+    const auto is_constant_with_zero = [&](spv_inst *a, std::size_t part) {
+        if (auto ci = dyn_cast<OpConstantComposite>(a); ci && ci->op0().size() > part) {
+            auto imag_part = dyn_cast<OpConstant>(ci->op0()[part]);
+            return imag_part && ci->type() == ty &&
+                   std::visit(overloaded{[]<typename T>(T &number) { return number == T{0}; }},
+                              imag_part->op0());
+        }
+        return false;
+    };
+    // We capture the case here if "a" stems from a non-complex -> complex cast
+    const auto is_imag_zero_after_cast = [&](spv_inst *a) -> bool {
         if (auto ci = dyn_cast<OpCompositeInsert>(a); ci) {
             return ci->type() == ty && ci->op1() == unique.null_constant(ty) &&
                    ci->op2().size() == 1 && ci->op2()[0] == 0;
         }
         return false;
     };
+    const auto is_real_zero = [&](spv_inst *a) -> bool { return is_constant_with_zero(a, 0); };
+    const auto is_imag_zero = [&](spv_inst *a) -> bool {
+        return is_constant_with_zero(a, 1) || is_imag_zero_after_cast(a);
+    };
 
-    if (is_imag_zero(a)) {
+    if (is_real_zero(a)) {
+        auto neg_b = mod.add<OpFNegate>(ty, b);
+        auto b_times_i =
+            conj_b ? mod.add<OpVectorShuffle>(ty, b, neg_b, std::vector<LiteralInteger>{1, 2})
+                   : mod.add<OpVectorShuffle>(ty, neg_b, b, std::vector<LiteralInteger>{1, 2});
+        auto a_1 = mod.add<OpVectorShuffle>(ty, a, a, std::vector<LiteralInteger>{1, 1});
+        return mod.add<OpFMul>(ty, a_1, b_times_i);
+    } else if (is_real_zero(b)) {
+        auto neg_a = mod.add<OpFNegate>(ty, a);
+        auto a_times_i =
+            conj_b ? mod.add<OpVectorShuffle>(ty, a, neg_a, std::vector<LiteralInteger>{1, 2})
+                   : mod.add<OpVectorShuffle>(ty, neg_a, a, std::vector<LiteralInteger>{1, 2});
+        auto b_1 = mod.add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{1, 1});
+        return mod.add<OpFMul>(ty, b_1, a_times_i);
+    } else if (is_imag_zero(a)) {
         a = mod.add<OpVectorShuffle>(ty, a, a, std::vector<LiteralInteger>{0, 0});
         return mod.add<OpFMul>(ty, a, b);
     } else if (is_imag_zero(b)) {
