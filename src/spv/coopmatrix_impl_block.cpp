@@ -103,7 +103,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst in, dope_vector co
         return mod.add<OpSubgroupBlockReadINTEL>(io_vec_ty, pointer);
     };
     const auto ld_chk = [&](tinytc_spv_mod &) {
-        return make_conditional_execution(unique(), interface_ty, walker.col_ok(), ld,
+        return make_conditional_execution(unique(), io_vec_ty, walker.col_ok(), ld,
                                           unique().null_constant(io_vec_ty), in.loc());
     };
     auto const ld_block = [&](tinytc_spv_mod &mod) {
