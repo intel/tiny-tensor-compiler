@@ -40,6 +40,7 @@ class dump_ir_pass {
     void operator()(alloca_inst a);
     void operator()(arith_inst a);
     void operator()(arith_unary_inst a);
+    void operator()(associated_inst a);
     void operator()(atomic_load_inst l);
     void operator()(atomic_store_inst s);
     void operator()(atomic_update_inst s);

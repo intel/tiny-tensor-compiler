@@ -151,6 +151,7 @@
 
 %token
     ALLOCA                          "alloca"
+    ASSOCIATED                      "associated"
     ATOMIC_LOAD                     "atomic_load"
     ATOMIC_STORE                    "atomic_store"
     ATOMIC_ADD                      "atomic_add"
@@ -848,6 +849,14 @@ valued_inst:
         yytry(ctx, [&] {
             $$ = alloca_inst::create(std::move($data_type), @valued_inst);
             $$->attr($dict);
+        });
+    }
+;
+
+valued_inst:
+    ASSOCIATED var[operand] COLON data_type {
+        yytry(ctx, [&] {
+            $$ = associated_inst::create($operand, $data_type, @valued_inst);
         });
     }
 ;

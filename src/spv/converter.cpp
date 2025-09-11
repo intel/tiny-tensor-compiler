@@ -242,6 +242,13 @@ void inst_converter::operator()(arith_unary_inst in) {
     }
 }
 
+void inst_converter::operator()(associated_inst in) {
+    auto v = val(in.operand());
+    auto v_ty = spv_ty(in.operand().ty());
+    auto null = unique_.null_constant(v_ty);
+    declare(in.result(), mod_->add<OpPtrNotEqual>(unique_.bool_ty(), v, null));
+}
+
 void inst_converter::operator()(atomic_load_inst in) {
     auto ot = get_memref_type(in.operand());
     auto pointer = get_pointer(in);

@@ -112,6 +112,18 @@ void alloca_inst::setup_and_check() {
     stack_ptr(-1);
 }
 
+void associated_inst::setup_and_check() {
+    auto ty = result().ty();
+
+    if (!isa<boolean_type>(*ty)) {
+        throw compilation_error(loc(), status::ir_expected_boolean);
+    }
+
+    if (!isa<group_type>(*operand().ty()) && !isa<memref_type>(*operand().ty())) {
+        throw compilation_error(loc(), {&operand()}, status::ir_expected_memref_or_group);
+    }
+}
+
 void barrier_inst::setup_and_check() {}
 
 auto barrier_inst::has_fence(address_space as) -> bool {

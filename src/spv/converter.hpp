@@ -34,6 +34,7 @@ class inst_converter {
     void operator()(alloca_inst in);
     void operator()(arith_inst in);
     void operator()(arith_unary_inst in);
+    void operator()(associated_inst in);
     void operator()(atomic_load_inst in);
     void operator()(atomic_store_inst in);
     void operator()(atomic_update_inst in);

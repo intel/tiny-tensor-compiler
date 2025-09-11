@@ -1090,6 +1090,35 @@ im   complex-type                  Extract imaginary part
 re   complex-type                  Extract real part
 ==== ============================= =============================
 
+Associated
+..........
+
+.. code:: abnf
+
+    value-instruction =/ "associated" local-identifier ":" bool-type
+
+Overview
+~~~~~~~~
+
+Checks whether if a memref or group is associated.
+Returns true if the base address is non-null.
+
+
+Operands
+~~~~~~~~~
+
+======= ======================== ===========
+Op.-No. Type                     Description
+======= ======================== ===========
+1       memref-type / group-type tensor
+======= ======================== ===========
+
+Returns
+~~~~~~~
+
+True if the memref is associated and false otherwise, that is, if the base address is a
+null pointer.
+
 Atomic load
 ...........
 

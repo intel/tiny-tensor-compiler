@@ -57,6 +57,7 @@ if(SPIRVTools_FOUND)
         lit/spv/alloca.ir
         lit/spv/arith.ir
         lit/spv/arith_unary.ir
+        lit/spv/associated.ir
         lit/spv/barrier.ir
         lit/spv/builtin.ir
         lit/spv/calling_convention.ir

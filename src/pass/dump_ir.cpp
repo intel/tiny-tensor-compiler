@@ -243,6 +243,14 @@ void dump_ir_pass::operator()(arith_unary_inst a) {
     visit(*this, *a.result().ty());
 }
 
+void dump_ir_pass::operator()(associated_inst a) {
+    dump_val(a.result());
+    *os_ << " = ";
+    dump_val(a.operand());
+    *os_ << " : ";
+    visit(*this, *a.result().ty());
+}
+
 void dump_ir_pass::dump_scope_sem(memory_scope scope, memory_semantics semantics) {
     if (scope != memory_scope::work_group) {
         *os_ << "." << to_string(scope);
@@ -743,8 +751,7 @@ void dump_ir_pass::operator()(yield_inst y) {
     *os_ << "yield (";
     auto vals = y.yielded_vals();
     if (vals.size() > 0) {
-        do_with_infix(
-            vals.begin(), vals.end(), [this](auto const &i) { dump_val(i); }, ", ");
+        do_with_infix(vals.begin(), vals.end(), [this](auto const &i) { dump_val(i); }, ", ");
     }
     *os_ << ")";
 }

@@ -9,6 +9,11 @@ inst @alloca "Alloca instruction" {
     ret %result "memref type of allocated variable"
 }
 
+inst @associated "Associated instruction" {
+    op %operand "tensor or group of tensors"
+    ret %result "boolean"
+}
+
 inst @barrier "Barrier instruction" {
     prop %fence_flags => "tinytc_address_spaces_t" "address space(s) of memory fence; "
                                                    "set to 0 for no fence"
