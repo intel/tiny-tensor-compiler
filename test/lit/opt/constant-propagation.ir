@@ -126,13 +126,20 @@ func @known_compare() {
 func @known_math() {
     %0 = constant 1.0 : f32
     %1 = constant -2.0 : f32
-    %2 = exp %0 : f32
-    %3 = exp %1 : f32
+    %2 = constant 2.0 : f32
+    %3 = exp %0 : f32
+    %4 = exp %1 : f32
+    %5 = log %0 : f32
+    %6 = log2 %2 : f32
 ; CHECK-LABEL: func @known_math({{.*}}
-; CHECK:      %2 = constant 0x1.5bf0a8p+1 : f32
-; CHECK-NEXT: %3 = exp %0 : f32
-; CHECK-NEXT: %4 = constant 0x1.152aaap-3 : f32
-; CHECK-NEXT: %5 = exp %1 : f32
+; CHECK:      %3 = constant 0x1.5bf0a8p+1 : f32
+; CHECK-NEXT: %4 = exp %0 : f32
+; CHECK-NEXT: %5 = constant 0x1.152aaap-3 : f32
+; CHECK-NEXT: %6 = exp %1 : f32
+; CHECK-NEXT: %7 = constant 0x0p+0 : f32
+; CHECK-NEXT: %8 = log %0 : f32
+; CHECK-NEXT: %9 = constant 0x1p+0 : f32
+; CHECK-NEXT: %10 = log2 %2 : f32
 }
 
 func @known_arith_complex() {

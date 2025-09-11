@@ -657,6 +657,10 @@ auto make_math_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv
             return make_ext_inst(OpenCLEntrypoint::exp);
         case IK::IK_exp2:
             return make_ext_inst(OpenCLEntrypoint::exp2);
+        case IK::IK_log:
+            return make_ext_inst(OpenCLEntrypoint::log);
+        case IK::IK_log2:
+            return make_ext_inst(OpenCLEntrypoint::log2);
         case IK::IK_native_cos:
             return make_ext_inst(OpenCLEntrypoint::native_cos);
         case IK::IK_native_sin:
@@ -665,6 +669,10 @@ auto make_math_unary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv
             return make_ext_inst(OpenCLEntrypoint::native_exp);
         case IK::IK_native_exp2:
             return make_ext_inst(OpenCLEntrypoint::native_exp2);
+        case IK::IK_native_log:
+            return make_ext_inst(OpenCLEntrypoint::native_log);
+        case IK::IK_native_log2:
+            return make_ext_inst(OpenCLEntrypoint::native_log2);
         default:
             throw compilation_error(loc, status::internal_compiler_error);
         }

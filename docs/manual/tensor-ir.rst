@@ -1687,10 +1687,14 @@ Math (unary)
                                "sin" /
                                "exp" /
                                "exp2" /
+                               "log" /
+                               "log2" /
                                "native_cos" /
                                "native_sin"
                                "native_exp" /
                                "native_exp2"
+                               "native_log" /
+                               "native_log2"
     value-instruction       =/ math-unary-type local-identifier ":" number-type
 
 Overview
@@ -1708,10 +1712,14 @@ cos         floating-type                 Compute cosine function
 sin         floating-type                 Compute sine function
 exp         floating-type / complex-type  Compute base-e exponential function
 exp2        floating-type / complex-type  Compute base-2 exponential function
+log         floating-type                 Compute base-e logarithm function
+log2        floating-type                 Compute base-2 logarithm function
 native_cos  floating-type                 Compute cosine function with implementation-defined error
 native_sin  floating-type                 Compute sine function with implementation-defined error
 native_exp  floating-type / complex-type  Compute base-e exponential function with implementation-defined error
 native_exp2 floating-type / complex-type  Compute base-2 exponential function with implementation-defined error
+native_log  floating-type                 Compute base-e logarithm function with implementation-defined error
+native_log2 floating-type                 Compute base-2 logarithm function with implementation-defined error
 =========== ============================= =====================================================================
 
 .. _size instruction:

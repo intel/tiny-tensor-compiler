@@ -435,10 +435,14 @@ inst @cos : @math_unary "Cosine instruction" {}
 inst @sin : @math_unary "Sine instruction" {}
 inst @exp : @math_unary "Base-e exponential instruction" {}
 inst @exp2 : @math_unary "Base-2 exponential instruction" {}
+inst @log : @math_unary "Base-e logarithm instruction" {}
+inst @log2 : @math_unary "Base-2 logarithm instruction" {}
 inst @native_cos : @math_unary "Cosine instruction (native)" {}
 inst @native_sin : @math_unary "Sine instruction (native)" {}
 inst @native_exp : @math_unary "Base-e exponential instruction (native)" {}
 inst @native_exp2 : @math_unary "Base-2 exponential instruction (native)" {}
+inst @native_log : @math_unary "Base-e logarithm instruction (native)" {}
+inst @native_log2 : @math_unary "Base-2 logarithm instruction (native)" {}
 
 
 ; Subgroup operation

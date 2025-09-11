@@ -512,6 +512,14 @@ struct compute_math_unary_op {
         case IK::IK_native_exp2:
             val = std::exp2(a);
             break;
+        case IK::IK_log:
+        case IK::IK_native_log:
+            val = std::log(a);
+            break;
+        case IK::IK_log2:
+        case IK::IK_native_log2:
+            val = std::log2(a);
+            break;
         default:
             throw compilation_error(loc, status::ir_fp_unsupported);
         }

@@ -233,10 +233,14 @@
     SIN                             "sin"
     EXP                             "exp"
     EXP2                            "exp2"
+    LOG                             "log"
+    LOG2                            "log2"
     NATIVE_COS                      "native_cos"
     NATIVE_SIN                      "native_sin"
     NATIVE_EXP                      "native_exp"
     NATIVE_EXP2                     "native_exp2"
+    NATIVE_LOG                      "native_log"
+    NATIVE_LOG2                     "native_log2"
     SUBGROUP_EXCLUSIVE_SCAN_ADD     "subgroup_exclusive_scan_add"
     SUBGROUP_EXCLUSIVE_SCAN_MAX     "subgroup_exclusive_scan_max"
     SUBGROUP_EXCLUSIVE_SCAN_MIN     "subgroup_exclusive_scan_min"
@@ -1271,10 +1275,14 @@ valued_inst: COS var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = cos_inst::cr
 valued_inst: SIN var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = sin_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: EXP var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = exp_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: EXP2 var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = exp2_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: LOG var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = log_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: LOG2 var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = log2_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: NATIVE_COS var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_cos_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: NATIVE_SIN var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_sin_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: NATIVE_EXP var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_exp_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: NATIVE_EXP2 var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_exp2_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NATIVE_LOG var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_log_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NATIVE_LOG2 var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_log2_inst::create($a, $ty, @valued_inst); }); };
 
 instruction:
     PARALLEL <unique_handle<tinytc_inst_t>>{

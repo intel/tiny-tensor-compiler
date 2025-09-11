@@ -271,10 +271,14 @@ lex:
         "sin"          { adv_loc(); return parser::make_SIN(loc_); }
         "exp"          { adv_loc(); return parser::make_EXP(loc_); }
         "exp2"         { adv_loc(); return parser::make_EXP2(loc_); }
+        "log"          { adv_loc(); return parser::make_LOG(loc_); }
+        "log2"         { adv_loc(); return parser::make_LOG2(loc_); }
         "native_cos"   { adv_loc(); return parser::make_NATIVE_COS(loc_); }
         "native_sin"   { adv_loc(); return parser::make_NATIVE_SIN(loc_); }
         "native_exp"   { adv_loc(); return parser::make_NATIVE_EXP(loc_); }
         "native_exp2"  { adv_loc(); return parser::make_NATIVE_EXP2(loc_); }
+        "native_log"   { adv_loc(); return parser::make_NATIVE_LOG(loc_); }
+        "native_log2"  { adv_loc(); return parser::make_NATIVE_LOG2(loc_); }
 
         // coopmatrix reduce
         "cooperative_matrix_reduce_add" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE_ADD(loc_); }

@@ -1212,6 +1212,8 @@ void exp_inst::setup_and_check() {
 void exp2_inst::setup_and_check() {
     math_unary_inst::setup_and_check(supports_float | supports_complex);
 }
+void log_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
+void log2_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
 void native_cos_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
 void native_sin_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
 void native_exp_inst::setup_and_check() {
@@ -1220,6 +1222,8 @@ void native_exp_inst::setup_and_check() {
 void native_exp2_inst::setup_and_check() {
     math_unary_inst::setup_and_check(supports_float | supports_complex);
 }
+void native_log_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
+void native_log2_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
 
 void subgroup_operation_inst::setup_and_check() {}
 void subgroup_operation_inst::setup_and_check(support_flags support) {
