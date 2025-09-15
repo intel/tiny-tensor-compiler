@@ -33,6 +33,7 @@ auto inst_cloner::clone_instruction(tinytc_inst &in) -> unique_handle<tinytc_ins
             auto layout = view.get().layout();
             auto lc = view.get().loc();
             auto clone = unique_handle{tinytc_inst::create(tid, layout, lc)};
+            clone->attr(view.get().attr());
             for (std::int32_t ret_no = 0; ret_no < layout.num_results; ++ret_no) {
                 clone->result(ret_no) =
                     tinytc_value{view.get().result(ret_no).ty(), clone.get(), lc};
