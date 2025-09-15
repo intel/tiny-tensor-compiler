@@ -889,8 +889,8 @@ Hadamard product
 
 .. code:: abnf
 
-    instruction     =/ "hadamard_product" [".atomic"] local-identifier "," local-identifier ","
-                                          local-identifier "," local-identifier "," local-identifier
+    instruction     =/ "hadamard" [".atomic"] local-identifier "," local-identifier ","
+                                  local-identifier "," local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
