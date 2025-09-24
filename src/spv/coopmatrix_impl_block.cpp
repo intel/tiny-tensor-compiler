@@ -270,6 +270,9 @@ auto coopmatrix_impl_block::get_io_sty(tinytc_type_t ty) -> tinytc_type_t {
 auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, tinytc_value const &operand,
                                        tinytc_value const &pos0) -> bool {
     auto const mt = get_memref_type(operand);
+    if (mt->stride(0) != 1) {
+        return false;
+    }
     const auto sty_size = size(mt->element_ty());
     if (sty_size >= static_cast<std::size_t>(alignment)) {
         return true;
@@ -277,8 +280,7 @@ auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, tinytc_value cons
     if (auto mi = gcd().get_memref_if(operand); mi) {
         const bool base_ok = (mi->offset_gcd() * sty_size) % alignment == 0;
         const bool pos0_ok = (gcd().get(pos0) * sty_size) % alignment == 0;
-        const bool stride_ok =
-            mt->stride(0) == 1 && (mi->stride_gcd()[1] * sty_size) % alignment == 0;
+        const bool stride_ok = (mi->stride_gcd()[1] * sty_size) % alignment == 0;
 
         return base_ok && pos0_ok && stride_ok;
     }
