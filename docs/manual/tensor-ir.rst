@@ -1522,7 +1522,7 @@ Example:
     %f0 = constant 0 : i64
     %f1 = constant 1 : i64
     %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
-        %fn = arith.add %fn_2, %fn_1 : i64
+        %fn = add %fn_2, %fn_1 : i64
         yield (%fn_1, %fn)
     }
     ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
