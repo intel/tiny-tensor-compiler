@@ -8,6 +8,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <complex>
 #include <cstdlib>
@@ -176,6 +177,20 @@ template <typename T> auto test_gemm_error_bound(std::size_t K) {
     } else {
         return gamma(K, std::numeric_limits<T>::epsilon());
     }
+}
+
+template <typename F> double bench(F f, int nrepeat = 10) {
+    f();
+    double min_exec_time_ns = std::numeric_limits<double>::max();
+    for (int i = 0; i < nrepeat; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        f();
+        auto end = std::chrono::high_resolution_clock::now();
+        double exec_time_ns =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        min_exec_time_ns = std::min(min_exec_time_ns, exec_time_ns);
+    }
+    return min_exec_time_ns;
 }
 
 } // namespace tinytc::examples

@@ -39,20 +39,6 @@ struct args {
     std::vector<examples::test_case> tc;
 };
 
-template <typename F> double bench(F f, int nrepeat = 10) {
-    f();
-    double min_exec_time_ns = std::numeric_limits<double>::max();
-    for (int i = 0; i < nrepeat; ++i) {
-        auto start = std::chrono::high_resolution_clock::now();
-        f();
-        auto end = std::chrono::high_resolution_clock::now();
-        double exec_time_ns =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        min_exec_time_ns = std::min(min_exec_time_ns, exec_time_ns);
-    }
-    return min_exec_time_ns;
-}
-
 auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, transpose tB,
                                        bool atomic, std::int64_t M, std::int64_t N, std::int64_t K,
                                        std::array<std::int64_t, 2> A_stride,
@@ -234,7 +220,7 @@ template <typename T> void test(queue q, args &a) {
                 if (a.internal_repetitions == 1 && a.verify) {
                     check(c.m, c.n, c.k, howmany);
                 }
-                min_exec_time_ns = bench([&]() {
+                min_exec_time_ns = examples::bench([&]() {
                     q.submit([&](handler &h) {
                          h.set_args(AA, howmany, BB, howmany, CC, howmany);
                          h.parallel_for(exe_range, kernel);

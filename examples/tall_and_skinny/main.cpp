@@ -35,20 +35,6 @@ struct args {
     std::vector<examples::test_case> tc;
 };
 
-template <typename F> double bench(F f, int nrepeat = 10) {
-    f();
-    double min_exec_time_ns = std::numeric_limits<double>::max();
-    for (int i = 0; i < nrepeat; ++i) {
-        auto start = std::chrono::high_resolution_clock::now();
-        f();
-        auto end = std::chrono::high_resolution_clock::now();
-        double exec_time_ns =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        min_exec_time_ns = std::min(min_exec_time_ns, exec_time_ns);
-    }
-    return min_exec_time_ns;
-}
-
 template <typename T> void test(queue q, args &a) {
     std::int64_t na_max = 0;
     std::int64_t nb_max = 0;
@@ -132,7 +118,7 @@ template <typename T> void test(queue q, args &a) {
             if (a.verify) {
                 check(c.m, c.n, c.k);
             }
-            double min_exec_time_ns = bench([&]() { submit(tas.get(), q).wait(); });
+            double min_exec_time_ns = examples::bench([&]() { submit(tas.get(), q).wait(); });
 
             const auto ops_per_mnk = [&] {
                 switch (a.ty) {
