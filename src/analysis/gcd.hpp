@@ -80,7 +80,7 @@ class gcd_analysis_result {
  *
  * We can update p without having to resort to P as following:
  *
- * "%x = constant C": p(%x) := C
+ * "%x = constant C": p(%x) := |C|
  * "%z = add %x, %y": p(%z) := gcd(p(%x),p(%y))
  * "%z = sub %x, %y": p(%z) := gcd(p(%x),p(%y))
  * "%z = mul %x, %y": p(%z) := p(%x) * p(%y)
