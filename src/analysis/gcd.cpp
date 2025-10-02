@@ -112,6 +112,7 @@ void gcd_helper::operator()(arith_inst in) {
         const auto gb = gcd_.get(in.b());
         switch (in.get().type_id()) {
         case IK::IK_add:
+        case IK::IK_sub:
             return std::gcd(ga, gb);
         case IK::IK_mul:
             return ga * gb;
