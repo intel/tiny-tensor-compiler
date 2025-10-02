@@ -112,6 +112,7 @@ enum @status "Status codes" {
     case %ir_expected_non_scalar_memref            => 0x150 "Expected memref of dimension greater or equal than 1"
     case %ir_complex_number_type_unsupported       => 0x151 "Complex number type not supported"
     case %ir_tile_shape0_not_multiple_of_sgs       => 0x152 "Tile shape 0 is not a multiple of the subgroup size"
+    case %ir_division_by_zero                      => 0x153 "Division by zero detected"
     ; SPIR-V errors
     case %spirv_forbidden_forward_declaration => 0x1000 "Forward declaration of id is forbidden"
     case %spirv_undefined_value               => 0x1001 "Undefined SPIR-V value"
