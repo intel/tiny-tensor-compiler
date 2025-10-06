@@ -1,0 +1,182 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -pinsert-barrier < %s | filecheck %s
+func @rar(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %A, %B, %b, %D
+; CHECK-LABEL: func @rar({{.*}}
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  gemm %a, %A, %B, %b, %D
+}
+
+func @raw(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %C, %B, %b, %D
+; CHECK-LABEL: func @raw({{.*}}
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %D
+}
+
+func @war(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    gemm %a, %C, %B, %b, %A
+    gemm %a, %D, %B, %b, %C
+; CHECK-LABEL: func @war({{.*}}
+; CHECK:       gemm %a, %C, %B, %b, %A
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  gemm %a, %D, %B, %b, %C
+}
+
+func @waw(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %A, %B, %b, %C
+; CHECK-LABEL: func @waw({{.*}}
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  gemm %a, %A, %B, %b, %C
+}
+
+func @raw_local(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    %C = alloca : memref<f32x4x4,local>
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %C, %B, %b, %D
+; CHECK-LABEL: func @raw_local({{.*}}
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  barrier.local
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %D
+}
+
+func @raw_local_war_global(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    %C = alloca : memref<f32x4x4,local>
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %C, %B, %b, %A
+; CHECK-LABEL: func @raw_local_war_global({{.*}}
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  barrier.global.local
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %A
+}
+
+func @respect_manual_barrier(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %D: memref<f32x4x4>) {
+    %C = alloca : memref<f32x4x4,local>
+    gemm %a, %A, %B, %b, %C
+    barrier.global.local
+    gemm %a, %C, %B, %b, %A
+; CHECK-LABEL: func @respect_manual_barrier({{.*}}
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  barrier.global.local
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %A
+}
+
+func @war_alias(%a: f32, %b: f32, %A: memref<f32x8x8>, %C: memref<f32x8x12>) {
+    %B = alloca : memref<f32x8x12,local>
+    %0 = subview %B[0:8,0:8] : memref<f32x8x8,local>
+    axpby %a, %B, %b, %C
+    axpby %a, %A, %b, %0
+; CHECK-LABEL: func @war_alias({{.*}}
+; CHECK:      axpby %a, %B, %b, %C{{.*}}
+; CHECK-NEXT: barrier.local
+; CHECK-NEXT: axpby %a, %A, %b, %0{{.*}}
+}
+
+func @if(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
+    %c42 = constant 42.0 : f32
+    %0 = greater_than %a, %c42 : bool
+    if %0 {
+        axpby %a, %A, %b, %B
+        axpby %a, %B, %b, %C
+    } else {
+        axpby %a, %C, %b, %D
+    }
+    axpby %a, %A, %b, %B
+; CHECK-LABEL: func @if({{.*}}
+; CHECK:       if %0 {
+; CHECK-NEXT:      axpby %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:      barrier.global
+; CHECK-NEXT:      axpby %a, %B, %b, %C{{.*}}
+; CHECK-NEXT:  } else {
+; CHECK-NEXT:      axpby %a, %C, %b, %D{{.*}}
+; CHECK-NEXT:  }
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  axpby %a, %A, %b, %B{{.*}}
+}
+
+func @if2(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
+    %c42 = constant 42.0 : f32
+    %0 = greater_than %a, %c42 : bool
+    axpby %a, %B, %b, %A
+    if %0 {
+        axpby %a, %A, %b, %B
+        axpby %a, %B, %b, %C
+    } else {
+        axpby %a, %C, %b, %D
+    }
+    axpby %a, %A, %b, %B
+; CHECK-LABEL: func @if2({{.*}}
+; CHECK:       if %0 {
+; CHECK-NEXT:      barrier.global
+; CHECK-NEXT:      axpby %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:      barrier.global
+; CHECK-NEXT:      axpby %a, %B, %b, %C{{.*}}
+; CHECK-NEXT:  } else {
+; CHECK-NEXT:      axpby %a, %C, %b, %D{{.*}}
+; CHECK-NEXT:  }
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  axpby %a, %A, %b, %B{{.*}}
+}
+
+func @region1() {
+    %one = constant 1.0 : f32
+    %zero = constant 0.0 : f32
+    %0 = alloca : memref<f32x8x8,local>
+    %lb = constant 0 : index
+    %ub = constant 4 : index
+    for %i=%lb,%ub {
+        %1 = alloca : memref<f32x8x8,local>
+        for %k=%lb,%ub {
+            %2 = alloca : memref<f32x8x8,local>
+            gemm %one, %0, %1, %zero, %2
+            axpby %one, %1, %zero, %0
+        }
+        axpby %one, %0, %zero, %1
+    }
+; CHECK-LABEL: func @region1({{.*}}
+; CHECK:       for %i=%lb,%ub {
+; CHECK-NEXT:    %1 = alloca : memref<f32x8x8,local>
+; CHECK-NEXT:    for %k=%lb,%ub {
+; CHECK-NEXT:      %2 = alloca : memref<f32x8x8,local>
+; CHECK-NEXT:      barrier.local
+; CHECK-NEXT:      gemm %one, %0, %1, %zero, %2
+; CHECK-NEXT:      barrier.local
+; CHECK-NEXT:      axpby %one, %1, %zero, %0{{.*}}
+; CHECK-NEXT:    }
+; CHECK-NEXT:    barrier.local
+; CHECK-NEXT:    axpby %one, %0, %zero, %1{{.*}}
+; CHECK-NEXT:  }
+}
+
+func @no_barrier_spmd(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>) {
+    %c0 = constant 0 : i32
+    %c3 = constant 3 : index
+    %c4 = constant 4 : index
+    parallel {
+        %0 = subgroup_linear_id : i32
+        %1 = equal %0, %c0 : bool
+        if %1 {
+            %2 = load %A[%c3,%c4] : f32
+            store %2, %A[%c3,%c4]
+        }
+    }
+    %3 = load %A[%c3,%c4] : f32
+; CHECK-LABEL: func @no_barrier_spmd({{.*}}
+; CHECK:       parallel {
+; CHECK-NEXT:    %0 = subgroup_linear_id : i32
+; CHECK-NEXT:    %1 = equal %0, %c0 : bool
+; CHECK-NEXT:    if %1 {
+; CHECK-NEXT:      %2 = load %A[%c3,%c4] : f32
+; CHECK-NEXT:      store %2, %A[%c3,%c4]
+; CHECK-NEXT:    }
+; CHECK-NEXT:  }
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  %3 = load %A[%c3,%c4] : f32
+}

@@ -1,0 +1,37 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+func @t1() {
+    %0 = constant true : bool
+    %1 = constant 42 : i8
+    %2 = constant -42 : i8
+    %3 = constant 42 : i16
+    %4 = constant -42 : i16
+    %5 = constant 42 : i32
+    %6 = constant -42 : i32
+    %7 = constant 42 : i64
+    %8 = constant -42 : i64
+    %9 = constant 42.42424242 : bf16
+    %10 = constant 42.42424242 : f16
+    %11 = constant 42.42424242 : f32
+    %12 = constant 42.42424242 : f64
+    %13 = constant [42.42424242, 0.0] : c32
+    %14 = constant [42.42424242, 0.0] : c64
+; CHECK:      %[[#]] = OpConstant %[[#]] 42
+; CHECK:      %[[#]] = OpConstant %[[#]] 214
+; CHECK:      %[[#]] = OpConstant %[[#]] 42
+; CHECK:      %[[#]] = OpConstant %[[#]] 65494
+; CHECK:      %[[#]] = OpConstant %[[#]] 42
+; CHECK:      %[[#]] = OpConstant %[[#]] 4294967254
+; CHECK:      %[[#]] = OpConstant %[[#]] 42
+; CHECK:      %[[#]] = OpConstant %[[#]] 18446744073709551574
+; CHECK:      %[[#]] = OpConstant %[[#]] 16938
+; CHECK:      %[[#]] = OpConstant %[[#]] 0x1.538p+5
+; CHECK:      %[[#CST32:]] = OpConstant %[[#]] 0x1.5364dap+5
+; CHECK:      %[[#CST64:]] = OpConstant %[[#]] 0x1.5364d935bbceap+5
+; CHECK:      %[[#]] = OpConstantComposite %[[#]] %[[#CST32]] %[[#]]
+; CHECK:      %[[#]] = OpConstantComposite %[[#]] %[[#CST64]] %[[#]]
+}
+

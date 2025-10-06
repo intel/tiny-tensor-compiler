@@ -3,9 +3,8 @@
 
 #include "recipe_handler.hpp"
 #include "../recipe.hpp"
-#include "../reference_counted.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/types.h"
@@ -17,17 +16,17 @@
 
 namespace tinytc {
 
-cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device, recipe rec,
-                                     source_context source_ctx)
+cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device,
+                                     shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_recipe().get_source(), std::move(source_ctx));
+    module_ = create_kernel_bundle(context, device, get_binary(get_recipe()).get());
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     local_size_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_.get(), get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back().get()));
     }
 
@@ -46,13 +45,13 @@ void cl_recipe_handler::active_kernel(int kernel_num) {
 void cl_recipe_handler::arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) {
     arg_handler_.set_arg(kernel(), arg_index, arg_size, arg_value);
 }
-void cl_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value,
-                                tinytc_mem_type_t type) {
-    arg_handler_.set_mem_arg(kernel(), arg_index, value, type);
+void cl_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t ty) {
+    arg_handler_.set_mem_arg(kernel(), arg_index, value, ty);
 }
 
 void cl_recipe_handler::howmany(std::int64_t num) {
-    global_size_ = get_global_size(num, local_size());
+    global_size_ = get_global_size(
+        std::array<std::size_t, 3u>{static_cast<std::size_t>(num), 1u, 1u}, local_size());
 }
 
 auto cl_recipe_handler::kernel() -> cl_kernel { return kernels_[active_kernel_].get(); }
@@ -69,15 +68,14 @@ extern "C" {
 
 tinytc_status_t tinytc_cl_recipe_handler_create(tinytc_recipe_handler_t *handler,
                                                 cl_context context, cl_device_id device,
-                                                tinytc_recipe_t rec,
-                                                tinytc_source_context_t source_ctx) {
+                                                tinytc_recipe_t rec) {
     if (handler == nullptr || rec == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code_cl([&] {
-        *handler = std::make_unique<tinytc::cl_recipe_handler>(context, device, recipe(rec, true),
-                                                               source_context(source_ctx, true))
-                       .release();
+        *handler =
+            std::make_unique<tinytc::cl_recipe_handler>(context, device, shared_handle{rec, true})
+                .release();
     });
 }
 

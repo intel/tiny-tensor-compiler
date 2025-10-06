@@ -1,0 +1,245 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+enum @status "Status codes" {
+    doc_to_string
+    case %success                     => 0x0  "Success"
+    case %bad_alloc                   => 0x1  "Bad allocation"
+    case %invalid_arguments           => 0x2  "Invalid arguments passed to function"
+    case %out_of_range                => 0x3  "Out of range"
+    case %runtime_error               => 0x4  "General runtime error"
+    case %internal_compiler_error     => 0x5  "Internal compiler error"
+    case %unsupported_subgroup_size   => 0x6  "Device does not support subgroup size"
+    case %unsupported_work_group_size => 0x7  "Device does not support work-group size"
+    case %compilation_error           => 0x8  "Compilation error"
+    case %file_io_error               => 0x9  "I/O error occured in file operation"
+    case %parse_error                 => 0xa  "Parse error"
+    case %unavailable_extension       => 0xb  "Required vendor extension is unavailable"
+    case %unsupported_backend         => 0xc  "Unsupported backend"
+    case %invalid_kernel_arguments    => 0xd  "Invalid arguments passed to kernel"
+    case %unsupported_device          => 0xe  "Unsupported device"
+    case %invalid_core_info           => 0xf  "Invalid core info object (e.g. max work group size is 0 or "
+                                              "subgroup sizes vector is empty)"
+    case %unknown_pass_name           => 0x10 "Unknown compiler pass name"
+    case %not_implemented             => 0x11 "Not implemented"
+    case %compute_runtime_error       => 0x12 "Error occured in compute runtime"
+    ; IR errors
+    case %ir_out_of_bounds                         => 0x100 "Argument is out of bounds"
+    case %ir_invalid_shape                         => 0x101 "Invalid shape"
+    case %ir_incompatible_shapes                   => 0x102 "Incompatible tensor shapes"
+    case %ir_shape_stride_mismatch                 => 0x103 "Dimension of shape and stride must match"
+    case %ir_number_mismatch                       => 0x104 "Number type mismatch"
+    case %ir_invalid_number_of_indices             => 0x105 "Number of indices must match memref order "
+                                                            "or must be 1 for group types"
+    case %ir_expected_boolean                      => 0x106 "Expected boolean type"
+    case %ir_expected_number                       => 0x107 "Expected number type"
+    case %ir_expected_int                          => 0x108 "Expected integer type"
+    case %ir_expected_float                        => 0x109 "Expected floating point type"
+    case %ir_expected_complex                      => 0x10a "Expected complex type"
+    case %ir_expected_i32                          => 0x10b "Expected i32 type"
+    case %ir_expected_index                        => 0x10c "Expected index type"
+    case %ir_expected_coopmatrix                   => 0x10d "Expected coopmatrix type"
+    case %ir_expected_coopmatrix_or_number         => 0x10e "Expected coopmatrix or number type"
+    case %ir_expected_coopmatrix_number_or_boolean => 0x10f "Expected coopmatrix type, number type, "
+                                                            "or boolean type"
+    case %ir_expected_memref                       => 0x110 "Expected memref type"
+    case %ir_expected_memref_or_number             => 0x111 "Expected memref or number type"
+    case %ir_expected_memref_or_group              => 0x112 "Expected memref or group type"
+    case %ir_expected_memref_order_0               => 0x113 "Expected memref of order 0 (scalar)"
+    case %ir_expected_memref_order_1               => 0x114 "Expected memref of order 1 (vector)"
+    case %ir_expected_memref_order_2               => 0x115 "Expected memref of order 2 (matrix)"
+    case %ir_expected_memref_order_0_or_1          => 0x116 "Expected memref of order 0 or 1 (scalar or vector)"
+    case %ir_expected_memref_order_1_or_2          => 0x117 "Expected memref of order 1 or 2 (vector or matrix)"
+    case %ir_expected_memref_order_0_1_or_2        => 0x118 "Expected memref of order 0, 1, or 2 "
+                                                            "(scalar, vector, or matrix)"
+    case %ir_unexpected_yield                      => 0x119 "Yield encountered in non-yielding region"
+    case %ir_yield_mismatch                        => 0x11a "Number of yielded values does not match number of "
+                                                            "values yielded by region or the types are different"
+    case %ir_subview_mismatch                      => 0x11b "Number of dynamic offsets and sizes must match "
+                                                            "number of dynamic operands"
+    case %ir_invalid_slice                         => 0x11c "Static offset and size must be non-negative or "
+                                                            "dynamic (?)"
+    case %ir_expand_shape_order_too_small          => 0x11d "Expand shape must have at least 2 entries"
+    case %ir_expand_shape_mismatch                 => 0x11e "Number of dynamic expand shape operands must equal "
+                                                            "number of dynamic modes in static expand shape"
+    case %ir_collective_called_from_spmd           => 0x11f "Collective instruction must not be called from "
+                                                            "SPMD region"
+    case %ir_fp_unsupported                        => 0x120 "Floating point type unsupported by instruction"
+    case %ir_spmd_called_from_collective           => 0x121 "SPMD instruction must not be called from collective "
+                                                            "region"
+    case %ir_expected_local_address_space          => 0x122 "Expected memref with local address space"
+    case %ir_expected_global_address_space         => 0x123 "Expected memref with global address space"
+    case %ir_address_space_mismatch                => 0x124 "Address space must match"
+    case %ir_invalid_offset                        => 0x125 "Offset must be non-negative or dynamic"
+    case %ir_int_unsupported                       => 0x126 "Instruction does not support int type"
+    case %ir_boolean_unsupported                   => 0x127 "Instruction does not support boolean type"
+    case %ir_complex_unsupported                   => 0x128 "Instruction does not support complex type"
+    case %ir_coopmatrix_unsupported                => 0x129 "Instruction does not support coopmatrix type"
+    case %ir_forbidden_cast                        => 0x12a "Forbidden cast"
+    case %ir_invalid_beta                          => 0x12b "beta must be constant and 0 or 1 for atomic linear "
+                                                            "algebra operations"
+    case %ir_init_return_mismatch                  => 0x12c "The number or types of the initial values does not "
+                                                            "match the return type list"
+    case %ir_invalid_matrix_use                    => 0x12d "Operands have invalid matrix use"
+    case %ir_unsupported_coopmatrix_shape          => 0x12e "Unsupported coopmatrix shape for the combination of "
+                                                            "Number type, matrix use, and target architecture"
+    case %ir_forbidden_promotion                   => 0x12f "Number type promotion is forbidden"
+    case %ir_constant_mismatch                     => 0x130 "Type of constant does not match type or returned "
+                                                            "value"
+    case %ir_insufficient_alignment                => 0x131 "Pointer does not satisfy minimum alignment "
+                                                            "requirements"
+    case %ir_must_have_yield                       => 0x132 "Last instruction of region that returns values must "
+                                                            "be yield"
+    case %ir_yield_in_else_branch_missing          => 0x133 "Else-branch must have yield instruction if "
+                                                            "then-branch has yield instruction"
+    case %ir_from_to_mismatch                      => 0x134 "length(from) != length(to)"
+    case %ir_from_tile_shape_mismatch              => 0x135 "length(from) != length(tile_shape)"
+    case %ir_operand_type_must_match_return_type   => 0x136 "Operand type must match return type"
+    case %ir_invalid_stride                        => 0x137 "Invalid stride"
+    case %ir_init_return_type_mismatch             => 0x138 "Type of initializer does not match return type or "
+                                                            "the number of return types is not equal the number "
+                                                            "of initializers"
+    case %ir_value_still_has_uses                  => 0x139 "A value shall be erased that still has uses"
+    ; Attribute errors
+    case %ir_expected_array_attribute              => 0x140 "Expected array attribute"
+    case %ir_expected_boolean_attribute            => 0x141 "Expected boolean attribute"
+    case %ir_expected_dictionary_attribute         => 0x142 "Expected dictionary attribute"
+    case %ir_expected_integer_attribute            => 0x143 "Expected integer attribute"
+    case %ir_expected_string_attribute             => 0x144 "Expected string attribute"
+    case %ir_duplicate_key_in_dictionary           => 0x145 "Duplicate key detected in list of named attributes"
+    case %ir_unexpected_array_attribute_size       => 0x146 "Unexpected array size"
+
+    case %ir_expected_non_scalar_memref            => 0x150 "Expected memref of dimension greater or equal than 1"
+    case %ir_complex_number_type_unsupported       => 0x151 "Complex number type not supported"
+    case %ir_tile_shape0_not_multiple_of_sgs       => 0x152 "Tile shape 0 is not a multiple of the subgroup size"
+    case %ir_division_by_zero                      => 0x153 "Division by zero detected"
+    ; SPIR-V errors
+    case %spirv_forbidden_forward_declaration => 0x1000 "Forward declaration of id is forbidden"
+    case %spirv_undefined_value               => 0x1001 "Undefined SPIR-V value"
+    case %spirv_missing_dope_vector           => 0x1002 "Dope vector missing"
+    case %spirv_unsupported_atomic_data_type  => 0x1003 "Atomic data type unsupported by SPIR-V"
+    case %spirv_required_feature_unavailable  => 0x1004 "A required SPIR-V feature is unavailable"
+    ; The unknown error comes last
+    case %unknown => 0x7fffffff "Unknown status code"
+}
+
+enum @comp3 "Named components of 3d vector" {
+    case %x => 0  ".x"
+    case %y => 1  ".y"
+    case %z => 2  ".z"
+}
+
+enum @reduce_mode "Reduce mode" {
+    case %row    => 0 "Reduction over rows"
+    case %column => 1 "Reduction over columns"
+}
+
+enum @transpose "Transpose" {
+    doc_to_string
+    case %N => 0 "n"
+    case %T => 1 "t"
+}
+
+enum @address_space "Address space" {
+    case %global => 0x1 "Global memory"
+    case %local  => 0x2 "Local memory, returned by alloca"
+}
+
+enum @checked_flag
+"@brief Checked flag
+
+Checks can be combined by bitwise or, that is,
+
+tinytc_checked_flag_both = tinytc_checked_flag_rows | tinytc_checked_flag_cols
+tinytc_checked_flag_rows = tinytc_checked_flag_rows | tinytc_checked_flag_none"
+{
+    case %none => 0x0 "Perform no checks"
+    case %rows => 0x1 "Check for out-of-bound rows"
+    case %cols => 0x2 "Check for out-of-bound cols"
+    case %both => 0x3 "Check for out-of-bound rows and cols"
+}
+
+enum @memory_scope "Memory scope flag" {
+    case %cross_device => 0
+    case %device => 1
+    case %work_group => 2
+    case %subgroup => 3
+}
+
+enum @memory_semantics "Memory semantics" {
+    case %relaxed                 => 0x0  "Relaxed"
+    case %acquire                 => 0x2  "Acquire"
+    case %release                 => 0x4  "Release"
+    case %acquire_release         => 0x8  "Acquire and release"
+    case %sequentially_consistent => 0x10 "Sequentially consistent"
+}
+
+enum @matrix_use "Matrix use" {
+    doc_to_string
+    case %a   => 0 "matrix_a"
+    case %b   => 1 "matrix_b"
+    case %acc => 2 "matrix_acc"
+}
+
+enum @spirv_feature "SPIR-V features" {
+    case %float16                         => 0  "f16 support"
+    case %float64                         => 1  "f64 support"
+    case %int64_atomics                   => 2  "i64 atomics support"
+    case %groups                          => 3  "work group collectives"
+    case %subgroup_dispatch               => 4  "subgroup support"
+    case %atomic_float16_add_local        => 5  "f16 atomic add on local pointer"
+    case %atomic_float16_add_global       => 6  "f16 atomic add on global pointer"
+    case %atomic_float32_add_local        => 7  "f32 atomic add on local pointer"
+    case %atomic_float32_add_global       => 8  "f32 atomic add on global pointer"
+    case %atomic_float64_add_local        => 9  "f64 atomic add on local pointer"
+    case %atomic_float64_add_global       => 10 "f64 atomic add on global pointer"
+    case %atomic_float16_min_max_local    => 11 "f16 atomic min/max on local pointer"
+    case %atomic_float16_min_max_global   => 12 "f16 atomic min/max on global pointer"
+    case %atomic_float32_min_max_local    => 13 "f32 atomic min/max on local pointer"
+    case %atomic_float32_min_max_global   => 14 "f32 atomic min/max on global pointer"
+    case %atomic_float64_min_max_local    => 15 "f64 atomic min/max on local pointer"
+    case %atomic_float64_min_max_global   => 16 "f64 atomic minmax on global pointer"
+    case %bfloat16_conversion             => 17 "bf16 -> f32 and f32 -> bf16 conversion"
+    case %subgroup_buffer_block_io        => 18 "subgroup block read/write support"
+}
+
+enum @core_feature_flag "Core features that may be optionally enabled" {
+    case %large_register_file => 0x1 "Request a large register file. "
+                                     "On PVC this doubles the number of registers per vector engine "
+                                     "but halves the number of available hardware threads. "
+                                     "When this feature is activated, the kernel is compiled with "
+                                     "the -ze-opt-large-register-file option."
+}
+
+enum @intel_gpu_architecture
+"@brief IP versions for Intel GPUs
+
+Note: IP versions are extracted from
+* https://github.com/intel/compute-runtime/blob/4b5d5f235abf0ff67c9188f8096afd4da2e0574d/third_party/aot_config_headers/platforms.h
+* https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619"
+{
+    case %tgl => 0x03000000 "Tiger Lake"
+    case %pvc => 0x030f0000 "Ponte Vecchio"
+    case %bmg => 0x05004000 "Battlemage"
+}
+
+enum @bundle_format "Target binary format" {
+    case %spirv  => 0 "SPIR-V"
+    case %native => 1 "Native device binary"
+}
+
+enum @optflag "Flags for optimizer" {
+    case %unsafe_fp_math => 0 "Unsafe floating point math (e.g. 0.0 * x => 0.0)"
+}
+
+enum @mem_type "Memory object type" {
+    case %buffer      => 0x0 "Buffer object (e.g. cl_mem)"
+    case %usm_pointer => 0x1 "Unified shared memory pointer"
+    case %svm_pointer => 0x2 "Shared virtual memory pointer"
+}
+
+enum @support_level "Support level of a device" {
+    case %none  => 0x0 "Device is unsupported (e.g. subgroups feature missing in OpenCL-C)"
+    case %basic => 0x1 "Device provides necessary features but is not well tested"
+    case %tuned => 0x2 "Device provides necessary features and is well tested"
+}

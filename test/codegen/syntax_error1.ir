@@ -1,8 +1,0 @@
-; Copyright (C) 2024 Intel Corporation
-; SPDX-License-Identifier: BSD-3-Clause
-
-; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
-func @axpby(%B: memref<f32x8x8>) {
-    axby
-; CHECK: 6.5: Unknown token
-}

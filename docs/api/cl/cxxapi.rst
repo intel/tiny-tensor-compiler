@@ -1,5 +1,7 @@
-.. Copyright (C) 2024 Intel Corporation
+.. Copyright (C) 2025 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
+
+.. _OpenCL C++-API:
 
 =======
 C++-API
@@ -10,10 +12,12 @@ Common
 
 * Functions
 
-  * :ref:`CL_CHECK_STATUS`
+  * :ref:`tinytc::CL_CHECK_STATUS`
 
 Common Functions
 ----------------
+
+.. _tinytc::CL_CHECK_STATUS:
 
 CL_CHECK_STATUS
 ...............
@@ -25,106 +29,123 @@ Device Info
 
 * Functions
 
-  * :ref:`get_support_level(cl_device_id)`
+  * :ref:`tinytc::get_support_level(cl_device_id)`
 
-  * :ref:`make_core_info(cl_device_id)`
+  * :ref:`tinytc::create_core_info(cl_device_id)`
 
 Device Info Functions
 ---------------------
+
+.. _tinytc::get_support_level(cl_device_id):
 
 get_support_level(cl_device_id)
 ...............................
 
 .. doxygenfunction:: tinytc::get_support_level(cl_device_id)
 
-make_core_info(cl_device_id)
-............................
+.. _tinytc::create_core_info(cl_device_id):
 
-.. doxygenfunction:: tinytc::make_core_info(cl_device_id)
+create_core_info(cl_device_id)
+..............................
+
+.. doxygenfunction:: tinytc::create_core_info(cl_device_id)
 
 Kernel
 ======
 
 * Functions
 
-  * :ref:`get_global_size(std::int64_t,std::array\<std::size_t, 3u\> const &)`
+  * :ref:`tinytc::get_global_size(std::array\<std::size_t,3u\> const &,std::array\<std::size_t,3u\> const &)`
 
-  * :ref:`get_group_size(cl_kernel)`
+  * :ref:`tinytc::get_group_size(cl_kernel)`
 
-  * :ref:`make_kernel(cl_program,char const\\*)`
+  * :ref:`tinytc::create_kernel(cl_program,char const\*)`
 
-  * :ref:`make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)`
+  * :ref:`tinytc::create_kernel_bundle(cl_context,cl_device_id,const_tinytc_binary_t)`
 
-  * :ref:`make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)`
-
-  * :ref:`make_kernel_bundle(cl_context,cl_device_id,source const&,source_context)`
+  * :ref:`tinytc::create_kernel_bundle(cl_context,cl_device_id,tinytc_prog_t,tinytc_core_feature_flags_t)`
 
 Kernel Functions
 ----------------
 
-get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
-.................................................................
+.. _tinytc::get_global_size(std::array\<std::size_t,3u\> const &,std::array\<std::size_t,3u\> const &):
 
-.. doxygenfunction:: tinytc::get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
+get_global_size(std::array<std::size_t,3u> const &,std::array<std::size_t,3u> const &)
+......................................................................................
+
+.. doxygenfunction:: tinytc::get_global_size(std::array<std::size_t,3u> const &,std::array<std::size_t,3u> const &)
+
+.. _tinytc::get_group_size(cl_kernel):
 
 get_group_size(cl_kernel)
 .........................
 
 .. doxygenfunction:: tinytc::get_group_size(cl_kernel)
 
-make_kernel(cl_program,char const\*)
-....................................
+.. _tinytc::create_kernel(cl_program,char const\*):
 
-.. doxygenfunction:: tinytc::make_kernel(cl_program,char const*)
+create_kernel(cl_program,char const\*)
+......................................
 
-make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)
-........................................................................
+.. doxygenfunction:: tinytc::create_kernel(cl_program,char const*)
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)
+.. _tinytc::create_kernel_bundle(cl_context,cl_device_id,const_tinytc_binary_t):
 
-make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)
-...........................................................................................
+create_kernel_bundle(cl_context,cl_device_id,const_tinytc_binary_t)
+...................................................................
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)
+.. doxygenfunction:: tinytc::create_kernel_bundle(cl_context,cl_device_id,const_tinytc_binary_t)
 
-make_kernel_bundle(cl_context,cl_device_id,source const&,source_context)
-........................................................................
+.. _tinytc::create_kernel_bundle(cl_context,cl_device_id,tinytc_prog_t,tinytc_core_feature_flags_t):
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,source const&,source_context)
+create_kernel_bundle(cl_context,cl_device_id,tinytc_prog_t,tinytc_core_feature_flags_t)
+.......................................................................................
+
+.. doxygenfunction:: tinytc::create_kernel_bundle(cl_context,cl_device_id,tinytc_prog_t,tinytc_core_feature_flags_t)
 
 Recipe
 ======
 
 * Functions
 
-  * :ref:`make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)`
+  * :ref:`tinytc::create_recipe_handler(cl_context,cl_device_id,tinytc_recipe_t)`
 
-* Classes
+  * :ref:`tinytc::submit(tinytc_recipe_handler_t,cl_command_queue,uint32_t,cl_event\*)`
 
-  * :ref:`opencl_recipe_handler`
+  * :ref:`tinytc::submit_no_event`
 
 * Structures
 
-  * :ref:`auto_mem_type\<cl_mem\>`
+  * :ref:`tinytc::auto_mem_type\< cl_mem \>`
 
 Recipe Functions
 ----------------
 
-make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)
-.........................................................................
+.. _tinytc::create_recipe_handler(cl_context,cl_device_id,tinytc_recipe_t):
 
-.. doxygenfunction:: tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)
+create_recipe_handler(cl_context,cl_device_id,tinytc_recipe_t)
+..............................................................
 
-Recipe Classes
---------------
+.. doxygenfunction:: tinytc::create_recipe_handler(cl_context,cl_device_id,tinytc_recipe_t)
 
-opencl_recipe_handler
-.....................
+.. _tinytc::submit(tinytc_recipe_handler_t,cl_command_queue,uint32_t,cl_event\*):
 
-.. doxygenclass:: tinytc::opencl_recipe_handler
+submit(tinytc_recipe_handler_t,cl_command_queue,uint32_t,cl_event\*)
+....................................................................
+
+.. doxygenfunction:: tinytc::submit(tinytc_recipe_handler_t,cl_command_queue,uint32_t,cl_event*)
+
+.. _tinytc::submit_no_event:
+
+submit_no_event
+...............
+
+.. doxygenfunction:: tinytc::submit_no_event
 
 Recipe Structures
 -----------------
+
+.. _tinytc::auto_mem_type\< cl_mem \>:
 
 auto_mem_type<cl_mem>
 .....................

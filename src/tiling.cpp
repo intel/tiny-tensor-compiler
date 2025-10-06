@@ -3,48 +3,69 @@
 
 #include "tiling.hpp"
 #include "device_info.hpp"
-#include "gemm_generator.hpp"
-#include "tinytc/tinytc.hpp"
+#include "gemm_tools.hpp"
+#include "matrix_ext_info.hpp"
+#include "node/type.hpp"
+#include "number.hpp"
+#include "tinytc/core.hpp"
+#include "tinytc/types.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <vector>
 
 namespace tinytc {
 
 auto blas_shape::operator==(blas_shape const &other) const -> bool {
-    return ty == other.ty && shape == other.shape;
+    return op1_ty == other.op1_ty && op2_ty == other.op2_ty && dst_ty == other.dst_ty &&
+           is_gemm == other.is_gemm && shape == other.shape;
 }
 auto blas_shape::operator!=(blas_shape const &other) const -> bool { return !(*this == other); }
 
-auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
+auto suggest_subgroup_size(array_view<blas_shape> const &shapes, ::tinytc_core_info const &info)
     -> std::int32_t {
-    std::size_t max_size = 1u;
-    for (auto &shape : shapes) {
-        max_size = std::max(max_size, size(shape.ty));
-    }
-
     auto const &available_subgroup_sizes = info.subgroup_sizes();
     if (available_subgroup_sizes.size() == 0) {
         throw std::out_of_range("Subgroup size vector must have at least one entry");
     }
-    auto sensible_subgroup_sizes = std::vector<std::int32_t>{};
-    sensible_subgroup_sizes.reserve(available_subgroup_sizes.size());
 
-    auto it = available_subgroup_sizes.begin();
-    sensible_subgroup_sizes.push_back(*it++);
-    if (max_size < 8u) { // Only consider smallest sub-group size for double precision
-        auto const register_space = info.register_space();
-        auto const number_of_reals_in_register = (register_space / 2) / max_size;
-        auto const number_of_reals_sqrt =
-            static_cast<std::int32_t>(std::sqrt(static_cast<double>(number_of_reals_in_register)));
-        for (; it != available_subgroup_sizes.end(); ++it) {
-            if (*it <= number_of_reals_sqrt) {
-                sensible_subgroup_sizes.push_back(*it);
-            }
+    for (auto &shape : shapes) {
+        auto const &mext = info.matrix();
+        if (shape.is_gemm && mext.have_precision(shape.op1_ty->type_id(), shape.op2_ty->type_id(),
+                                                 shape.dst_ty->type_id())) {
+            return mext.required_subgroup_size();
         }
     }
+
+    auto sensible_subgroup_sizes = [&] {
+        auto sgs = std::vector<std::int32_t>{};
+
+        std::size_t max_size = 1u;
+        for (auto &shape : shapes) {
+            max_size = std::max(max_size, size(shape.dst_ty));
+        }
+        sgs.reserve(available_subgroup_sizes.size());
+
+        auto it = available_subgroup_sizes.begin();
+        sgs.push_back(*it++);
+        if (max_size < 8u) { // Only consider smallest sub-group size for double precision
+            auto const register_space = info.register_space();
+            auto const number_of_reals_in_register = (register_space / 2) / max_size;
+            auto const number_of_reals_sqrt = static_cast<std::int32_t>(
+                std::sqrt(static_cast<double>(number_of_reals_in_register)));
+            for (; it != available_subgroup_sizes.end(); ++it) {
+                if (*it <= number_of_reals_sqrt) {
+                    sgs.push_back(*it);
+                }
+            }
+        }
+
+        return sgs;
+    }();
+
     if (sensible_subgroup_sizes.size() == 1) {
         return sensible_subgroup_sizes.front();
     }
@@ -65,20 +86,20 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_
     return sensible_subgroup_sizes.back();
 }
 
-auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config const &core_cfg)
+auto suggest_local_tiling(array_view<blas_shape> const &shapes, core_config const &core_cfg)
     -> local_tiling {
     if (shapes.empty()) {
         return {1, 1};
     }
 
-    auto max_ty_size = std::max_element(shapes.begin(), shapes.end(),
-                                        [](blas_shape const &a, blas_shape const &b) {
-                                            auto const a0 = size(a.ty);
-                                            auto const b0 = size(b.ty);
-                                            return a0 < b0;
-                                        });
+    auto max_ty = std::max_element(shapes.begin(), shapes.end(),
+                                   [](blas_shape const &a, blas_shape const &b) {
+                                       auto const a0 = size(acc_type(a.dst_ty));
+                                       auto const b0 = size(acc_type(b.dst_ty));
+                                       return a0 < b0;
+                                   });
 
-    auto const max_shapei = [](std::vector<blas_shape> const &shapes, std::size_t idx) {
+    auto const max_shapei = [](array_view<blas_shape> const &shapes, std::size_t idx) {
         auto max_it = std::max_element(
             shapes.begin(), shapes.end(), [&idx](blas_shape const &a, blas_shape const &b) {
                 auto const a0 = is_dynamic_value(a.shape[idx]) ? 0 : a.shape[idx];
@@ -91,12 +112,15 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config con
     auto M = max_shapei(shapes, 0);
     auto N = max_shapei(shapes, 1);
 
-    return suggest_local_tiling(blas_shape{max_ty_size->ty, {M, N}}, core_cfg);
+    return suggest_local_tiling(size(max_ty->op1_ty), size(max_ty->op2_ty),
+                                size(acc_type(max_ty->dst_ty)), {M, N}, core_cfg);
 }
 
-auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg) -> local_tiling {
-    auto [row_blocks, cols] =
-        max_register_block_gemm(size(bshape.ty), core_cfg.subgroup_size, core_cfg.register_space);
+auto suggest_local_tiling(std::size_t A_size, std::size_t B_size, std::size_t C_size,
+                          std::array<std::int64_t, 2u> const &shape, core_config const &core_cfg)
+    -> local_tiling {
+    auto [rows, cols] = max_register_block_gemm(A_size, B_size, C_size, core_cfg.subgroup_size,
+                                                core_cfg.register_space);
     auto const num_tile_limit = [](std::int64_t mode, std::int32_t block_size) {
         auto limit = std::numeric_limits<std::int32_t>::max();
         if (!is_dynamic_value(mode)) {
@@ -104,8 +128,8 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
         }
         return limit;
     };
-    auto const m_limit = num_tile_limit(bshape.shape[0], row_blocks * core_cfg.subgroup_size);
-    auto const n_limit = num_tile_limit(bshape.shape[1], cols);
+    auto const m_limit = num_tile_limit(shape[0], rows);
+    auto const n_limit = num_tile_limit(shape[1], cols);
 
     auto const max_threads = core_cfg.max_work_group_size / core_cfg.subgroup_size;
     if (max_threads == 0) {
@@ -119,7 +143,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
         while (2 * n <= std::min(n_limit, max_threads / m)) {
             n *= 2;
         }
-        auto const LM = m * row_blocks * core_cfg.subgroup_size;
+        auto const LM = m * rows;
         auto const LN = n * cols;
         double const ratio = LM * LN / static_cast<double>(LM + LN);
         if (ratio > best_ratio) {
@@ -132,7 +156,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
     return tiling;
 }
 
-auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
+auto suggest_subgroup_size_and_tiling(array_view<blas_shape> const &shapes,
                                       ::tinytc_core_info const &dev_info)
     -> std::tuple<std::int32_t, local_tiling> {
     auto const sgs = suggest_subgroup_size(shapes, dev_info);
@@ -144,11 +168,6 @@ auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
 } // namespace tinytc
 
 std::size_t std::hash<tinytc::blas_shape>::operator()(tinytc::blas_shape const &x) const {
-    constexpr std::int64_t fnv_prime = 0x100000001B3;
-    constexpr std::int64_t fnv_offset = 0xCBF29CE484222325;
-    auto hash = (fnv_offset ^ static_cast<std::int64_t>(x.ty)) * fnv_prime;
-    hash = (hash ^ x.shape[0]) * fnv_prime;
-    hash = (hash ^ x.shape[1]) * fnv_prime;
-    return hash;
+    return tinytc::fnv1a_combine(x.op1_ty, x.op2_ty, x.dst_ty, x.is_gemm, x.shape[0], x.shape[1]);
 }
 

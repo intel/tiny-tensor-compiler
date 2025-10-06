@@ -1,0 +1,130 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#include "error.hpp"
+#include "location.hpp"
+#include "node/inst_view.hpp"
+#include "node/type.hpp"
+#include "node/visit.hpp"
+#include "tinytc/builder.h"
+#include "tinytc/core.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/overloaded.hpp"
+
+#include <complex>
+#include <cstdint>
+
+using namespace tinytc;
+
+extern "C" {
+// もち api_builder_cpp "tinytc/instructions.anko"
+
+tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr, tinytc_bool_t value,
+                                                    tinytc_type_t ty,
+                                                    const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = constant_inst::create(value != 0, ty, get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr, double value_re,
+                                                    double value_im, tinytc_type_t ty,
+                                                    const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            constant_inst::create(std::complex<double>(value_re, value_im), ty, get_optional(loc))
+                .release();
+    });
+}
+
+tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double value,
+                                                  tinytc_type_t ty, const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = constant_inst::create(value, ty, get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t value,
+                                                tinytc_type_t ty, const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = constant_inst::create(value, ty, get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_type_t ty,
+                                                const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    auto dispatch_ty = ty;
+    if (const auto *ct = dyn_cast<coopmatrix_type>(dispatch_ty); ct != nullptr) {
+        dispatch_ty = ct->component_ty();
+    }
+    return exception_to_status_code([&] {
+        *instr = visit(
+            overloaded{
+                [&](boolean_type &) -> tinytc_inst_t {
+                    return constant_inst::create(true, ty, get_optional(loc)).release();
+                },
+                [&](integer_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::int64_t{1}, ty, get_optional(loc)).release();
+                },
+                [&](float_type &) -> tinytc_inst_t {
+                    return constant_inst::create(double{1}, ty, get_optional(loc)).release();
+                },
+                [&](complex_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::complex<double>{1}, ty, get_optional(loc))
+                        .release();
+                },
+                [&](tinytc_type &) -> tinytc_inst_t {
+                    throw compilation_error(get_optional(loc), status::ir_expected_number);
+                }},
+            *dispatch_ty);
+    });
+}
+
+tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_type_t ty,
+                                                 const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    auto dispatch_ty = ty;
+    if (const auto *ct = dyn_cast<coopmatrix_type>(dispatch_ty); ct != nullptr) {
+        dispatch_ty = ct->component_ty();
+    }
+    return exception_to_status_code([&] {
+        *instr = visit(
+            overloaded{
+                [&](boolean_type &) -> tinytc_inst_t {
+                    return constant_inst::create(false, ty, get_optional(loc)).release();
+                },
+                [&](integer_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::int64_t{0}, ty, get_optional(loc)).release();
+                },
+                [&](float_type &) -> tinytc_inst_t {
+                    return constant_inst::create(double{0}, ty, get_optional(loc)).release();
+                },
+                [&](complex_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::complex<double>{0}, ty, get_optional(loc))
+                        .release();
+                },
+                [&](tinytc_type &) -> tinytc_inst_t {
+                    throw compilation_error(get_optional(loc), status::ir_expected_number);
+                }},
+            *dispatch_ty);
+    });
+}
+}

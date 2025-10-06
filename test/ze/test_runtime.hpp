@@ -4,10 +4,12 @@
 #ifndef ZE_TEST_RUNTIME_20240314_HPP
 #define ZE_TEST_RUNTIME_20240314_HPP
 
-#include "tinytc/tinytc.hpp"
-#include "tinytc/tinytc_ze.hpp"
+#include "tinytc/tinytc_ze.hpp" // IWYU pragma: keep
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <level_zero/ze_api.h>
 
 class level_zero_test_runtime {
@@ -15,7 +17,8 @@ class level_zero_test_runtime {
     using device_t = ze_device_handle_t;
     using context_t = ze_context_handle_t;
     using command_list_t = ze_command_list_handle_t;
-    using recipe_handler_t = tinytc::level_zero_recipe_handler;
+    using kernel_bundle_t = tinytc::unique_handle<ze_module_handle_t>;
+    using kernel_t = tinytc::unique_handle<ze_kernel_handle_t>;
     using mem_t = void *;
     using const_mem_t = const void *;
 
@@ -33,11 +36,19 @@ class level_zero_test_runtime {
     void memcpy_h2d(mem_t dst, void const *src, std::size_t bytes);
     void memcpy_d2h(void *dst, const_mem_t src, std::size_t bytes);
 
-    auto get_core_info() const -> tinytc::core_info;
+    auto get_core_info() const -> tinytc::shared_handle<tinytc_core_info_t>;
     auto get_device() -> device_t;
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;
-    auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
+    auto get_recipe_handler(tinytc_recipe_t rec) -> tinytc::shared_handle<tinytc_recipe_handler_t>;
+    auto get_kernel_bundle(tinytc_prog_t p, tinytc_core_feature_flags_t core_features = 0)
+        -> kernel_bundle_t;
+    auto get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t;
+    void set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,
+                 const void *arg_value);
+    void set_mem_arg(kernel_t &kernel, std::uint32_t arg_index, const void *arg_value,
+                     tinytc::mem_type type);
+    void submit(kernel_t &kernel, std::int64_t howmany = 1);
     void synchronize();
 
     bool supports_fp64();

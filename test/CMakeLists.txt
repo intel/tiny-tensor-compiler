@@ -5,26 +5,38 @@ include(CTest)
 include(CommonOptions)
 include(${PROJECT_SOURCE_DIR}/external/doctest/cmake/doctest.cmake)
 
+find_package(SPIRVTools)
+
 add_library(test-lib STATIC main.cpp)
 target_include_directories(test-lib PUBLIC ${PROJECT_SOURCE_DIR}/external)
 target_compile_features(test-lib PUBLIC cxx_std_20)
 target_link_libraries(test-lib PUBLIC tinytc-objects)
-target_include_directories(test-lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(test-lib PUBLIC
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/utilities
+)
 set_cxx_common_options(test-lib)
 
 #add_executable(test-lexer lexer.cpp)
 #target_link_libraries(test-lexer PRIVATE test-lib)
 #doctest_discover_tests(test-lexer)
 
+add_executable(test-math math.cpp)
+target_link_libraries(test-math PRIVATE test-lib)
+doctest_discover_tests(test-math)
+set_cxx_common_options(test-math)
+
 add_executable(test-generator generator.cpp)
 target_link_libraries(test-generator PRIVATE test-lib)
 doctest_discover_tests(test-generator)
 set_cxx_common_options(test-generator)
 
-add_executable(test-visitor visitor.cpp)
-target_link_libraries(test-visitor PRIVATE test-lib)
-doctest_discover_tests(test-visitor)
-set_cxx_common_options(test-visitor)
+add_library(test-lib-linalg STATIC linalg_blas_a2.cpp linalg_blas_a3.cpp linalg_types.cpp)
+target_link_libraries(test-lib-linalg PUBLIC tinytc)
+if (BUILD_DOUBLE_PRECISION_TESTS)
+    target_compile_definitions(test-lib-linalg PUBLIC ENABLE_DOUBLE_PRECISION)
+endif()
+set_cxx_common_options(test-lib-linalg)
 
 configure_file(lit.site.cfg.py.in lit.site.cfg.py @ONLY)
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in LIT_SITE_CONFIG)
@@ -35,11 +47,48 @@ file(GENERATE
 )
 
 set(LIT_COMMAND lit "${CMAKE_CURRENT_BINARY_DIR}" -v)
-add_test(lit-check ${LIT_COMMAND})
+add_test(NAME lit-check COMMAND ${LIT_COMMAND})
 set_tests_properties(lit-check PROPERTIES LABELS "lit")
 add_custom_target(lit-check COMMAND ${LIT_COMMAND})
-add_dependencies(lit-check tinytc-oc)
+add_dependencies(lit-check tinytc-oc tinytc-opt)
 
+if(SPIRVTools_FOUND)
+    set(SPIRV_VAL_SOURCES
+        lit/spv/alloca.ir
+        lit/spv/arith.ir
+        lit/spv/arith_unary.ir
+        lit/spv/associated.ir
+        lit/spv/barrier.ir
+        lit/spv/builtin.ir
+        lit/spv/calling_convention.ir
+        lit/spv/cast.ir
+        lit/spv/compare.ir
+        lit/spv/constant.ir
+        lit/spv/cooperative_matrix_construct.ir
+        lit/spv/cooperative_matrix_extract.ir
+        lit/spv/cooperative_matrix_insert.ir
+        lit/spv/expand.ir
+        lit/spv/for.ir
+        lit/spv/func_attributes.ir
+        lit/spv/fuse.ir
+        lit/spv/if.ir
+        lit/spv/load.ir
+        lit/spv/math_unary.ir
+        lit/spv/size.ir
+        lit/spv/store.ir
+        lit/spv/subgroup_broadcast.ir
+        lit/spv/subview.ir
+        lit/spv/unique_function_type.ir
+    )
+    foreach(SOURCE IN LISTS SPIRV_VAL_SOURCES)
+        get_filename_component(TEST_NAME ${SOURCE} NAME_WE)
+        set(CHECK_COMMAND $<TARGET_FILE:tinytc-oc> -O0 ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE} | ${SPIRVTools_SPIRV_VAL} -)
+        list(JOIN CHECK_COMMAND " " CHECK_COMMAND_STR)
+        add_test(NAME spirv-val-${TEST_NAME} COMMAND bash -c "${CHECK_COMMAND_STR}")
+        add_custom_target(spirv-val-${TEST_NAME} COMMAND ${CHECK_COMMAND})
+        add_dependencies(spirv-val-${TEST_NAME} tinytc-oc)
+    endforeach()
+endif()
 
 if(BUILD_OPENCL)
     add_subdirectory(cl)

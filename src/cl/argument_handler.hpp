@@ -19,13 +19,16 @@ class opencl_argument_handler {
     using clSetKernelArgMemPointerINTEL_t = cl_int (*)(cl_kernel kernel, cl_uint arg_index,
                                                        const void *arg_value);
     //! ctor
-    inline opencl_argument_handler() : clSetKernelArgMemPointerINTEL_(nullptr) {}
+    inline opencl_argument_handler() = default;
     //! ctor; checks whether cl_intel_unified_shared_memory is available and gets
     //! clSetKernelArgMemPointerINTEL
-    inline opencl_argument_handler(cl_platform_id plat)
-        : clSetKernelArgMemPointerINTEL_(
-              (clSetKernelArgMemPointerINTEL_t)clGetExtensionFunctionAddressForPlatform(
-                  plat, "clSetKernelArgMemPointerINTEL")) {}
+    inline opencl_argument_handler(cl_platform_id plat) { set_platform(plat); }
+
+    inline void set_platform(cl_platform_id plat) {
+        clSetKernelArgMemPointerINTEL_ =
+            (clSetKernelArgMemPointerINTEL_t)clGetExtensionFunctionAddressForPlatform(
+                plat, "clSetKernelArgMemPointerINTEL");
+    }
 
     /**
      * @brief Set single kernel argument
@@ -48,8 +51,8 @@ class opencl_argument_handler {
      * @param mem Memory object
      */
     inline void set_mem_arg(cl_kernel kernel, std::uint32_t arg_index, const void *value,
-                            tinytc_mem_type_t type) const {
-        switch (type) {
+                            tinytc_mem_type_t ty) const {
+        switch (ty) {
         case tinytc_mem_type_buffer:
             set_arg(kernel, arg_index, sizeof(value), &value);
             return;
@@ -69,7 +72,7 @@ class opencl_argument_handler {
     }
 
   private:
-    clSetKernelArgMemPointerINTEL_t clSetKernelArgMemPointerINTEL_;
+    clSetKernelArgMemPointerINTEL_t clSetKernelArgMemPointerINTEL_ = nullptr;
 };
 
 } // namespace tinytc

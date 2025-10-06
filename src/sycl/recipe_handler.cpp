@@ -3,6 +3,7 @@
 
 #include "recipe_handler.hpp"
 #include "dispatch.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/tinytc_sycl.hpp"
 #include "tinytc/tinytc_ze.hpp"
@@ -24,17 +25,16 @@ template <> struct arg_handler_dispatcher<sycl::backend::opencl> {
 };
 
 sycl_recipe_handler_impl::sycl_recipe_handler_impl(sycl::context const &context,
-                                                   sycl::device const &device, recipe rec,
-                                                   source_context source_ctx)
+                                                   sycl::device const &device,
+                                                   shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)),
-      module_(
-          make_kernel_bundle(context, device, get_recipe().get_source(), std::move(source_ctx))) {
+      module_(create_kernel_bundle(context, device, get_binary(get_recipe()).get())) {
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     local_size_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_, get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_, get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back()));
     }
 
@@ -53,12 +53,14 @@ void sycl_recipe_handler_impl::arg(std::uint32_t arg_index, std::size_t arg_size
     arg_handler_->set_arg(kernel(), arg_index, arg_size, arg_value);
 }
 void sycl_recipe_handler_impl::mem_arg(std::uint32_t arg_index, const void *value,
-                                       tinytc_mem_type_t type) {
-    arg_handler_->set_mem_arg(kernel(), arg_index, value, type);
+                                       tinytc_mem_type_t ty) {
+    arg_handler_->set_mem_arg(kernel(), arg_index, value, ty);
 }
 
 void sycl_recipe_handler_impl::howmany(std::int64_t num) {
-    execution_range_ = sycl::nd_range{get_global_size(num, local_size()), local_size()};
+    const auto ls = local_size();
+    execution_range_ = sycl::nd_range{
+        get_global_size(sycl::range<3u>(1u, 1u, static_cast<std::size_t>(num)), ls), ls};
 }
 
 auto sycl_recipe_handler_impl::kernel() const -> sycl::kernel const & {
@@ -68,47 +70,47 @@ auto sycl_recipe_handler_impl::local_size() const -> sycl::range<3u> const & {
     return local_size_[active_kernel_];
 }
 
-auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, recipe const &rec,
-                         source_context source_ctx) -> sycl_recipe_handler {
+auto create_recipe_handler(sycl::context const &ctx, sycl::device const &dev, tinytc_recipe_t rec)
+    -> shared_handle<tinytc_recipe_handler_t> {
     tinytc_recipe_handler_t handler =
-        std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec, std::move(source_ctx)).release();
-    return sycl_recipe_handler{handler};
+        std::make_unique<sycl_recipe_handler_impl>(ctx, dev, shared_handle{rec, true}).release();
+    return shared_handle{handler};
 }
 
-auto make_recipe_handler(sycl::queue const &q, recipe const &rec, source_context source_ctx)
-    -> sycl_recipe_handler {
-    tinytc_recipe_handler_t handler =
-        std::make_unique<sycl_recipe_handler_impl>(q.get_context(), q.get_device(), rec,
-                                                   std::move(source_ctx))
-            .release();
-    return sycl_recipe_handler{handler};
+auto create_recipe_handler(sycl::queue const &q, tinytc_recipe_t rec)
+    -> shared_handle<tinytc_recipe_handler_t> {
+    tinytc_recipe_handler_t handler = std::make_unique<sycl_recipe_handler_impl>(
+                                          q.get_context(), q.get_device(), shared_handle{rec, true})
+                                          .release();
+    return shared_handle{handler};
 }
 
-void sycl_recipe_handler::parallel_for(sycl::handler &h) {
-    auto recipe_handler = dynamic_cast<tinytc::sycl_recipe_handler_impl *>(obj_);
+void parallel_for(tinytc_recipe_handler_t handler, sycl::handler &cgh) {
+    auto recipe_handler = dynamic_cast<tinytc::sycl_recipe_handler_impl *>(handler);
     if (recipe_handler == nullptr) {
         throw status::invalid_arguments;
     }
 
-    h.parallel_for(recipe_handler->execution_range(), recipe_handler->kernel());
+    cgh.parallel_for(recipe_handler->execution_range(), recipe_handler->kernel());
 }
 
-auto sycl_recipe_handler::submit(sycl::queue q) -> sycl::event {
-    return q.submit([&](sycl::handler &h) { parallel_for(h); });
+auto submit(tinytc_recipe_handler_t handler, sycl::queue q) -> sycl::event {
+    return q.submit([&](sycl::handler &cgh) { parallel_for(handler, cgh); });
 }
 
-auto sycl_recipe_handler::submit(sycl::queue q, sycl::event const &dep_event) -> sycl::event {
-    return q.submit([&](sycl::handler &h) {
-        h.depends_on(dep_event);
-        parallel_for(h);
+auto submit(tinytc_recipe_handler_t handler, sycl::queue q, sycl::event const &dep_event)
+    -> sycl::event {
+    return q.submit([&](sycl::handler &cgh) {
+        cgh.depends_on(dep_event);
+        parallel_for(handler, cgh);
     });
 }
 
-auto sycl_recipe_handler::submit(sycl::queue q, std::vector<sycl::event> const &dep_events)
-    -> sycl::event {
-    return q.submit([&](sycl::handler &h) {
-        h.depends_on(dep_events);
-        parallel_for(h);
+auto submit(tinytc_recipe_handler_t handler, sycl::queue q,
+            std::vector<sycl::event> const &dep_events) -> sycl::event {
+    return q.submit([&](sycl::handler &cgh) {
+        cgh.depends_on(dep_events);
+        parallel_for(handler, cgh);
     });
 }
 

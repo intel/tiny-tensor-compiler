@@ -22,7 +22,7 @@ class sycl_argument_handler {
     virtual void set_arg(sycl::kernel const &krnl, std::uint32_t arg_index, std::size_t arg_size,
                          void const *arg_value) const = 0;
     virtual void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index, const void *value,
-                             tinytc_mem_type_t type) const = 0;
+                             tinytc_mem_type_t ty) const = 0;
 };
 
 class sycl_argument_handler_opencl_backend : public sycl_argument_handler {
@@ -38,9 +38,9 @@ class sycl_argument_handler_opencl_backend : public sycl_argument_handler {
     }
 
     inline void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index, const void *value,
-                            tinytc_mem_type_t type) const override {
+                            tinytc_mem_type_t ty) const override {
         auto native_krnl = sycl::get_native<sycl::backend::opencl, sycl::kernel>(krnl);
-        cl_arg_.set_mem_arg(native_krnl, arg_index, value, type);
+        cl_arg_.set_mem_arg(native_krnl, arg_index, value, ty);
         CL_CHECK_STATUS(clReleaseKernel(native_krnl));
     }
 

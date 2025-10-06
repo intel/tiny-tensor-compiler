@@ -1,34 +1,44 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
+#include "tinytc/core.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <array>
 #include <cstdint>
 #include <iostream>
+#include <utility>
 
 using namespace tinytc;
 
 int main() {
-    scalar_type type = scalar_type::f32;
     int64_t M = 64;
     int64_t N = 32;
 
     try {
-        auto pb = program_builder{};
-        pb.create("copy", [&](function_builder &fb) {
-            auto dt = make_memref(type, {M, N});
-            auto A = fb.argument(dt);
-            auto B = fb.argument(dt);
-            fb.body([&](region_builder &bb) {
-                auto alpha = make_imm(1.0, type);
-                auto beta = make_imm(0.0, type);
-                bb.add(make_axpby(transpose::N, false, alpha, A, beta, B));
-            });
-        });
-        auto program = pb.get_product();
+        auto ctx = create_compiler_context();
+        auto element_ty = get<f32_type>(ctx.get());
+        auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
+                                   address_space::global);
 
-        program.dump();
+        auto void_ty = get<void_type>(ctx.get());
+        auto f = create_func("copy", {ty, ty}, void_ty);
+
+        auto body = get_body(f.get());
+        std::array<tinytc_value_t, 2u> params;
+        get_parameters(body, params);
+
+        auto bb = region_builder{body};
+        auto alpha = bb.constant_one(element_ty);
+        auto beta = bb.constant_zero(element_ty);
+        bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
+
+        auto p = create_prog(ctx.get());
+        add_function(p.get(), std::move(f));
+
+        dump(p.get());
     } catch (builder_error const &e) {
         std::cerr << "Error  " << static_cast<int>(e.code()) << std::endl;
     } catch (status const &st) {

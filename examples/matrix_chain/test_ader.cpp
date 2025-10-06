@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "test_ader.hpp"
+#include <tinytc/builder.hpp>
 
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <limits>
+#include <sstream>
 #include <utility>
 
 using namespace sycl;
@@ -14,14 +15,15 @@ using namespace tinytc;
 
 template <typename T>
 test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
-                        queue q)
+                        queue q, bool dump)
     : N_(N), P_(P), howmany_(howmany), alignment_(alignment), q_(std::move(q)),
-      dev_info_(make_core_info(q_.get_device())), I_ref_(Bd(), P_, Bd_aligned(), howmany_, q_),
+      dev_info_(create_core_info(q_.get_device())), I_ref_(Bd(), P_, Bd_aligned(), howmany_, q_),
       I_opt_(Bd(), P_, Bd_aligned(), howmany_, q_),
       tmp_(Bd(), P_, Bd_aligned(N_ - 1), howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(Bd(), Bd(), Bd_aligned(N_ - 1), 1, q_)), dQ_(make_dQ()),
-      opt_bundle_(make_optimized_kernel()), opt_kernel_(make_kernel(opt_bundle_, "ader_kernel")) {
+      opt_bundle_(make_optimized_kernel(dump)),
+      opt_kernel_(create_kernel(opt_bundle_, "ader_kernel")) {
     I_ref_.random();
     I_opt_.random();
     for (auto &a : A_) {
@@ -36,16 +38,19 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
         d->fill(0);
     }
 
+    auto ctx = create_compiler_context();
     for (std::int64_t n = 1; n <= N_; ++n) {
         auto bn = Bd_aligned(N_ - n);
-        g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                                        bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0, dQ_[n - 1].ld(),
-                                        dQ_[n - 1].stride(), bn, bn * P_)));
-        g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                                        bn, P_, P_, bn, bn * P_, A_[0].ld(), A_[0].stride(),
-                                        dQ_[n].ld(), dQ_[n].stride())));
+        g_.emplace_back(create_recipe_handler(
+            q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
+                                          transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
+                                          dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_)
+                    .get()));
+        g_.emplace_back(create_recipe_handler(
+            q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
+                                          transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
+                                          A_[0].stride(), dQ_[n].ld(), dQ_[n].stride())
+                    .get()));
     }
 }
 
@@ -58,63 +63,119 @@ template <typename T> std::vector<matrix_batch<T>> test_ader<T>::make_dQ() {
 }
 
 template <typename T>
-auto test_ader<T>::make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_state::executable> {
-    constexpr auto real_t = to_scalar_type_v<T>;
-    auto opt_kernel = [&](function_builder &fb) {
-        T dt = 1.01;
-        T num = T(1.0);
+auto test_ader<T>::make_optimized_kernel(bool dump_code)
+    -> sycl::kernel_bundle<sycl::bundle_state::executable> {
+    auto opt_kernel = [&](tinytc_compiler_context_t ctx) {
+        auto element_ty = to_type<T>(ctx);
+        std::array<tinytc_type_t, 2 * dim + 3> param_types;
+        param_types[0] = element_ty;
+        for (std::size_t i = 0; i < dim; ++i) {
+            param_types[1 + i] = A_[i].type(element_ty);
+        }
+        for (std::size_t i = 0; i < dim; ++i) {
+            param_types[1 + dim + i] = K_[i].type(element_ty);
+        }
+        param_types[1 + 2 * dim + 0] = dQ_[0].type(element_ty);
+        param_types[1 + 2 * dim + 1] = I_opt_.type(element_ty);
+
+        auto void_ty = get<void_type>(ctx);
+        auto f = create_func("ader_kernel", param_types, void_ty);
+        auto fn_body = get_body(f.get());
+
+        std::array<tinytc_value_t, 2 * dim + 3> params;
+        get_parameters(fn_body, params);
+
+        auto dt = params[0];
+        set_name(dt, "dt");
+        auto A = [&params](std::size_t i) -> tinytc_value_t & { return params[1 + i]; };
+        auto K = [&params](std::size_t i) -> tinytc_value_t & { return params[1 + dim + i]; };
+        auto Q = params[1 + 2 * dim + 0];
+        auto I = params[1 + 2 * dim + 1];
+        for (std::size_t i = 0; i < dim; ++i) {
+            set_name(A(i), (std::ostringstream{} << 'A' << i).str());
+            set_name(K(i), (std::ostringstream{} << 'K' << i).str());
+        }
+        set_name(Q, "Q");
+        set_name(I, "I");
+
+        auto bb = region_builder{fn_body};
+        auto const c0 = bb.constant_zero(element_ty);
+        auto const c1 = bb.constant_one(element_ty);
+        auto const gid = bb.create<group_id_inst>(comp3::x, get<index_type>(ctx));
+        auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
+        auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
+            return {b.nrows(), b.ncols(), 0};
+        };
+        auto const static_sizes2 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 2u> {
+            return {b.nrows(), b.ncols()};
+        };
+        auto const offsets3 = array_view<tinytc_value_t>(gid);
+        const auto dynamic_stride = std::array{std::int64_t{1}, dynamic};
+        auto dqt = get<memref_type>(element_ty, static_sizes2(dQ_[0]), dynamic_stride,
+                                    address_space::global);
+        auto dq = bb.create<subview_inst>(static_offsets3, static_sizes3(dQ_[0]), Q, offsets3,
+                                          array_view<tinytc_value_t>{}, dqt);
+        for (std::size_t d = 0; d < dim; ++d) {
+            auto At = get<memref_type>(element_ty, static_sizes2(A_[d]), array_view<std::int64_t>{},
+                                       address_space::global);
+            A(d) = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[d]), A(d), offsets3,
+                                           array_view<tinytc_value_t>{}, At);
+        }
+        auto it = get<memref_type>(element_ty, static_sizes2(I_opt_), dynamic_stride,
+                                   address_space::global);
+        auto i = bb.create<subview_inst>(static_offsets3, static_sizes3(I_opt_), I, offsets3,
+                                         array_view<tinytc_value_t>{}, it);
+        bb.create<axpby_inst>(false, transpose::N, c1, dq, c1, i);
+
         int denom = 1;
-        std::array<value, dim> A;
-        std::array<value, dim> K;
-        for (std::size_t i = 0; i < dim; ++i) {
-            A[i] = fb.argument(A_[i].type(), "A");
-        }
-        for (std::size_t i = 0; i < dim; ++i) {
-            K[i] = fb.argument(K_[i].type(), "K");
-        }
-        auto Q = fb.argument(dQ_[0].type(), "dQ");
-        auto I = fb.argument(I_opt_.type(), "I");
-        fb.body([&](region_builder &bb) {
-            auto const gid = bb.add(make_group_id());
-            auto const offsets3 = std::vector<value>{make_index(0), make_index(0), gid};
-            auto const size3 = std::vector<value>{make_dynamic(), make_dynamic(), value{}};
-            auto dq = bb.add(make_subview(Q, offsets3, size3));
+        auto cnum = c1;
+        auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
+        for (std::int64_t n = 1; n <= N_; ++n) {
+            cnum = bb.create<mul_inst>(cnum, dt, get_type(dt));
+            denom *= n + 1;
+            auto cdenom = bb.create<constant_inst>(static_cast<double>(denom), element_ty);
+            auto cfactor = bb.create<div_inst>(cnum, cdenom, get_type(cnum));
+            auto bn = Bd_aligned(N_ - n);
+            auto dq_next = bb.create<alloca_inst>(dQ_[n].local_type(element_ty));
+            auto dq_nextvt = get<memref_type>(element_ty, std::array{bn, P_}, dynamic_stride,
+                                              address_space::local);
+            auto dq_nextv = bb.create<subview_inst>(static_offsets2, array_view{bn, P_}, dq_next,
+                                                    array_view<tinytc_value_t>{},
+                                                    array_view<tinytc_value_t>{}, dq_nextvt);
+            auto tmp = bb.create<alloca_inst>(get<memref_type>(
+                element_ty, std::array{bn, P_}, dynamic_stride, address_space::local));
             for (std::size_t d = 0; d < dim; ++d) {
-                A[d] = bb.add(make_subview(A[d], offsets3, size3));
+                auto Kvt = get<memref_type>(element_ty, std::array{bn, Bd(N_ - n + 1)},
+                                            dynamic_stride, address_space::global);
+                auto Kv = bb.create<subview_inst>(static_offsets2, array_view{bn, Bd(N_ - n + 1)},
+                                                  K(d), array_view<tinytc_value_t>{},
+                                                  array_view<tinytc_value_t>{}, Kvt);
+                bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, Kv, dq, c0, tmp);
+                bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, tmp, A(d),
+                                     d > 0 ? c1 : c0, dq_nextv);
             }
-            auto i = bb.add(make_subview(I, offsets3, size3));
-            bb.add(make_axpby(transpose::N, false, make_imm(num / denom), dq, make_imm(T(1.0)), i));
+            auto ivt = get<memref_type>(element_ty, std::array{Bd(N_ - n), P_}, dynamic_stride,
+                                        address_space::global);
+            auto iv = bb.create<subview_inst>(static_offsets2, array_view{Bd(N_ - n), P_}, i,
+                                              array_view<tinytc_value_t>{},
+                                              array_view<tinytc_value_t>{}, ivt);
+            bb.create<axpby_inst>(false, transpose::N, cfactor, dq_next, c1, iv);
+            dq = dq_next;
+        }
 
-            auto const offsets2 = std::vector<value>{make_index(0), make_index(0)};
-            for (std::int64_t n = 1; n <= N_; ++n) {
-                num *= dt;
-                denom *= n + 1;
-                auto bn = Bd_aligned(N_ - n);
-                auto dq_next = bb.add(make_alloca(dQ_[n].type(false)));
-                auto dq_nextv =
-                    bb.add(make_subview(dq_next, offsets2, {make_index(bn), make_index(P_)}));
-                auto tmp = bb.add(make_alloca(make_memref(real_t, {bn, P_}, {1, bn})));
-                for (std::size_t d = 0; d < dim; ++d) {
-                    auto Kv = bb.add(
-                        make_subview(K[d], offsets2, {make_index(bn), make_index(Bd(N_ - n + 1))}));
-                    bb.add(make_gemm(transpose::N, transpose::N, false, make_imm(T(1.0)), Kv, dq,
-                                     make_imm(T(0.0)), tmp));
-                    bb.add(make_gemm(transpose::N, transpose::N, false, make_imm(T(1.0)), tmp, A[d],
-                                     make_imm(T(d > 0 ? 1.0 : 0.0)), dq_nextv));
-                }
-                auto iv =
-                    bb.add(make_subview(i, offsets2, {make_index(Bd(N_ - n)), make_index(P_)}));
-                bb.add(make_axpby(transpose::N, false, make_imm(num / denom), dq_next,
-                                  make_imm(T(1.0)), iv));
-                dq = dq_next;
-            }
-        });
+        return f;
     };
-    auto pb = program_builder{};
-    pb.create("ader_kernel", opt_kernel);
-
-    return make_kernel_bundle(q_.get_context(), q_.get_device(),
-                              compile_to_opencl(pb.get_product(), dev_info_));
+    auto ctx = create_compiler_context();
+    set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
+    auto p = create_prog(ctx.get());
+    add_function(p.get(), opt_kernel(ctx.get()));
+    if (dump_code) {
+        dump(p.get());
+    }
+    auto bin = compile_to_spirv_and_assemble(p.get(), dev_info_.get());
+    return create_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
 }
 
 template <typename T>
@@ -144,12 +205,13 @@ template <typename T> std::vector<event> test_ader<T>::reference() {
         num *= dt;
         denom *= n + 1;
         for (std::size_t d = 0; d < dim; ++d) {
-            small_gemm_batched::set_args(g_[2 * (n - 1)], howmany_, T(1.0), K_[d].get(),
-                                         dQ_[n - 1].get(), T(0.0), tmp_.get());
-            e[0] = g_[2 * (n - 1)].submit(q_, e);
-            small_gemm_batched::set_args(g_[2 * n - 1], howmany_, T(1.0), tmp_.get(), A_[d].get(),
-                                         T(1.0), dQ_[n].get());
-            e[0] = g_[2 * n - 1].submit(q_, e);
+            auto handler = g_[2 * (n - 1)].get();
+            set_small_gemm_batched_args(handler, howmany_, T(1.0), K_[d].get(), dQ_[n - 1].get(),
+                                        T(0.0), tmp_.get());
+            e[0] = submit(handler, q_, e);
+            set_small_gemm_batched_args(handler, howmany_, T(1.0), tmp_.get(), A_[d].get(), T(1.0),
+                                        dQ_[n].get());
+            e[0] = submit(handler, q_, e);
         }
         e[0] = taylor_sum(I_ref_, dQ_[n], num / denom, e);
     }
@@ -157,10 +219,13 @@ template <typename T> std::vector<event> test_ader<T>::reference() {
 }
 
 template <typename T> std::vector<event> test_ader<T>::optimized() {
-    auto exe_range = get_execution_range(opt_kernel_, howmany_);
+    T dt = 1.01;
+    auto exe_range = get_execution_range(
+        opt_kernel_, sycl::range<3u>{1u, 1u, static_cast<std::size_t>(howmany_)});
     return {q_.submit([&](handler &h) {
-        h.set_args(A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_, K_[0].get(),
-                   K_[1].get(), K_[2].get(), dQ_[0].get(), howmany_, I_opt_.get(), howmany_);
+        h.set_args(dt, A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_,
+                   K_[0].get(), K_[1].get(), K_[2].get(), dQ_[0].get(), howmany_, I_opt_.get(),
+                   howmany_);
         h.parallel_for(exe_range, opt_kernel_);
     })};
 }

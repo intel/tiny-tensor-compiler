@@ -1,0 +1,107 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#BOOL:]] = OpTypeBool
+; CHECK: %[[#BOOL_TRUE:]] = OpConstantTrue
+; CHECK: %[[#I32_0:]] = OpConstant %[[#I32]] 0
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F32_4:]] = OpTypeVector %[[#F32]] 4
+; CHECK: %[[#CST1:]] = OpConstant %[[#F32]] 0x1p+0
+; CHECK: %[[#CST1_4:]] = OpConstantComposite %[[#F32_4]] %[[#CST1]] %[[#CST1]] %[[#CST1]] %[[#CST1]]
+; CHECK: %[[#CST0_4:]] = OpConstantNull %[[#F32_4]]
+
+func @if0(%0: i32) {
+    %c42 = constant 42 : i32
+    %1 = less_than %0, %c42 : bool
+    if %1 {
+        %2 = neg %0 : i32
+    } else {
+        %3 = not %0 : i32
+    }
+; CHECK:                  %[[#]] = OpFunction {{.*}}
+; CHECK:       %[[#CONDITION0:]] = OpSLessThan %[[#]] %[[#]] %[[#]] 
+; CHECK-NEXT:                      OpSelectionMerge %[[#MERGE_LABEL0:]] None
+; CHECK-NEXT:                      OpBranchConditional %[[#CONDITION0]] %[[#TRUE_LABEL0:]] %[[#FALSE_LABEL0:]]
+; CHECK-NEXT:  %[[#TRUE_LABEL0]] = OpLabel
+; CHECK-NEXT:             %[[#]] = OpSNegate %[[#]] %[[#]]
+; CHECK-NEXT:                      OpBranch %[[#MERGE_LABEL0]]
+; CHECK-NEXT: %[[#FALSE_LABEL0]] = OpLabel
+; CHECK-NEXT:             %[[#]] = OpNot %[[#]] %[[#]]
+; CHECK-NEXT:                      OpBranch %[[#MERGE_LABEL0]]
+; CHECK-NEXT: %[[#MERGE_LABEL0]] = OpLabel
+}
+
+func @if1() {
+    %c1 = constant true : bool
+    if %c1 -> (){
+        yield ()
+    } else {
+        yield ()
+    }
+; Just check that it does not crash
+; CHECK:                  %[[#]] = OpFunction {{.*}}
+}
+
+func @if2(%0: i32) {
+    %c1 = constant true : bool
+    %x = if %c1 -> (i32) {
+        %1 = if %c1 -> (i32) {
+            yield (%0)
+        } else {
+            %c0 = constant 0 : i32
+            yield (%c0)
+        }
+        yield (%1)
+    } else {
+        %1 = not %0 : i32
+        yield (%1)
+    }
+    %y = not %x : i32
+; CHECK:                         %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:             %[[#PARAM2:]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT:                    %[[#]] = OpLabel
+; CHECK-NEXT:                             OpSelectionMerge %[[#MERGE_LABEL2:]] None
+; CHECK-NEXT:                             OpBranchConditional %[[#BOOL_TRUE]] %[[#THEN_LABEL2:]] %[[#OTHER_LABEL2:]]
+; CHECK-NEXT:         %[[#THEN_LABEL2]] = OpLabel
+; CHECK-NEXT:                             OpSelectionMerge %[[#NESTED_MERGE_LABEL2:]] None
+; CHECK-NEXT:                             OpBranchConditional %[[#BOOL_TRUE]] %[[#NESTED_THEN_LABEL2:]] %[[#NESTED_OTHER_LABEL2:]]
+; CHECK-NEXT:  %[[#NESTED_THEN_LABEL2]] = OpLabel
+; CHECK-NEXT:                             OpBranch %[[#NESTED_MERGE_LABEL2]]
+; CHECK-NEXT: %[[#NESTED_OTHER_LABEL2]] = OpLabel
+; CHECK-NEXT:                             OpBranch %[[#NESTED_MERGE_LABEL2]]
+; CHECK-NEXT: %[[#NESTED_MERGE_LABEL2]] = OpLabel
+; CHECK-NEXT:        %[[#NESTED_PHI2:]] = OpPhi %[[#I32]] %[[#PARAM2]] %[[#NESTED_THEN_LABEL2]] %[[#I32_0]] %[[#NESTED_OTHER_LABEL2]]
+; CHECK-NEXT:                             OpBranch %[[#MERGE_LABEL2]]
+; CHECK-NEXT:        %[[#OTHER_LABEL2]] = OpLabel
+; CHECK-NEXT:         %[[#NOT_PARAM2:]] = OpNot %[[#I32]] %[[#PARAM2]]
+; CHECK-NEXT:                             OpBranch %[[#MERGE_LABEL2]]
+; CHECK-NEXT:        %[[#MERGE_LABEL2]] = OpLabel
+; CHECK-NEXT:               %[[#PHI2:]] = OpPhi %[[#I32]] %[[#NESTED_PHI2]] %[[#NESTED_MERGE_LABEL2]] %[[#NOT_PARAM2]] %[[#OTHER_LABEL2]]
+; CHECK-NEXT:                    %[[#]] = OpNot %[[#I32]] %[[#PHI2]]
+}
+
+func @if3() attributes{subgroup_size=16} {
+    %c1 = constant true : bool
+    %y, %x = if %c1 -> (bool,coopmatrix<f32x16x4,matrix_a>) {
+        %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
+        yield (%c1, %0)
+    } else {
+        %1 = constant 0.0 : coopmatrix<f32x16x4,matrix_a>
+        yield (%c1, %1)
+    }
+    %z = neg %x : coopmatrix<f32x16x4,matrix_a>
+; CHECK:                   %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:              %[[#]] = OpLabel
+; CHECK:       %[[#TRUE_LABEL3:]] = OpLabel
+; CHECK:      %[[#FALSE_LABEL3:]] = OpLabel
+; CHECK:                   %[[#]] = OpLabel
+; CHECK-NEXT:       %[[#PHI3_0:]] = OpPhi %[[#BOOL]] %[[#BOOL_TRUE]] %[[#TRUE_LABEL3]] %[[#BOOL_TRUE]] %[[#FALSE_LABEL3]]
+; CHECK-NEXT:       %[[#PHI3_1:]] = OpPhi %[[#F32_4]] %[[#CST1_4]] %[[#TRUE_LABEL3]] %[[#CST0_4]] %[[#FALSE_LABEL3]]
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 0
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 1
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 2
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 3
+}

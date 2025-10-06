@@ -1,0 +1,37 @@
+// Copyright (C) 2024 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef TYPE_20250626_HPP
+#define TYPE_20250626_HPP
+
+#include "tinytc/core.hpp"
+#include "tinytc/types.h"
+
+#include <cstdint>
+#include <vector>
+
+namespace tinytc {
+enum class address_space;
+enum class matrix_use;
+enum class TK;
+} // namespace tinytc
+
+struct tinytc_type {
+  public:
+    inline tinytc_type(tinytc::TK tid, tinytc_compiler_context_t ctx) : tid_(tid), ctx_(ctx) {}
+    virtual ~tinytc_type() = default;
+    inline auto type_id() const -> tinytc::TK { return tid_; }
+    inline auto context() const -> tinytc_compiler_context_t { return ctx_; }
+
+  private:
+    tinytc::TK tid_;
+    tinytc_compiler_context_t ctx_;
+};
+
+namespace tinytc {
+
+// もち type_hpp "tinytc/types.anko"
+
+} // namespace tinytc
+
+#endif // TYPE_20250626_HPP

@@ -2,98 +2,71 @@
 # SPDX-License-Identifier: BSD-3-Clause
 Builder C++-API:
   Common:
-    enum:
-      - tinytc::arithmetic
-      - tinytc::arithmetic_unary
-      - tinytc::cmp_condition
-      - tinytc::scalar_type
-      - tinytc::transpose
     function:
       - tinytc::is_dynamic_value
-      - tinytc::to_string(arithmetic)
-      - tinytc::to_string(arithmetic_unary)
-      - tinytc::to_string(cmp_condition)
-      - tinytc::to_string(scalar_type)
-      - tinytc::to_string(transpose)
-      - tinytc::size
     class:
       - tinytc::builder_error
     typedef:
-      - tinytc::position
       - tinytc::location
+      - tinytc::position
     variable:
       - tinytc::dynamic
+  Attribute:
+    function:
+      - get_dictionary_attr_with_sorted
+      - sort_items
+    struct:
+      - tinytc::getter< array_attr >
+      - tinytc::getter< boolean_attr >
+      - tinytc::getter< dictionary_attr >
+      - tinytc::getter< integer_attr >
+      - tinytc::getter< string_attr >
   Data Type:
     function:
-      - tinytc::make_memref
-      - tinytc::make_group
-      - tinytc::make_scalar
-    class:
-      - tinytc::data_type
-    struct:
-      - tinytc::to_scalar_type
-    variable:
-      - tinytc::to_scalar_type_v
+      - tinytc::get_compiler_context(const_tinytc_type_t)
+      - tinytc::to_type
+  Data Type Builder:
+    function:
+      - tinytc::get
   Function:
     function:
-      - tinytc::make_function
-      - tinytc::make_function_prototype
-      - tinytc::set_work_group_size
-      - tinytc::set_subgroup_size
-    class:
-      - tinytc::func
-      - tinytc::function_builder
+      - tinytc::create_func
+      - tinytc::get_body
+      - tinytc::set_attr(tinytc_func_t,tinytc_attr_t)
+      - tinytc::set_parameter_attr
   Instruction:
     function:
-      - tinytc::make_alloca
-      - tinytc::make_axpby
-      - tinytc::make_arith(arithmetic,value const&,value const&,location const&)
-      - tinytc::make_arith(arithmetic_unary,value const&,location const&)
-      - tinytc::make_cast
-      - tinytc::make_cmp
-      - tinytc::make_expand
-      - tinytc::make_for
-      - tinytc::make_foreach
-      - tinytc::make_fuse
-      - tinytc::make_gemm
-      - tinytc::make_gemv
-      - tinytc::make_ger
-      - tinytc::make_group_id
-      - tinytc::make_group_size
-      - tinytc::make_hadamard
-      - tinytc::make_if
-      - tinytc::make_load
-      - tinytc::make_size
-      - tinytc::make_store
-      - tinytc::make_subview
-      - tinytc::make_sum
-      - tinytc::make_yield
-    class:
-      - tinytc::inst
+      - tinytc::get_parent_region
+      - tinytc::get_regions
+      - tinytc::get_values
+      - tinytc::set_attr(tinytc_inst_t,tinytc_attr_t)
+  Instruction Builder:
+    function:
+      - tinytc::create
+    struct:
+      - tinytc::creator< constant_inst >
   Program:
     function:
-      - tinytc::make_program
-    class:
-      - tinytc::prog
-      - tinytc::program_builder
+      - tinytc::add_function
+      - tinytc::create_prog
+  Recipe:
+    function:
+      - tinytc::create_small_gemm_batched
+      - tinytc::create_tall_and_skinny
+      - tinytc::create_tall_and_skinny_specialized
+      - tinytc::get_prog
+      - tinytc::get_binary
+      - tinytc::get_recipe
+      - tinytc::set_small_gemm_batched_args
+      - tinytc::set_tall_and_skinny_args
   Region:
     function:
-      - tinytc::make_region
+      - tinytc::append
+      - tinytc::begin
+      - tinytc::end
+      - tinytc::get_parameters
+      - tinytc::insert
+      - tinytc::next
+      - tinytc::prev
     class:
-      - tinytc::region
       - tinytc::region_builder
-  Value:
-    function:
-      - tinytc::make_dynamic(location const&)
-      - tinytc::make_imm(float,location const&)
-      - tinytc::make_imm(double,scalar_type,location const&)
-      - tinytc::make_imm(std::int8_t,location const&)
-      - tinytc::make_imm(std::int16_t,location const&)
-      - tinytc::make_imm(std::int32_t,location const&)
-      - tinytc::make_imm(std::int64_t,scalar_type,location const&)
-      - tinytc::make_index(std::int32_t,location const&)
-      - tinytc::make_index(std::int64_t,location const&)
-      - tinytc::make_value(data_type const&,location const&)
-      - tinytc::make_value(scalar_type,location const&)
-    class:
-      - tinytc::value

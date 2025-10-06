@@ -1,0 +1,60 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -pconstant-propagation -funsafe-fp-math < %s | filecheck %s
+
+func @identity_fadd(%a: f32) {
+    %c0 = constant 0.0 : f32
+    %0 = add %a, %c0 : f32
+    %1 = add %c0, %a : f32
+    %2 = add %0, %1 : f32
+; CHECK-LABEL: func @identity_fadd({{.*}}
+; CHECK: %2 = add %a, %a : f32
+}
+
+func @identity_fsub(%a: f32) {
+    %c0 = constant 0.0 : f32
+    %0 = sub %a, %c0 : f32
+    %1 = sub %c0, %a : f32
+    %2 = add %0, %1 : f32
+; CHECK-LABEL: func @identity_fsub({{.*}}
+; CHECK: %2 = add %a, %1 : f32
+}
+
+func @identity_fmul0(%a: f32) {
+    %c0 = constant 0.0 : f32
+    %0 = mul %a, %c0 : f32
+    %1 = mul %c0, %a : f32
+; CHECK-LABEL: func @identity_fmul0({{.*}}
+; CHECK:       %0 = constant 0x0p+0 : f32
+; CHECK-NEXT:  %1 = mul %a, %c0 : f32
+; CHECK-NEXT:  %2 = constant 0x0p+0 : f32
+; CHECK-NEXT:  %3 = mul %c0, %a : f32
+}
+
+func @identity_fmul1(%a: f32) {
+    %c1 = constant 1.0 : f32
+    %0 = mul %a, %c1 : f32
+    %1 = mul %c1, %a : f32
+    %2 = mul %0, %1 : f32
+; CHECK-LABEL: func @identity_fmul1({{.*}}
+; CHECK:       %2 = mul %a, %a : f32
+}
+
+func @identity_fdiv(%a: f32) {
+    %c1 = constant 1.0 : f32
+    %0 = div %a, %c1 : f32
+    %1 = div %c1, %a : f32
+    %2 = mul %0, %1 : f32
+; CHECK-LABEL: func @identity_fdiv({{.*}}
+; CHECK:       %2 = mul %a, %1 : f32
+}
+
+func @identity_cmul1(%a: c32) {
+    %c1 = constant [1.0, 0.0] : c32
+    %0 = mul %a, %c1 : c32
+    %1 = mul %c1, %a : c32
+    %2 = mul %0, %1 : c32
+; CHECK-LABEL: func @identity_cmul1({{.*}}
+; CHECK:       %2 = mul %a, %a : c32
+}

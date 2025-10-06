@@ -1,8 +1,0 @@
-; Copyright (C) 2024 Intel Corporation
-; SPDX-License-Identifier: BSD-3-Clause
-
-; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
-func @kernel(%K0: memref<f32>) {
-  %0 = load %K0[] : memref<f64>
-; CHECK: 6.13-31: Type of SSA value does not match operand type
-}

@@ -3,29 +3,29 @@
 
 #include "recipe_handler.hpp"
 #include "../recipe.hpp"
-#include "../reference_counted.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <level_zero/ze_api.h>
 #include <memory>
 #include <utility>
 
 namespace tinytc {
 
 ze_recipe_handler::ze_recipe_handler(ze_context_handle_t context, ze_device_handle_t device,
-                                     recipe rec, source_context source_ctx)
+                                     shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_recipe().get_source(), std::move(source_ctx));
+    module_ = create_kernel_bundle(context, device, get_binary(get_recipe()).get());
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_.get(), get_recipe()->kernel_name(num)));
     }
 }
 
@@ -44,7 +44,7 @@ void ze_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value, tiny
 }
 
 void ze_recipe_handler::howmany(std::int64_t num) {
-    group_count_ = ::tinytc_ze_get_group_count(num);
+    group_count_ = ze_group_count_t{static_cast<std::uint32_t>(num), 1u, 1u};
 }
 
 auto ze_recipe_handler::kernel() -> ze_kernel_handle_t { return kernels_[active_kernel_].get(); }
@@ -58,15 +58,14 @@ extern "C" {
 
 tinytc_status_t tinytc_ze_recipe_handler_create(tinytc_recipe_handler_t *handler,
                                                 ze_context_handle_t context,
-                                                ze_device_handle_t device, tinytc_recipe_t rec,
-                                                tinytc_source_context_t source_ctx) {
+                                                ze_device_handle_t device, tinytc_recipe_t rec) {
     if (handler == nullptr || rec == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code_ze([&] {
-        *handler = std::make_unique<tinytc::ze_recipe_handler>(context, device, recipe(rec, true),
-                                                               source_context(source_ctx, true))
-                       .release();
+        *handler =
+            std::make_unique<tinytc::ze_recipe_handler>(context, device, shared_handle{rec, true})
+                .release();
     });
 }
 

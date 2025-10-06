@@ -1,0 +1,471 @@
+#!/usr/bin/env python3
+#
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Very simple and stupid script to generate SPIR-V classes
+#
+
+import argparse
+import json
+import os
+import shutil
+
+from gen import generate_cpp, generate_header
+
+spv_enums = 'enums.hpp'
+spv_enums_includes = ['<cstdint>']
+spv_capex = 'capex_util.hpp'
+spv_capex_includes = ["tinytc/tinytc.hpp"]
+spv_capex_cpp = 'capex_util.cpp'
+spv_capex_cpp_includes = [spv_capex, spv_enums]
+spv_capex_required_enums = [
+    'AddressingModel', 'ExecutionMode', 'ExecutionModel', 'MemoryModel'
+]
+spv_names = 'names.hpp'
+spv_names_includes = []
+spv_names_cpp = 'names.cpp'
+spv_names_cpp_includes = [spv_names, spv_enums]
+spv_defs = 'defs.hpp'
+spv_defs_includes = [
+    spv_enums, 'util/ilist_base.hpp', 'tinytc/tinytc.hpp', None,
+    '<cstdint>', '<limits>', '<variant>', '<string>', '<utility>'
+]
+spv_ops = 'instructions.hpp'
+spv_visitor = 'visit.hpp'
+spv_visitor_includes = [spv_defs, spv_enums, spv_ops, 'util/overloaded.hpp']
+spv_ops_includes = [
+    spv_defs, spv_enums, 'error.hpp', 'util/ilist_base.hpp', None,
+    '<array>', '<cstdint>', '<optional>', '<string>', '<utility>', '<variant>',
+    '<vector>'
+]
+
+enumerant_subs = {
+    '1D': 'Dim1D',
+    '2D': 'Dim2D',
+    '3D': 'Dim3D',
+    '2x2': 'CooperativeMatrixReduce2x2'
+}
+
+
+def get_opcode_name(instruction):
+    return instruction['opname'][2:]
+
+
+def get_class_name(instruction):
+    return instruction['opname']
+
+
+def generate_capex(f, grammar):
+    print(f'enum class Capability;', file=f)
+    for i in spv_capex_required_enums:
+        print(f'enum class {i};', file=f)
+    for name, ty in zip(['capabilities', 'extensions'],
+                        ['Capability', 'char const*']):
+        for opkind in grammar['operand_kinds']:
+            if opkind['kind'] in spv_capex_required_enums:
+                print(f'auto {name}({opkind["kind"]} op) -> array_view<{ty}>;',
+                      file=f)
+
+
+def generate_capex_cpp(f, grammar):
+    # Need to go through capabilities to filter aliases later on
+    capabilities = set()
+    for opkind in grammar['operand_kinds']:
+        if opkind['kind'] == 'Capability':
+            for enumerant in opkind['enumerants']:
+                capabilities.add(enumerant['enumerant'])
+
+    def print_function(name, ty, trans, filt):
+        for opkind in grammar['operand_kinds']:
+            if opkind['kind'] in spv_capex_required_enums:
+                print(
+                    f'auto {name}({opkind["kind"]} e) -> array_view<{ty}> {{ switch(e) {{',
+                    file=f)
+                for enumerant in opkind['enumerants']:
+                    if name in enumerant:
+                        ename = enumerant["enumerant"]
+                        values = enumerant[name]
+                        values_str = ','.join(
+                            [trans(v) for v in values if filt(v)])
+                        print(
+                            f'case {opkind["kind"]}::{enumerant_subs.get(ename, ename)}: {{',
+                            file=f)
+                        print(
+                            f'constexpr static {ty} values[] = {{{values_str}}};',
+                            file=f)
+                        print(f'return {{values, {len(values)}}}; }}', file=f)
+                print('default: return {}; }}', file=f)
+
+    print_function('capabilities', 'Capability', lambda x: f'Capability::{x}',
+                   lambda x: x in capabilities)
+    print_function('extensions', 'char const*', lambda x: f'"{x}"',
+                   lambda x: True)
+
+
+def generate_enums(f, grammar):
+    print(f'constexpr std::int32_t magic_number = {grammar["magic_number"]};',
+          file=f)
+    print(file=f)
+
+    print('enum class Op {', file=f)
+    for inst in grammar['instructions']:
+        print(f'{get_opcode_name(inst)} = {inst["opcode"]},', file=f)
+    print('};', file=f)
+
+    for opkind in grammar['operand_kinds']:
+        category = opkind['category']
+        if category != 'BitEnum' and category != 'ValueEnum':
+            continue
+        print(f'enum class {opkind["kind"]} {{', file=f)
+        for enumerant in opkind['enumerants']:
+            name = enumerant["enumerant"]
+            print(f'{enumerant_subs.get(name, name)} = {enumerant["value"]},',
+                  file=f)
+        print('};', file=f)
+
+
+def generate_names(f, grammar):
+    print('enum class Op;', file=f)
+    print('auto to_string(Op op) -> char const*;', file=f)
+
+    for opkind in grammar['operand_kinds']:
+        category = opkind['category']
+        if category != 'BitEnum' and category != 'ValueEnum':
+            continue
+        print(f'enum class {opkind["kind"]};', file=f)
+        print(f'auto to_string({opkind["kind"]} e) -> char const*;', file=f)
+
+
+def generate_names_cpp(f, grammar):
+    print('auto to_string(Op op) -> char const* { switch(op) {', file=f)
+    for inst in grammar['instructions']:
+        name = get_opcode_name(inst)
+        print(f'case Op::{name}: return "{name}";', file=f)
+    print('} return "unknown";}', file=f)
+
+    for opkind in grammar['operand_kinds']:
+        category = opkind['category']
+        if category != 'BitEnum' and category != 'ValueEnum':
+            continue
+        print(
+            f'auto to_string({opkind["kind"]} e) -> char const* {{ switch(e) {{',
+            file=f)
+        for enumerant in opkind['enumerants']:
+            name = enumerant["enumerant"]
+            name = enumerant_subs.get(name, name)
+            print(f'case {opkind["kind"]}::{name}: return "{name}";', file=f)
+        print('} return "unknown";}', file=f)
+
+
+def get_kind(operand):
+    kind = operand['kind']
+    quant = operand.get('quantifier')
+    if quant:
+        if quant == '?':
+            return f'std::optional<{kind}>'
+        elif quant == '*':
+            return f'std::vector<{kind}>'
+        else:
+            raise NotImplementedError
+    return kind
+
+
+def has_result_id(instruction):
+    for operand in instruction.get('operands', []):
+        if operand['kind'] == 'IdResult':
+            return True
+    return False
+
+
+class Operand:
+
+    def __init__(self, name, kind, quantifier):
+        self.name = name
+        self.kind = kind
+        self.quantifier = quantifier
+        self.init = None
+        if self.quantifier == '?':
+            self.init = 'std::nullopt'
+
+
+def get_operands(instruction):
+    operands = []
+    opno = 0
+    for num, operand in enumerate(instruction.get('operands', [])):
+        if operand['kind'] == 'IdResult':
+            pass
+        elif operand['kind'] == 'IdResultType':
+            operands.append(Operand('type', get_kind(operand), ''))
+        else:
+            operands.append(
+                Operand(f'op{opno}', get_kind(operand),
+                        operand.get('quantifier', '')))
+            opno = opno + 1
+    return operands
+
+
+def generate_defs(f, grammar):
+    print("""
+class spv_inst : public ilist_node<spv_inst> {
+  public:
+    inline spv_inst(Op opcode, bool has_result_id)
+        : opcode_{opcode}, id_{has_result_id ? 0 : std::numeric_limits<std::uint32_t>::max()} {}
+    virtual ~spv_inst() = default;
+
+    spv_inst(spv_inst const &other) = delete;
+    spv_inst(spv_inst &&other) = delete;
+    spv_inst &operator=(spv_inst const &other) = delete;
+    spv_inst &operator=(spv_inst &&other) = delete;
+
+    inline auto opcode() const -> Op { return opcode_; }
+    // SPIR-V requires 0 < id < Bound, therefore, we can reserve 0 for encoding "produces result; id not yet assigned"
+    // and uint32_max for encoding "does not produce result"
+    inline auto has_result_id() const -> bool { return id_ != std::numeric_limits<std::uint32_t>::max(); }
+    inline auto id() const -> std::uint32_t { return id_; }
+    inline void id(std::uint32_t id) { id_ = id; }
+
+  private:
+    Op opcode_;
+    std::uint32_t id_;
+};
+
+using DecorationAttr = std::variant<BuiltIn, std::int32_t, std::pair<std::string, LinkageType>>;
+using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
+using LiteralContextDependentNumber
+    = std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, half, float, double>;
+using LiteralString = std::string;
+using LiteralInteger = std::int32_t;
+using LiteralExtInstInteger = std::int32_t;
+using IdResultType = spv_inst*;
+using IdRef = spv_inst*;
+using IdScope = spv_inst*;
+using IdMemorySemantics = spv_inst*;
+using LoopControlAttr = std::int32_t;
+using MemoryAccessAttr = std::int32_t;
+using PairIdRefIdRef = std::pair<spv_inst*, spv_inst*>;
+using PairLiteralIntegerIdRef
+    = std::pair<std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t>, spv_inst*>;
+using PairIdRefLiteralInteger = std::pair<spv_inst*, std::int32_t>;
+""",
+          file=f)
+
+    for instruction in grammar['instructions']:
+        print(f'class {get_class_name(instruction)}; // IWYU pragma: export',
+              file=f)
+
+
+def generate_op_classes(f, grammar):
+    for instruction in grammar['instructions']:
+        operands = get_operands(instruction)
+
+        print(f'class {get_class_name(instruction)} : public spv_inst {{',
+              file=f)
+        print(f'public:', file=f)
+        print(
+            f'inline static bool classof(spv_inst const& s) {{ return s.opcode() == Op::{get_opcode_name(instruction)};}}',
+            file=f)
+        if 'capabilities' in instruction:
+            caps = instruction['capabilities']
+            cap_str = ','.join([f'Capability::{cap}' for cap in caps])
+            print(
+                f'constexpr static std::array<Capability, {len(caps)}> required_capabilities = {{{cap_str}}};',
+                file=f)
+        if 'extensions' in instruction:
+            exts = instruction['extensions']
+            ext_str = ','.join([f'\"{ext}\"' for ext in exts])
+            print(
+                f'constexpr static std::array<char const*, {len(exts)}> required_extensions = {{{ext_str}}};',
+                file=f)
+        f.write(f'{get_class_name(instruction)}(')
+        f.write(','.join([
+            f'{o.kind} {o.name}{f" = {o.init}" if o.init else ""}'
+            for o in operands
+        ]))
+        f.write(') : ')
+        initializer_list = [
+            f'spv_inst{{Op::{get_opcode_name(instruction)}, {"true" if has_result_id(instruction) else "false"}}}'
+        ]
+        initializer_list += [
+            f'{o.name}_(std::move({o.name}))' for o in operands
+        ]
+        f.write(','.join(initializer_list))
+        f.write('{}')
+        for o in operands:
+            print(
+                f'inline auto {o.name}() -> {o.kind}& {{ return {o.name}_; }}',
+                file=f)
+            print(
+                f'inline auto {o.name}() const -> {o.kind} const& {{ return {o.name}_; }}',
+                file=f)
+        print(f'private:', file=f)
+        for o in operands:
+            print(f'{o.kind} {o.name}_;', file=f)
+        print('};', file=f)
+
+
+def generate_visitor(f, grammar):
+    format_call = lambda op: f'static_cast<Derived*>(this)->operator()({op});'
+
+    for const in ["", "const"]:
+        print('template <typename Visitor>', file=f)
+        print(
+            f'auto visit(Visitor&& visitor, spv_inst {const}& inst) {{ switch(inst.opcode()) {{',
+            file=f)
+        for instruction in grammar['instructions']:
+            print(f"""case Op::{get_opcode_name(instruction)}:
+                      return visitor(static_cast<{get_class_name(instruction)} {const}&>(inst));""",
+                  file=f)
+        print("""}
+    throw internal_compiler_error();
+}
+""", file=f)
+
+    print(
+        'template <typename Derived, bool IsConst=true> class default_visitor { public:',
+        file=f)
+    print(
+        'template <typename T> using const_t = std::conditional_t<IsConst, std::add_const_t<T>, T>;',
+        file=f)
+    print('auto pre_visit(const_t<spv_inst>&) {}', file=f)
+    print('auto visit_result(const_t<spv_inst>&) {}', file=f)
+    print('auto post_visit(const_t<spv_inst>&) {}', file=f)
+    for instruction in grammar['instructions']:
+        print(
+            f"""auto operator()(const_t<{get_class_name(instruction)}>& in) {{""",
+            file=f)
+        print(f'static_cast<Derived*>(this)->pre_visit(in);', file=f)
+        operands = get_operands(instruction)
+        if len(operands) > 0 and operands[0].name == 'type':
+            print(format_call('in.type()'), file=f)
+            operands.pop(0)
+        if has_result_id(instruction):
+            print(f'static_cast<Derived*>(this)->visit_result(in);', file=f)
+        for o in operands:
+            if o.quantifier == '*':
+                print(f"""for (auto& op : in.{o.name}()) {{
+    {format_call('op')}
+}}
+""",
+                      file=f)
+            elif o.quantifier == '?':
+                print(f"""if (in.{o.name}()) {{
+    {format_call(f'*in.{o.name}()')}
+}}
+""",
+                      file=f)
+            else:
+                print(format_call(f'in.{o.name}()'), file=f)
+        print(f'static_cast<Derived*>(this)->post_visit(in);', file=f)
+        print('}', file=f)
+    print('};', file=f)
+
+
+def filter_grammar(grammar, filt):
+    filtered_instructions = []
+    for instruction in grammar['instructions']:
+        opcode = instruction['opcode']
+        for i in filt['include']:
+            if i[0] <= opcode and opcode <= i[1]:
+                filtered_instructions.append(instruction)
+    grammar['instructions'] = filtered_instructions
+    return grammar
+
+
+def patch_grammar(grammar):
+    for instruction in grammar['instructions']:
+        if instruction['opname'] == 'OpDecorate':
+            if instruction['operands'][-1]['kind'] == 'Decoration':
+                instruction['operands'].append({
+                    'kind': 'DecorationAttr',
+                    'quantifier': '?'
+                })
+        elif instruction['opname'] == 'OpExecutionMode':
+            if instruction['operands'][-1]['kind'] == 'ExecutionMode':
+                instruction['operands'].append({'kind': 'ExecutionModeAttr'})
+        elif instruction['opname'] == 'OpAsmTargetINTEL':
+            instruction['operands'] = [
+                op for op in instruction['operands']
+                if not op['kind'] == 'IdResultType'
+            ]
+        elif instruction['opname'] == 'OpLoopMerge':
+            if instruction['operands'][-1]['kind'] == 'LoopControl':
+                instruction['operands'].append({'kind': 'LoopControlAttr', 'quantifier': '?'})
+        elif 'operands' in instruction and instruction['operands'][-1][
+                'kind'] == 'MemoryAccess':
+            instruction['operands'].append({
+                'kind': 'MemoryAccessAttr',
+                'quantifier': '?'
+            })
+
+    version = grammar["major_version"] * 256 + grammar["minor_version"]
+    # Old grammar files have duplicate enumerants that need to be filtered
+    if version < 1 * 256 + 6:
+        for opkind in grammar['operand_kinds']:
+            category = opkind['category']
+            if category != 'BitEnum' and category != 'ValueEnum':
+                continue
+            available_values = set()
+            new_enumerants = list()
+            for enumerant in opkind['enumerants']:
+                if enumerant['value'] not in available_values:
+                    new_enumerants.append(enumerant)
+                    available_values.add(enumerant['value'])
+            opkind['enumerants'] = new_enumerants
+    return grammar
+
+
+if __name__ == '__main__':
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c',
+                        help='clang-format binary',
+                        default='clang-format'),
+    parser.add_argument('-e',
+                        help='Add extension JSON file',
+                        default=os.path.join(script_dir, 'joint_matrix.json')),
+    parser.add_argument('-f',
+                        help='Filter JSON file',
+                        default=os.path.join(script_dir, 'filter.json')),
+    parser.add_argument('-o', help='output directory', default=''),
+    parser.add_argument(
+        'grammar',
+        help='spirv.core.grammar.json file from SPIRV-Headers project')
+    args = parser.parse_args()
+
+    if shutil.which(args.c):
+        grammar = dict()
+        filt = dict()
+        with open(args.grammar) as f:
+            grammar = json.load(f)
+        with open(args.f) as f:
+            filt = json.load(f)
+        with open(args.e) as f:
+            extension = json.load(f)
+            grammar['instructions'].extend(extension['instructions'])
+            for opkind_ext in extension['operand_kinds']:
+                for opkind in grammar['operand_kinds']:
+                    if opkind_ext['kind'] == opkind['kind']:
+                        opkind['enumerants'].extend(opkind_ext['enumerants'])
+                        continue
+
+        grammar = filter_grammar(grammar, filt)
+        grammar = patch_grammar(grammar)
+        generate_header(args, spv_capex, grammar, generate_capex,
+                        spv_capex_includes)
+        generate_cpp(args, spv_capex_cpp, grammar, generate_capex_cpp,
+                     spv_capex_cpp_includes)
+        generate_header(args, spv_enums, grammar, generate_enums,
+                        spv_enums_includes)
+        generate_header(args, spv_names, grammar, generate_names,
+                        spv_names_includes)
+        generate_cpp(args, spv_names_cpp, grammar, generate_names_cpp,
+                     spv_names_cpp_includes)
+        generate_header(args, spv_defs, grammar, generate_defs,
+                        spv_defs_includes)
+        generate_header(args, spv_ops, grammar, generate_op_classes,
+                        spv_ops_includes)
+        generate_header(args, spv_visitor, grammar, generate_visitor,
+                        spv_visitor_includes)
+    else:
+        print(f'Could not find clang-format: {args.c}')

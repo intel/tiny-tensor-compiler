@@ -1,0 +1,61 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: %[[#BOOL:]] = OpTypeBool
+; CHECK: %[[#BOOL2:]] = OpTypeVector %[[#BOOL]] 2
+
+func @tint(%a: i64, %b: i64) {
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+    %2 = greater_than %a, %b : bool
+    %3 = greater_than_equal %a, %b : bool
+    %4 = less_than %a, %b : bool
+    %5 = less_than_equal %a, %b : bool
+; CHECK:      %[[#]] = OpIEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpINotEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSGreaterThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSGreaterThanEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSLessThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSLessThanEqual %[[#BOOL]] %[[#]] %[[#]]
+}
+
+func @tfloat(%a: f32, %b: f32) {
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+    %2 = greater_than %a, %b : bool
+    %3 = greater_than_equal %a, %b : bool
+    %4 = less_than %a, %b : bool
+    %5 = less_than_equal %a, %b : bool
+; CHECK:      %[[#]] = OpFOrdEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFUnordNotEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdGreaterThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdGreaterThanEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdLessThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdLessThanEqual %[[#BOOL]] %[[#]] %[[#]]
+}
+
+func @thalf(%a: f16, %b: f16) {
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+    %2 = greater_than %a, %b : bool
+    %3 = greater_than_equal %a, %b : bool
+    %4 = less_than %a, %b : bool
+    %5 = less_than_equal %a, %b : bool
+; CHECK:      %[[#]] = OpFOrdEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFUnordNotEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdGreaterThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdGreaterThanEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdLessThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdLessThanEqual %[[#BOOL]] %[[#]] %[[#]]
+}
+
+func @tcomplex(%a: c32, %b: c32) {
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+; CHECK:      %[[#COMPONENTS_EQUAL:]] = OpFOrdEqual %[[#BOOL2]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpAll %[[#BOOL]] %[[#COMPONENTS_EQUAL]]
+; CHECK-NEXT: %[[#COMPONENTS_NOT_EQUAL:]] = OpFUnordNotEqual %[[#BOOL2]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpAll %[[#BOOL]] %[[#COMPONENTS_NOT_EQUAL]]
+}

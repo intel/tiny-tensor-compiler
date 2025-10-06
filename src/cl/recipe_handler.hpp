@@ -6,8 +6,8 @@
 
 #include "../recipe.hpp"
 #include "argument_handler.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <array>
@@ -19,12 +19,11 @@ namespace tinytc {
 
 struct cl_recipe_handler : ::tinytc_recipe_handler {
   public:
-    cl_recipe_handler(cl_context context, cl_device_id device, recipe rec,
-                      source_context source_ctx);
+    cl_recipe_handler(cl_context context, cl_device_id device, shared_handle<tinytc_recipe_t> rec);
 
     void active_kernel(int kernel_num) override;
     void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) override;
-    void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) override;
+    void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t ty) override;
     void howmany(std::int64_t num) override;
 
     auto kernel() -> cl_kernel;

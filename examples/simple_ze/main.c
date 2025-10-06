@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include <tinytc/builder.h>
 #include <tinytc/tinytc.h>
 #include <tinytc/tinytc_ze.h>
 
@@ -13,7 +14,7 @@
     do {                                                                                           \
         status = X;                                                                                \
         if (status != tinytc_status_success) {                                                     \
-            printf("Error (%d): %s\n", status, tinytc_error_string(status));                       \
+            printf("Error (%d): %s\n", status, tinytc_status_to_string(status));                   \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
             goto err;                                                                              \
         }                                                                                          \
@@ -23,8 +24,7 @@
     do {                                                                                           \
         ze_result_t result = X;                                                                    \
         if (result != ZE_RESULT_SUCCESS) {                                                         \
-            status = tinytc_ze_convert_status(result);                                             \
-            printf("Error (%d): %s\n", status, tinytc_error_string(status));                       \
+            printf("Level Zero error (%d)\n", result);                                             \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
             goto err;                                                                              \
         }                                                                                          \
@@ -41,20 +41,22 @@ tinytc_status_t gemm(ze_context_handle_t context, ze_device_handle_t device,
                      ze_command_list_handle_t list) {
     tinytc_status_t status = tinytc_status_success;
     tinytc_core_info_t info = NULL;
-    tinytc_source_context_t source_ctx = NULL;
+    tinytc_compiler_context_t ctx = NULL;
+    tinytc_type_t f32_ty = NULL;
     tinytc_recipe_t recipe = NULL;
     tinytc_recipe_handler_t handler = NULL;
     void *A = NULL, *B = NULL, *C = NULL;
     float *Chost = NULL;
 
     CHECK(tinytc_ze_core_info_create(&info, device));
+    CHECK(tinytc_compiler_context_create(&ctx));
+    CHECK(tinytc_f32_type_get(&f32_ty, ctx));
 
     const uint32_t M = 64, N = 64, K = 64, howmany = 1000;
-    CHECK(tinytc_source_context_create(&source_ctx));
-    CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
-                                                  tinytc_transpose_N, tinytc_transpose_N, M, N, K,
-                                                  M, M * K, K, K * N, M, M * N, source_ctx));
-    CHECK(tinytc_ze_recipe_handler_create(&handler, context, device, recipe, source_ctx));
+    CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, f32_ty, tinytc_transpose_N,
+                                                  tinytc_transpose_N, M, N, K, M, M * K, K, K * N,
+                                                  M, M * N));
+    CHECK(tinytc_ze_recipe_handler_create(&handler, context, device, recipe));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
     const size_t Bbytes = K * N * howmany * sizeof(float);
@@ -110,14 +112,7 @@ err:
     }
     tinytc_recipe_handler_release(handler);
     tinytc_recipe_release(recipe);
-    if (source_ctx) {
-        const char *error_log;
-        tinytc_source_context_get_error_log(source_ctx, &error_log);
-        if (error_log[0] != '\0') {
-            printf("\nError log:\n%s\n", error_log);
-        }
-        tinytc_source_context_release(source_ctx);
-    }
+    tinytc_compiler_context_release(ctx);
     tinytc_core_info_release(info);
 
     return status;
@@ -126,18 +121,17 @@ err:
 tinytc_status_t custom_kernel(ze_context_handle_t context, ze_device_handle_t device,
                               ze_command_list_handle_t list) {
     tinytc_status_t status = tinytc_status_success;
-    int32_t *host = NULL;
+    int16_t *host = NULL;
     void *A = NULL, *B = NULL;
     tinytc_core_info_t info = NULL;
-    tinytc_source_context_t source_ctx = NULL;
     tinytc_prog_t program = NULL;
     ze_module_handle_t module = NULL;
     ze_kernel_handle_t kernel = NULL;
 
     const uint32_t howmany = 1000;
     const int32_t elements = CHUNK_SIZE * howmany;
-    const size_t bytes = elements * sizeof(float);
-    host = (int32_t *)malloc(bytes);
+    const size_t bytes = elements * sizeof(int16_t);
+    host = (int16_t *)malloc(bytes);
     if (!host) {
         goto err;
     }
@@ -156,24 +150,21 @@ tinytc_status_t custom_kernel(ze_context_handle_t context, ze_device_handle_t de
 
     static const char source_text[] =
         "func @copy(%A: memref<i32x" CHUNK_SIZE_S "x?>, %B: memref<i32x" CHUNK_SIZE_S "x?>) {\n"
-        "    %gid = group_id\n"
-        "    %a = subview %A[:,%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
-        "    %b = subview %B[:,%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
-        "    axpby.n 1, %a, 0, %b\n"
-        "        : i32, memref<i32x" CHUNK_SIZE_S ">, i32, memref<i32x" CHUNK_SIZE_S ">\n"
+        "    %gid = group_id.x : index\n"
+        "    %a = subview %A[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
+        "    %b = subview %B[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
+        "    %c0 = constant 0 : i32\n"
+        "    %c1 = constant 1 : i32\n"
+        "    axpby.n %c1, %a, %c0, %b\n"
         "}\n";
 
-    CHECK(tinytc_source_context_create(&source_ctx));
-    CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, source_ctx));
-    CHECK(tinytc_ze_kernel_bundle_create_with_program(&module, context, device, program, 0u,
-                                                      source_ctx));
+    CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, NULL));
+    CHECK(tinytc_ze_kernel_bundle_create_with_program(&module, context, device, program, 0u));
     CHECK(tinytc_ze_kernel_create(&kernel, module, "copy"));
 
     ZE_CHECK(zeKernelSetArgumentValue(kernel, 0, sizeof(A), &A));
-    ZE_CHECK(zeKernelSetArgumentValue(kernel, 1, sizeof(howmany), &howmany));
-    ZE_CHECK(zeKernelSetArgumentValue(kernel, 2, sizeof(B), &B));
-    ZE_CHECK(zeKernelSetArgumentValue(kernel, 3, sizeof(howmany), &howmany));
-    ze_group_count_t group_count = tinytc_ze_get_group_count(howmany);
+    ZE_CHECK(zeKernelSetArgumentValue(kernel, 1, sizeof(B), &B));
+    ze_group_count_t group_count = {howmany, 1u, 1u};
     ZE_CHECK(zeCommandListAppendLaunchKernel(list, kernel, &group_count, NULL, 0, NULL));
     ZE_CHECK(zeCommandListHostSynchronize(list, TIMEOUT));
 
@@ -182,10 +173,19 @@ tinytc_status_t custom_kernel(ze_context_handle_t context, ze_device_handle_t de
 
     uint32_t ok = 0;
     for (int32_t i = 0; i < elements; ++i) {
+        int32_t c = i / 64;
+        int32_t r = i % 64;
+        if (r < 16 && c < 8) {
+            printf("%d ", host[i]);
+        }
+        if (r == 63 && c < 8) {
+            printf("\n");
+        }
         if (host[i] == i) {
             ++ok;
         }
     }
+    printf("\n");
     if (ok == (uint32_t)elements) {
         printf("Custom kernel was successful\n");
     } else {
@@ -200,14 +200,6 @@ err:
         zeModuleDestroy(module);
     }
     tinytc_prog_release(program);
-    if (source_ctx) {
-        const char *error_log;
-        tinytc_source_context_get_error_log(source_ctx, &error_log);
-        if (error_log[0] != '\0') {
-            printf("\nError log:\n%s\n", error_log);
-        }
-        tinytc_source_context_release(source_ctx);
-    }
     tinytc_core_info_release(info);
     if (B) {
         zeMemFree(context, B);

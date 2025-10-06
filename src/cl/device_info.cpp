@@ -3,17 +3,99 @@
 
 #include "../device_info.hpp"
 #include "device_info_helper.hpp"
-#include "tinytc/tinytc.h"
+#include "error.hpp"
+#include "tinytc/core.h"
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <CL/cl_ext.h>
 #include <CL/cl_platform.h>
 #include <cstddef>
 #include <cstring>
-#include <string>
 #include <vector>
+
+#ifndef CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT
+#define CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT 0x4231
+#endif
+#ifndef CL_DEVICE_DOUBLE_FP_ATOMIC_CAPABILITIES_EXT
+#define CL_DEVICE_DOUBLE_FP_ATOMIC_CAPABILITIES_EXT 0x4232
+#endif
+#ifndef CL_DEVICE_HALF_FP_ATOMIC_CAPABILITIES_EXT
+#define CL_DEVICE_HALF_FP_ATOMIC_CAPABILITIES_EXT 0x4233
+#endif
+
+#ifndef CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT
+#define CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT (1 << 1)
+#endif
+#ifndef CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT
+#define CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT (1 << 2)
+#endif
+#ifndef CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT
+#define CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT (1 << 17)
+#endif
+#ifndef CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT
+#define CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT (1 << 18)
+#endif
+
+namespace tinytc {
+void set_spirv_features(tinytc_core_info_t info, cl_device_id device) {
+    auto const set_feature = [&info](tinytc_spirv_feature_t feature, bool available) {
+        CHECK_STATUS(tinytc_core_info_set_spirv_feature(info, feature, available));
+    };
+
+    const auto ocl_exts = get_opencl_extensions(device);
+    const auto ocl_version = get_opencl_version(device);
+    const auto max_num_subgroups = device_info<cl_uint>(device, CL_DEVICE_MAX_NUM_SUB_GROUPS);
+    const auto double_fp_config =
+        device_info<cl_device_fp_config>(device, CL_DEVICE_DOUBLE_FP_CONFIG);
+
+    set_feature(tinytc_spirv_feature_float16, ocl_exts & opencl_ext_cl_khr_fp16);
+    set_feature(tinytc_spirv_feature_float64,
+                double_fp_config != 0 || ocl_exts & opencl_ext_cl_khr_fp64);
+    set_feature(tinytc_spirv_feature_groups, ocl_version.major >= 2 && max_num_subgroups != 0);
+    set_feature(tinytc_spirv_feature_subgroup_dispatch,
+                ocl_version.major >= 2 && max_num_subgroups != 0);
+    set_feature(tinytc_spirv_feature_subgroup_buffer_block_io,
+                ocl_exts & opencl_ext_cl_intel_spirv_subgroups);
+    set_feature(tinytc_spirv_feature_int64_atomics,
+                ocl_exts & (opencl_ext_cl_khr_int64_base_atomics |
+                            opencl_ext_cl_khr_int64_extended_atomics));
+    if (ocl_exts & opencl_ext_cl_ext_float_atomics) {
+        auto f16_flags =
+            device_info<cl_bitfield>(device, CL_DEVICE_HALF_FP_ATOMIC_CAPABILITIES_EXT);
+        auto f32_flags =
+            device_info<cl_bitfield>(device, CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT);
+        auto f64_flags =
+            device_info<cl_bitfield>(device, CL_DEVICE_DOUBLE_FP_ATOMIC_CAPABILITIES_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_add_local,
+                    f16_flags & CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_add_local,
+                    f32_flags & CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_add_local,
+                    f64_flags & CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_add_global,
+                    f16_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_add_global,
+                    f32_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_add_global,
+                    f64_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_min_max_local,
+                    f16_flags & CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_min_max_local,
+                    f32_flags & CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_min_max_local,
+                    f64_flags & CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_min_max_global,
+                    f16_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_min_max_global,
+                    f32_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_min_max_global,
+                    f64_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT);
+    }
+}
+} // namespace tinytc
 
 extern "C" {
 tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_level_t *level) {
@@ -21,22 +103,12 @@ tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_
         return tinytc_status_invalid_arguments;
     }
 
-    std::size_t extensions_size;
-    TINYTC_CL_CHECK_STATUS(
-        clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 0, nullptr, &extensions_size));
-    std::string extensions;
-    extensions.resize(extensions_size);
-    TINYTC_CL_CHECK_STATUS(
-        clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, extensions_size, extensions.data(), nullptr));
-
-    bool has_subgroup = tinytc::has_subgroup_extension(extensions.size(), extensions.c_str());
+    auto ocl_exts = tinytc::get_opencl_extensions(device);
+    bool has_subgroup =
+        ocl_exts & (tinytc::opencl_ext_cl_intel_subgroups | tinytc::opencl_ext_cl_khr_subgroups);
 
     if (!has_subgroup) {
-        char version_str[32];
-        std::size_t version_str_size;
-        TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_VERSION, sizeof(version_str) - 1,
-                                               version_str, &version_str_size));
-        auto version = tinytc::get_opencl_version(version_str_size, version_str);
+        auto version = tinytc::get_opencl_version(device);
         if (version.major >= 3) {
             std::size_t features_size;
             TINYTC_CL_CHECK_STATUS(
@@ -63,7 +135,13 @@ tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_
     cl_version ip_ver = 0;
     cl_int err =
         clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr);
-    if (err == CL_SUCCESS && ip_ver == tinytc_intel_gpu_architecture_pvc) {
+    const auto is_arch = [&ip_ver](tinytc_intel_gpu_architecture_t arch) {
+        auto arch_u = static_cast<std::uint32_t>(arch);
+        return arch_u <= ip_ver &&
+               ip_ver <= arch_u + TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS;
+    };
+    if (err == CL_SUCCESS && (is_arch(tinytc_intel_gpu_architecture_pvc) ||
+                              is_arch(tinytc_intel_gpu_architecture_bmg))) {
         *level = tinytc_support_level_tuned;
     }
 
@@ -75,15 +153,17 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         return tinytc_status_invalid_arguments;
     }
 
-    cl_uint vendor_id;
+    cl_uint vendor_id, mem_base_addr_align;
 
     TINYTC_CL_CHECK_STATUS(
         clGetDeviceInfo(device, CL_DEVICE_VENDOR_ID, sizeof(vendor_id), &vendor_id, nullptr));
 
     if (vendor_id == 0x8086) {
-        cl_version ip_ver;
-        cl_uint num_eus_per_subslice, num_threads_per_eu;
+        cl_device_type device_type;
         std::size_t subgroup_sizes_size = 0;
+
+        TINYTC_CL_CHECK_STATUS(
+            clGetDeviceInfo(device, CL_DEVICE_TYPE, sizeof(device_type), &device_type, nullptr));
 
         TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_SUB_GROUP_SIZES_INTEL, 0, nullptr,
                                                &subgroup_sizes_size));
@@ -95,19 +175,36 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         auto subgroup_sizes =
             std::vector<std::int32_t>(subgroup_sizes_long.begin(), subgroup_sizes_long.end());
 
-        TINYTC_CL_CHECK_STATUS(
-            clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr));
+        if (device_type == CL_DEVICE_TYPE_GPU) {
+            cl_version ip_ver;
+            cl_uint num_eus_per_subslice, num_threads_per_eu;
 
-        TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL,
-                                               sizeof(num_eus_per_subslice), &num_eus_per_subslice,
-                                               nullptr));
-        TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_THREADS_PER_EU_INTEL,
-                                               sizeof(num_threads_per_eu), &num_threads_per_eu,
-                                               nullptr));
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL,
+                                                   sizeof(ip_ver), &ip_ver, nullptr));
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL,
+                                                   sizeof(num_eus_per_subslice),
+                                                   &num_eus_per_subslice, nullptr));
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_THREADS_PER_EU_INTEL,
+                                                   sizeof(num_threads_per_eu), &num_threads_per_eu,
+                                                   nullptr));
 
-        TINYTC_CHECK_STATUS(tinytc_core_info_intel_create(info, ip_ver, num_eus_per_subslice,
-                                                          num_threads_per_eu, subgroup_sizes.size(),
-                                                          subgroup_sizes.data()));
+            TINYTC_CHECK_STATUS(tinytc_core_info_intel_create(
+                info, ip_ver, num_eus_per_subslice, num_threads_per_eu, subgroup_sizes.size(),
+                subgroup_sizes.data()));
+        } else if (device_type == CL_DEVICE_TYPE_CPU) {
+            // 32 zmm registers
+            // @todo: need to do something smarter here
+            std::uint32_t register_space = 32 * 64;
+            size_t max_work_group_size;
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                                                   sizeof(max_work_group_size),
+                                                   &max_work_group_size, nullptr));
+            TINYTC_CHECK_STATUS(
+                tinytc_core_info_generic_create(info, register_space, max_work_group_size,
+                                                subgroup_sizes.size(), subgroup_sizes.data()));
+        } else {
+            return tinytc_status_unsupported_device;
+        }
     } else if (vendor_id == 0x1002) {
         // 512 KB / 32 wavefronts
         // @todo: can this info be queried?
@@ -127,7 +224,13 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         return tinytc_status_unsupported_device;
     }
 
-    return tinytc_status_success;
+    TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_MEM_BASE_ADDR_ALIGN,
+                                           sizeof(mem_base_addr_align), &mem_base_addr_align,
+                                           nullptr));
+    // mem_base_addr_align is in bits -> convert to bytes
+    TINYTC_CHECK_STATUS(tinytc_core_info_set_default_alignment(*info, mem_base_addr_align / 8));
+
+    return tinytc::exception_to_status_code_cl([&] { set_spirv_features(*info, device); });
 }
 }
 

@@ -4,6 +4,8 @@
 #include "test_runtime.hpp"
 
 #include <cstdint>
+#include <level_zero/ze_api.h>
+#include <utility>
 
 using tinytc::ZE_CHECK_STATUS;
 
@@ -39,7 +41,7 @@ auto level_zero_test_runtime::create_buffer(std::size_t bytes) const -> mem_t {
     void *ptr;
     auto device_desc =
         ze_device_mem_alloc_desc_t{ZE_STRUCTURE_TYPE_DEVICE_MEM_ALLOC_DESC, nullptr, 0, 0};
-    ZE_CHECK_STATUS(zeMemAllocDevice(ctx_, &device_desc, bytes, 64, dev_, &ptr));
+    ZE_CHECK_STATUS(zeMemAllocDevice(ctx_, &device_desc, bytes, 0, dev_, &ptr));
     return ptr;
 }
 void level_zero_test_runtime::free_buffer(mem_t buf) const {
@@ -57,14 +59,37 @@ void level_zero_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t
     this->memcpy(dst, src, bytes);
 }
 
-auto level_zero_test_runtime::get_core_info() const -> tinytc::core_info {
-    return ::tinytc::make_core_info(dev_);
+auto level_zero_test_runtime::get_core_info() const -> tinytc::shared_handle<tinytc_core_info_t> {
+    return ::tinytc::create_core_info(dev_);
 }
 auto level_zero_test_runtime::get_device() -> device_t { return dev_; }
 auto level_zero_test_runtime::get_context() -> context_t { return ctx_; }
 auto level_zero_test_runtime::get_command_list() -> command_list_t { return list_; }
-auto level_zero_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
-    return tinytc::make_recipe_handler(ctx_, dev_, rec);
+auto level_zero_test_runtime::get_recipe_handler(tinytc_recipe_t rec)
+    -> tinytc::shared_handle<tinytc_recipe_handler_t> {
+    return tinytc::create_recipe_handler(ctx_, dev_, rec);
+}
+auto level_zero_test_runtime::get_kernel_bundle(tinytc_prog_t p,
+                                                tinytc_core_feature_flags_t core_features)
+    -> kernel_bundle_t {
+    return ::tinytc::create_kernel_bundle(ctx_, dev_, std::move(p), core_features);
+}
+auto level_zero_test_runtime::get_kernel(kernel_bundle_t const &bundle, char const *name)
+    -> kernel_t {
+    return ::tinytc::create_kernel(bundle.get(), name);
+}
+void level_zero_test_runtime::set_arg(kernel_t &kernel, std::uint32_t arg_index,
+                                      std::size_t arg_size, const void *arg_value) {
+    ZE_CHECK_STATUS(zeKernelSetArgumentValue(kernel.get(), arg_index, arg_size, arg_value));
+}
+void level_zero_test_runtime::set_mem_arg(kernel_t &kernel, std::uint32_t arg_index,
+                                          const void *arg_value, tinytc::mem_type) {
+    set_arg(kernel, arg_index, sizeof(arg_value), &arg_value);
+}
+void level_zero_test_runtime::submit(kernel_t &kernel, std::int64_t howmany) {
+    auto group_count = ze_group_count_t{static_cast<std::uint32_t>(howmany), 1u, 1u};
+    ZE_CHECK_STATUS(
+        zeCommandListAppendLaunchKernel(list_, kernel.get(), &group_count, nullptr, 0, nullptr));
 }
 void level_zero_test_runtime::synchronize() {
     ZE_CHECK_STATUS(zeCommandListHostSynchronize(list_, UINT64_MAX));

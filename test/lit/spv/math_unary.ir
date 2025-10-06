@@ -1,0 +1,66 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: OpCapability Int64
+; CHECK: %[[#EXT:]] = OpExtInstImport "OpenCL.std"
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+; CHECK: %[[#FLOG2:]] = OpConstant %[[#F32]]
+
+func @tfloat(%a: f32) {
+    %0 = exp %a : f32
+    %1 = native_exp %a : f32
+    %2 = exp2 %a : f32
+    %3 = native_exp2 %a : f32
+    %4 = cos %a : f32
+    %5 = native_cos %a : f32
+    %6 = sin %a : f32
+    %7 = native_sin %a : f32
+    %8 = log %a : f32
+    %9 = native_log %a : f32
+    %10 = log2 %a : f32
+    %11 = native_log2 %a : f32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] exp %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_exp %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] exp2 %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_exp2 %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] cos %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_cos %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] sin %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_sin %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] log %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_log %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] log2 %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_log2 %[[#]]
+}
+
+func @tcomplex(%a: c32) {
+    %0 = exp %a : c32
+    %1 = exp2 %a : c32
+; CHECK-LABEL:       %[[#]] = OpFunction {{.*}}
+; CHECK:          %[[#A2:]] = OpFunctionParameter %[[#C32]]
+; CHECK:        %[[#A2_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
+; CHECK-NEXT:   %[[#A2_1:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 1
+; CHECK-NEXT:     %[[#E2:]] = OpExtInst %[[#F32]] %[[#EXT]] exp %[[#A2_0]]
+; CHECK-NEXT:     %[[#C2:]] = OpExtInst %[[#F32]] %[[#EXT]] cos %[[#A2_1]]
+; CHECK-NEXT:     %[[#S2:]] = OpExtInst %[[#F32]] %[[#EXT]] sin %[[#A2_1]]
+; CHECK-NEXT:     %[[#R2:]] = OpFMul %[[#F32]] %[[#E2]] %[[#C2]]
+; CHECK-NEXT:     %[[#I2:]] = OpFMul %[[#F32]] %[[#E2]] %[[#S2]]
+; CHECK-NEXT: %[[#DUMMY2:]] = OpUndef %[[#C32]]
+; CHECK-NEXT:     %[[#B2:]] = OpCompositeInsert %[[#C32]] %[[#R2]] %[[#DUMMY2]] 0
+; CHECK-NEXT:        %[[#]] = OpCompositeInsert %[[#C32]] %[[#I2]] %[[#B2]] 1
+; CHECK:        %[[#A3_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
+; CHECK-NEXT:   %[[#A3_1:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 1
+; CHECK-NEXT: %[[#A3_1_S:]] = OpFMul %[[#F32]] %[[#A3_1]] %[[#FLOG2]]
+; CHECK-NEXT:     %[[#E3:]] = OpExtInst %[[#F32]] %[[#EXT]] exp2 %[[#A3_0]]
+; CHECK-NEXT:     %[[#C3:]] = OpExtInst %[[#F32]] %[[#EXT]] cos %[[#A3_1_S]]
+; CHECK-NEXT:     %[[#S3:]] = OpExtInst %[[#F32]] %[[#EXT]] sin %[[#A3_1_S]]
+; CHECK-NEXT:     %[[#R3:]] = OpFMul %[[#F32]] %[[#E3]] %[[#C3]]
+; CHECK-NEXT:     %[[#I3:]] = OpFMul %[[#F32]] %[[#E3]] %[[#S3]]
+; CHECK-NEXT: %[[#DUMMY3:]] = OpUndef %[[#C32]]
+; CHECK-NEXT:     %[[#B3:]] = OpCompositeInsert %[[#C32]] %[[#R3]] %[[#DUMMY3]] 0
+; CHECK-NEXT:        %[[#]] = OpCompositeInsert %[[#C32]] %[[#I3]] %[[#B3]] 1
+}

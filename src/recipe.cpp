@@ -3,39 +3,24 @@
 
 #include "recipe.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/types.hpp"
+#include "number_dispatch.hpp"
+#include "tinytc/builder.h"
 
 #include <algorithm>
+#include <complex>
 #include <cstring>
 
 namespace tinytc {
-template <typename T> bool is_argument_zero(std::size_t arg_size, const void *arg_value) {
-    T v;
-    memcpy(&v, arg_value, std::min(sizeof(v), arg_size));
-    return v == T(0);
-}
 
-auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_value) -> bool {
-    switch (type) {
-    case scalar_type::index:
-        return is_argument_zero<std::int64_t>(arg_size, arg_value);
-    case scalar_type::i8:
-        return is_argument_zero<std::int8_t>(arg_size, arg_value);
-    case scalar_type::i16:
-        return is_argument_zero<std::int16_t>(arg_size, arg_value);
-    case scalar_type::i32:
-        return is_argument_zero<std::int32_t>(arg_size, arg_value);
-    case scalar_type::i64:
-        return is_argument_zero<std::int64_t>(arg_size, arg_value);
-    case scalar_type::f32:
-        return is_argument_zero<float>(arg_size, arg_value);
-    case scalar_type::f64:
-        return is_argument_zero<double>(arg_size, arg_value);
-    case scalar_type::i1:
-        break;
-    };
-    throw status::invalid_arguments;
+auto is_argument_zero(tinytc_type_t ty, std::size_t arg_size, const void *arg_value) -> bool {
+    return dispatch_number_to_native(
+        ty,
+        []<typename T>(std::size_t arg_size, const void *arg_value) {
+            T v;
+            memcpy(&v, arg_value, std::min(sizeof(v), arg_size));
+            return v == T(0);
+        },
+        arg_size, arg_value);
 }
 
 } // namespace tinytc
@@ -46,16 +31,14 @@ tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recipe, tinytc_prog
     if (recipe == nullptr || prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *prg = tinytc::prog(recipe->get_program()).release(); });
+    return tinytc::exception_to_status_code([&] { *prg = recipe->get_program(); });
 }
 
-tinytc_status_t tinytc_recipe_get_source(const_tinytc_recipe_t recipe, tinytc_source_t *src) {
-    if (recipe == nullptr || src == nullptr) {
+tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe, tinytc_binary_t *bin) {
+    if (recipe == nullptr || bin == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *src = tinytc::source(recipe->get_source()).release(); });
+    return tinytc::exception_to_status_code([&] { *bin = recipe->get_binary(); });
 }
 
 tinytc_status_t tinytc_recipe_release(tinytc_recipe_t obj) {
@@ -82,8 +65,7 @@ tinytc_status_t tinytc_recipe_handler_get_recipe(const_tinytc_recipe_handler_t h
     if (handler == nullptr || recipe == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *recipe = tinytc::recipe(handler->get_recipe()).release(); });
+    return tinytc::exception_to_status_code([&] { *recipe = handler->get_recipe(); });
 }
 
 tinytc_status_t tinytc_recipe_handler_release(tinytc_recipe_handler_t obj) {

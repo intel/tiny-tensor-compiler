@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "test_runtime.hpp"
-#include "tinytc/tinytc.hpp"
-#include "tinytc/tinytc_cl.hpp"
+#include "argument_handler.hpp"
+#include "tinytc/types.h"
 
 #include <CL/cl_platform.h>
+#include <array>
 #include <stdexcept>
 #include <vector>
 
@@ -26,6 +27,7 @@ opencl_test_runtime::opencl_test_runtime() {
             device_count = 1;
             CL_CHECK_STATUS(
                 clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &dev_, NULL));
+            arg_handler_.set_platform(platforms[p]);
             break;
         }
     }
@@ -67,14 +69,39 @@ void opencl_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t byt
     synchronize();
 }
 
-auto opencl_test_runtime::get_core_info() const -> tinytc::core_info {
-    return ::tinytc::make_core_info(dev_);
+auto opencl_test_runtime::get_core_info() const -> tinytc::shared_handle<tinytc_core_info_t> {
+    return ::tinytc::create_core_info(dev_);
 }
 auto opencl_test_runtime::get_device() -> device_t { return dev_; }
 auto opencl_test_runtime::get_context() -> context_t { return ctx_; }
 auto opencl_test_runtime::get_command_list() -> command_list_t { return q_; }
-auto opencl_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
-    return tinytc::make_recipe_handler(ctx_, dev_, rec);
+auto opencl_test_runtime::get_recipe_handler(tinytc_recipe_t rec)
+    -> tinytc::shared_handle<tinytc_recipe_handler_t> {
+    return tinytc::create_recipe_handler(ctx_, dev_, rec);
+}
+auto opencl_test_runtime::get_kernel_bundle(tinytc_prog_t p,
+                                            tinytc_core_feature_flags_t core_features)
+    -> kernel_bundle_t {
+    return ::tinytc::create_kernel_bundle(ctx_, dev_, p, core_features);
+}
+auto opencl_test_runtime::get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t {
+    return ::tinytc::create_kernel(bundle.get(), name);
+}
+void opencl_test_runtime::set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,
+                                  const void *arg_value) {
+    arg_handler_.set_arg(kernel.get(), arg_index, arg_size, arg_value);
+}
+void opencl_test_runtime::set_mem_arg(kernel_t &kernel, std::uint32_t arg_index,
+                                      const void *arg_value, tinytc::mem_type type) {
+    arg_handler_.set_mem_arg(kernel.get(), arg_index, arg_value,
+                             static_cast<tinytc_mem_type_t>(type));
+}
+void opencl_test_runtime::submit(kernel_t &kernel, std::int64_t howmany) {
+    auto ng = std::array<std::size_t, 3u>{static_cast<std::size_t>(howmany), 1, 1};
+    auto ls = ::tinytc::get_group_size(kernel.get());
+    auto gs = ::tinytc::get_global_size(ng, ls);
+    CL_CHECK_STATUS(
+        clEnqueueNDRangeKernel(q_, kernel.get(), 3u, NULL, gs.data(), ls.data(), 0, NULL, NULL));
 }
 void opencl_test_runtime::synchronize() { CL_CHECK_STATUS(clFinish(q_)); }
 

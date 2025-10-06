@@ -1,0 +1,20 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F32_42:]] = OpConstant %[[#F32]] 0x1.5p+5
+
+func @textract() attributes{subgroup_size=16} {
+    %0 = constant 1.0 : coopmatrix<f32x16x3,matrix_acc>
+    %1 = constant 42.0 : coopmatrix<f32x16x1,matrix_acc>
+    parallel {
+        %2 = cooperative_matrix_extract %0[1] : f32
+        %3 = cooperative_matrix_extract %1[0] : f32
+        %4 = neg %3 : f32
+    }
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:       %[[#]] = OpCompositeExtract %[[#F32]] %[[#]] 1 
+; CHECK:       %[[#]] = OpFNegate %[[#F32]] %[[#F32_42]]
+}

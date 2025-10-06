@@ -1,0 +1,10 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
+func @t1(%a: f32, %b: f32) {
+  %1 = and %a, %b : f32
+; CHECK:        <stdin>:6.8-23: Floating point type unsupported by instruction
+; CHECK:        %1 = and %a, %b : f32
+; CHECK-NEXT:        ~~~~~~~~~~~~~~~~
+}

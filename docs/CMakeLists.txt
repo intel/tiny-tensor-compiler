@@ -51,10 +51,12 @@ set(DOC_FILES
     api/ze/capi.rst
     api/ze/cxxapi.rst
     api/ze/index.rst
+    dev/coopmatrix_layout.rst
     manual/build.rst
     manual/builder.rst
     manual/calling_convention.rst
     manual/core.rst
+    manual/preprocessor.rst
     manual/tensor-ir.rst
     manual/tutorial_matrix_chain.rst
 )

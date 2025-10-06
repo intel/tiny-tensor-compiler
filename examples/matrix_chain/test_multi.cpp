@@ -25,14 +25,17 @@ template <typename F> double bench(F f, int nrepeat = 10) {
 
 template <typename T>
 test_multi<T>::test_multi(std::int64_t N, std::int64_t P, std::int64_t howmany,
-                          std::size_t alignment, test_case tc, std::vector<queue> const &q) {
+                          std::size_t alignment, test_case tc, std::vector<queue> const &q,
+                          bool dump) {
     for (auto &qu : q) {
         switch (tc) {
         case test_case::ader:
-            instances_.emplace_back(std::make_unique<test_ader<T>>(N, P, howmany, alignment, qu));
+            instances_.emplace_back(
+                std::make_unique<test_ader<T>>(N, P, howmany, alignment, qu, dump));
             break;
         case test_case::volume:
-            instances_.emplace_back(std::make_unique<test_volume<T>>(N, P, howmany, alignment, qu));
+            instances_.emplace_back(
+                std::make_unique<test_volume<T>>(N, P, howmany, alignment, qu, dump));
             break;
         default:
             break;

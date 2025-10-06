@@ -35,25 +35,11 @@ TINYTC_EXPORT auto get_support_level(sycl::device const &dev) -> support_level;
  *
  * @return core info
  */
-TINYTC_EXPORT auto make_core_info(sycl::device const &dev) -> core_info;
+TINYTC_EXPORT auto create_core_info(sycl::device const &dev) -> shared_handle<tinytc_core_info_t>;
 
 ////////////////////////////
 ////////// Kernel //////////
 ////////////////////////////
-
-/**
- * @brief Make SYCL kernel bundle from tinytc source
- *
- * @param ctx Context
- * @param dev Device
- * @param src Source
- * @param source_ctx Source context for improved error reporting
- *
- * @return SYCL kernel bundle
- */
-TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                                      source const &src, source_context source_ctx = {})
-    -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
 /**
  * @brief Make SYCL kernel bundle from tinytc program
@@ -63,13 +49,12 @@ TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device con
  * @param prg Program
  * @param core_features requested core features; must be 0 (default) or a combination of
  * tinytc_core_feature_flag_t
- * @param source_ctx Source context for improved error reporting
  *
  * @return SYCL kernel bundle
  */
-TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev, prog prg,
-                                      tinytc_core_feature_flags_t core_features = 0,
-                                      source_context source_ctx = {})
+TINYTC_EXPORT auto create_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
+                                        tinytc_prog_t prg,
+                                        tinytc_core_feature_flags_t core_features = 0)
     -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
 /**
@@ -78,12 +63,11 @@ TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device con
  * @param ctx Context
  * @param dev Device
  * @param bin Binary
- * @param source_ctx Source context for improved error reporting
  *
  * @return SYCL kernel bundle
  */
-TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                                      binary const &bin, source_context source_ctx = {})
+TINYTC_EXPORT auto create_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
+                                        const_tinytc_binary_t bin)
     -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
 /**
@@ -94,8 +78,8 @@ TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device con
  *
  * @return SYCL kernel
  */
-TINYTC_EXPORT auto make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &bundle,
-                               char const *name) -> sycl::kernel;
+TINYTC_EXPORT auto create_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &bundle,
+                                 char const *name) -> sycl::kernel;
 
 /**
  * @brief Get work-group size
@@ -109,23 +93,29 @@ TINYTC_EXPORT auto get_group_size(sycl::kernel const &krnl) -> sycl::range<3u>;
 /**
  * @brief Convert group size to SYCL range
  *
- * @param howmany Group size
+ * **Important:** num_groups is in SYCL ZYX order, meaning that the range should contain
+ * {num_groups_z, num_groups_y, num_groups_x}.
+ *
+ * @param num_groups Number of groups
  * @param local_size Work-group size
  *
  * @return Global size
  */
-TINYTC_EXPORT auto get_global_size(std::int64_t howmany, sycl::range<3u> const &local_size)
-    -> sycl::range<3u>;
+TINYTC_EXPORT auto get_global_size(sycl::range<3u> const &num_groups,
+                                   sycl::range<3u> const &local_size) -> sycl::range<3u>;
 
 /**
  * @brief Get SYCL nd_range
  *
+ * **Important:** num_groups is in SYCL ZYX order, meaning that the range should contain
+ * {num_groups_z, num_groups_y, num_groups_x}.
+ *
  * @param krnl Kernel
- * @param howmany Group size
+ * @param num_groups Number of groups
  *
  * @return ND range
  */
-TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl, std::int64_t howmany)
+TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl, sycl::range<3u> const &num_groups)
     -> sycl::nd_range<3u>;
 
 ////////////////////////////
@@ -133,45 +123,43 @@ TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl, std::int64_t ho
 ////////////////////////////
 
 /**
- * @brief Recipe handler for the SYCL runtime
+ * @brief Launch recipe with submit call
+ *
+ * @param handler recipe handler
+ * @param cgh Handler
  */
-class TINYTC_EXPORT sycl_recipe_handler : public recipe_handler {
-  public:
-    using recipe_handler::recipe_handler;
-
-    /**
-     * @brief Launch recipe with submit call
-     *
-     * @param h Handler
-     */
-    void parallel_for(sycl::handler &h);
-    /**
-     * @brief Submit recipe to queue
-     *
-     * @param q Queue
-     *
-     * @return Event
-     */
-    auto submit(sycl::queue q) -> sycl::event;
-    /**
-     * @brief Submit recipe to queue
-     *
-     * @param q Queue
-     * @param dep_event Event to wait on
-     *
-     * @return Event
-     */
-    auto submit(sycl::queue q, sycl::event const &dep_event) -> sycl::event;
-    /**
-     * @brief Submit recipe to queue
-     *
-     * @param q Queue
-     * @param dep_events Events to wait on
-     *
-     * @return Event
-     */
-    auto submit(sycl::queue q, std::vector<sycl::event> const &dep_events) -> sycl::event;
-};
+TINYTC_EXPORT void parallel_for(tinytc_recipe_handler_t handler, sycl::handler &cgh);
+/**
+ * @brief Submit recipe to queue
+ *
+ * @param handler recipe handler
+ * @param q Queue
+ *
+ * @return Event
+ */
+TINYTC_EXPORT auto submit(tinytc_recipe_handler_t handler, sycl::queue q) -> sycl::event;
+/**
+ * @brief Submit recipe to queue
+ *
+ * @param handler recipe handler
+ * @param q Queue
+ * @param dep_event Event to wait on
+ *
+ * @return Event
+ */
+TINYTC_EXPORT auto submit(tinytc_recipe_handler_t handler, sycl::queue q,
+                          sycl::event const &dep_event) -> sycl::event;
+/**
+ * @brief Submit recipe to queue
+ *
+ * @param handler recipe handler
+ * @param q Queue
+ * @param dep_events Events to wait on
+ *
+ * @return Event
+ */
+TINYTC_EXPORT auto submit(tinytc_recipe_handler_t handler, sycl::queue q,
+                          std::vector<sycl::event> const &dep_events) -> sycl::event;
 
 /**
  * @brief Make recipe handler
@@ -179,24 +167,22 @@ class TINYTC_EXPORT sycl_recipe_handler : public recipe_handler {
  * @param ctx Context
  * @param dev Device
  * @param rec Recipe
- * @param source_ctx Source context for improved error reporting
  *
  * @return SYCL recipe handler
  */
-TINYTC_EXPORT auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
-                                       recipe const &rec, source_context source_ctx = {})
-    -> sycl_recipe_handler;
+TINYTC_EXPORT auto create_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
+                                         tinytc_recipe_t rec)
+    -> shared_handle<tinytc_recipe_handler_t>;
 /**
  * @brief Make recipe handler
  *
  * @param q Queue
  * @param rec Recipe
- * @param source_ctx Source context for improved error reporting
  *
  * @return SYCL recipe handler
  */
-TINYTC_EXPORT auto make_recipe_handler(sycl::queue const &q, recipe const &rec,
-                                       source_context source_ctx = {}) -> sycl_recipe_handler;
+TINYTC_EXPORT auto create_recipe_handler(sycl::queue const &q, tinytc_recipe_t rec)
+    -> shared_handle<tinytc_recipe_handler_t>;
 
 } // namespace tinytc
 

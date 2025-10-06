@@ -1,14 +1,17 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "args.hpp"
+#include "../gemm_common.hpp"
 
+#include <argparser.hpp>
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 #include <tinytc/tinytc_sycl.hpp>
 
 #include <algorithm>
 #include <chrono>
+#include <complex>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -20,26 +23,19 @@
 using namespace sycl;
 using namespace tinytc;
 
-template <typename F> double bench(F f, int nrepeat = 10) {
-    f();
-    double min_exec_time_ns = std::numeric_limits<double>::max();
-    for (int i = 0; i < nrepeat; ++i) {
-        auto start = std::chrono::high_resolution_clock::now();
-        f();
-        auto end = std::chrono::high_resolution_clock::now();
-        double exec_time_ns =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        min_exec_time_ns = std::min(min_exec_time_ns, exec_time_ns);
-    }
-    return min_exec_time_ns;
-}
+struct args {
+    bool dump = false;
+    bool specialize_M = false;
+    bool specialize_ld = false;
+    examples::test_type ty = examples::test_type::f32;
+    bool update = false;
+    bool verify = false;
+    std::int32_t alignment = 0;
+    std::int32_t M_block_size = 0;
+    std::vector<examples::test_case> tc;
+};
 
 template <typename T> void test(queue q, args &a) {
-    auto const fill = [](std::vector<T> &x) {
-        for (std::size_t i = 0; i < x.size(); ++i) {
-            x[i] = i % 101;
-        }
-    };
     std::int64_t na_max = 0;
     std::int64_t nb_max = 0;
     std::int64_t nc_max = 0;
@@ -51,28 +47,32 @@ template <typename T> void test(queue q, args &a) {
     auto A_host = std::vector<T>(na_max);
     auto B_host = std::vector<T>(nb_max);
     auto C_host = std::vector<T>(nc_max);
-    auto C_ref_host = std::vector<T>(nc_max);
-    T *C_ref = malloc_device<T>(nc_max, q);
-    T *A = malloc_device<T>(na_max, q);
-    T *B = malloc_device<T>(nb_max, q);
-    T *C = malloc_device<T>(nc_max, q);
-    fill(A_host);
-    fill(B_host);
-    q.copy(A_host.data(), A, na_max).wait();
-    q.copy(B_host.data(), B, nb_max).wait();
+    auto const alloc_device = [&a, &q](std::size_t num_bytes) {
+        if (a.alignment == 0) {
+            return malloc_device<T>(num_bytes, q);
+        } else {
+            return aligned_alloc_device<T>(a.alignment, num_bytes, q);
+        }
+    };
+    T *A = alloc_device(na_max);
+    T *B = alloc_device(nb_max);
+    T *C = alloc_device(nc_max);
 
-    auto const check = [&](std::int64_t M, std::int64_t N) {
-        q.copy(C_ref, C_ref_host.data(), M * N).wait();
+    auto const check = [&](std::int64_t M, std::int64_t N, std::int64_t K) {
         q.copy(C, C_host.data(), M * N).wait();
         std::size_t num_err = 0;
-        for (std::int64_t i = 0; i < M * N; ++i) {
-            auto err = std::abs(C_host[i] - C_ref_host[i]);
-            if (err > 10.0 * std::numeric_limits<T>::epsilon()) {
-                if (num_err < 10) {
-                    std::cout << i << " " << err << " " << C_host[i] << " " << C_ref_host[i]
-                              << std::endl;
+        const auto error_bound = examples::test_gemm_error_bound<T>(K);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < M; ++i) {
+                const auto relerr = examples::test_gemm_rel_error<T>(C_host.data(), i, j, M);
+                if (relerr > error_bound) {
+                    if (num_err < 10) {
+                        std::cout << "C_{" << i << "," << j << "}=" << C_host[i + j * M]
+                                  << ", relative_error=" << relerr
+                                  << ", error_bound=" << error_bound << std::endl;
+                    }
+                    ++num_err;
                 }
-                ++num_err;
             }
         }
         if (num_err > 10) {
@@ -80,31 +80,17 @@ template <typename T> void test(queue q, args &a) {
         }
     };
 
-    auto const &type = typeid(T);
     for (auto &c : a.tc) {
-        if (a.verify) {
-            q.memset(C, 0, c.m * c.n * sizeof(T)).wait();
-            q.memset(C_ref, 0, c.m * c.n * sizeof(T)).wait();
-            q.submit([&](auto &h) {
-                 auto beta = a.beta;
-                 h.parallel_for(range{static_cast<std::size_t>(c.n), static_cast<std::size_t>(c.m)},
-                                [=](id<2> it) {
-                                    auto m = it[1];
-                                    auto n = it[0];
-                                    auto c_acc = T(0.0);
-                                    for (std::int64_t k = 0; k < c.k; ++k) {
-                                        c_acc += A[m + k * c.m] * B[k + n * c.k];
-                                    }
-                                    C_ref[m + n * c.m] = c_acc + T(beta) * C_ref[m + n * c.m];
-                                });
-             }).wait();
-        }
+        examples::test_gemm_matrix<T, matrix_use::a>(A_host.data(), c.m, c.k);
+        examples::test_gemm_matrix<T, matrix_use::b>(B_host.data(), c.k, c.n);
+        q.copy(A_host.data(), A, c.m * c.k).wait();
+        q.copy(B_host.data(), B, c.k * c.n).wait();
+        q.memset(C, 0, c.m * c.n * sizeof(T)).wait();
 
-        auto source_ctx = source_context{};
+        auto beta = a.update ? T{1} : T{0};
         try {
-            source_ctx = make_source_context();
-            auto info = make_core_info(q.get_device());
-            info.set_core_features(tinytc_core_feature_flag_large_register_file);
+            auto info = create_core_info(q.get_device());
+            set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
 
             std::int64_t M = a.specialize_M ? c.m : dynamic;
             std::int64_t ldA = dynamic, ldB = dynamic, ldC = dynamic;
@@ -113,31 +99,47 @@ template <typename T> void test(queue q, args &a) {
                 ldB = c.k;
                 ldC = c.m;
             }
-            auto tas = make_recipe_handler(
-                q,
-                make_tall_and_skinny_specialized(info, to_scalar_type_v<T>, M, c.n, c.k, ldA, ldB,
-                                                 ldC, 0, source_ctx),
-                source_ctx);
-
-            tall_and_skinny::set_args(tas, c.m, T(1.0), A, c.m, B, c.k, T(a.beta), C, c.m);
-            tas.submit(q).wait();
-            if (a.verify) {
-                check(c.m, c.n);
+            auto ctx = create_compiler_context();
+            set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
+                std::cerr << what << std::endl;
+            });
+            auto r = create_tall_and_skinny_specialized(info.get(), to_type<T>(ctx.get()), M, c.n,
+                                                        c.k, ldA, ldB, ldC, a.alignment,
+                                                        a.alignment, a.alignment, a.M_block_size);
+            if (a.dump) {
+                dump(get_prog(r.get()).get());
             }
-            double min_exec_time_ns = bench([&]() { tas.submit(q).wait(); });
+            auto tas = create_recipe_handler(q, r.get());
 
-            auto bw_C_factor = a.beta != 0.0 ? 2 : 1;
+            set_tall_and_skinny_args(tas.get(), c.m, T{1}, mem(A, mem_type::usm_pointer), c.m,
+                                     mem(B, mem_type::usm_pointer), c.k, beta,
+                                     mem(C, mem_type::usm_pointer), c.m);
+            submit(tas.get(), q).wait();
+            if (a.verify) {
+                check(c.m, c.n, c.k);
+            }
+            double min_exec_time_ns = examples::bench([&]() { submit(tas.get(), q).wait(); });
+
+            const auto ops_per_mnk = [&] {
+                switch (a.ty) {
+                case examples::test_type::c32:
+                case examples::test_type::c64:
+                    return 8;
+                default:
+                    return 2;
+                }
+            }();
+
+            auto bw_C_factor = a.update ? 2 : 1;
             auto bw =
                 sizeof(T) * (c.m * c.n * bw_C_factor + c.m * c.k + c.k * c.n) / min_exec_time_ns;
-            auto gflops = 2 * c.m * c.n * c.k / min_exec_time_ns;
-            std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << a.beta
-                      << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops << std::endl;
-        } catch (status const &st) {
-            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::error_string(st)
+            auto gflops = ops_per_mnk * c.m * c.n * c.k / min_exec_time_ns;
+            std::cout << to_string(a.ty) << "," << c.m << "," << c.n << "," << c.k << ","
+                      << a.update << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops
                       << std::endl;
-            if (source_ctx.get_error_log()[0] != '\0') {
-                std::cerr << "Error log: " << std::endl << source_ctx.get_error_log() << std::endl;
-            }
+        } catch (status const &st) {
+            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::to_string(st)
+                      << std::endl;
         } catch (std::exception const &e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }
@@ -146,31 +148,48 @@ template <typename T> void test(queue q, args &a) {
     free(A, q);
     free(B, q);
     free(C, q);
-    free(C_ref, q);
 };
 
 int main(int argc, char **argv) {
     auto a = args{};
+    bool help = false;
+
+    auto parser = cmd::arg_parser{};
     try {
-        a = arg_parser::parse_args(argc, argv);
-    } catch (std::runtime_error const &e) {
+        parser.set_short_opt('a', &a.alignment, "Override memory alignment");
+        parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
+        parser.set_short_opt('f', &a.ty, "Data type (bf16, f16, f32, f64, c32, c64)")
+            .converter(examples::convert_data_type);
+        parser.set_short_opt('h', &help, "Show help");
+        parser.set_short_opt('u', &a.update,
+                             "Add A*B to C (beta=1) instead of overwriting C (beta=0)");
+        parser.set_short_opt('v', &a.verify, "Verify optimized implementation");
+        parser.set_long_opt("help", &help, "Show help");
+        parser.set_long_opt("m-block-size", &a.M_block_size,
+                            "Set block size for M mode (one work-group per block)");
+        parser.set_long_opt("specialize-m", &a.specialize_M,
+                            "Specialize M instead of using dynamic value");
+        parser.set_long_opt("specialize-ld", &a.specialize_ld,
+                            "Specialize ldA, ldB, ldC instead of using dynamic value");
+        parser.add_positional_arg("test-case", &a.tc, "MxNxK triplet (e.g. 300000x64x64)")
+            .converter(examples::convert_test_case)
+            .validator(examples::validate_test_case);
+
+        parser.parse(argc, argv);
+    } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;
     }
-    if (a.help || a.tc.empty()) {
-        arg_parser::show_help(std::cout);
-        return 0;
+    if (help || a.tc.empty()) {
+        parser.print_help(std::cout, "tall_and_skinny", "");
+        return !help ? -1 : 0;
     }
 
     auto q = queue{};
 
-    std::cout << "precision,m,n,k,beta,time,bandwidth,gflops" << std::endl;
+    std::cout << "precision,m,n,k,update,time,bandwidth,gflops" << std::endl;
     try {
-        if (a.double_precision) {
-            test<double>(std::move(q), a);
-        } else {
-            test<float>(std::move(q), a);
-        }
+        dispatch(a.ty, [&]<typename T>() { test<T>(q, a); });
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;

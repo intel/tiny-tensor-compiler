@@ -1,0 +1,39 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -O0 -S < %s | filecheck %s
+
+; CHECK:        %[[#F32:]] = OpTypeFloat 32
+; CHECK:    %[[#F32_PTR:]] = OpTypePointer CrossWorkgroup %[[#F32]]
+; CHECK:        %[[#I64:]] = OpTypeInt 64 0
+; CHECK:     %[[#I64_C1:]] = OpConstant %[[#I64]] 1
+; CHECK: %[[#INDEX_NULL:]] = OpConstantNull %[[#I64]]
+; CHECK:     %[[#I64_C4:]] = OpConstant %[[#I64]] 4
+
+func @sv1(%K0: memref<f32x?x?>, %offset: index, %size: index) {
+  %0 = subview %K0[4:%size, %offset] : memref<f32x?>
+  %1 = subview %K0[%offset, 4:%size] : memref<f32x?,strided<?>>
+  %2 = size %0[0] : index
+  %3 = not %2 : index
+  %4 = size %1[0] : index
+  %5 = not %4 : index
+; CHECK:                %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:      %[[#P_MR:]] = OpFunctionParameter %[[#F32_PTR]]
+; CHECK-NEXT:           %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:           %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT: %[[#P_STRIDE1:]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#P_OFFSET:]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:    %[[#P_SIZE:]] = OpFunctionParameter %[[#I64]]
+; CHECK:           %[[#TMP1:]] = OpIMul %[[#I64]] %[[#I64_C4]] %[[I64_C1]]
+; CHECK-NEXT:   %[[#OFFSET1:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[#TMP1]]
+; CHECK-NEXT:      %[[#TMP2:]] = OpIMul %[[#I64]] %[[#P_OFFSET]] %[[#P_STRIDE1]]
+; CHECK-NEXT:   %[[#OFFSET2:]] = OpIAdd %[[#I64]] %[[#OFFSET1]] %[[#TMP2]]
+; CHECK-NEXT:           %[[#]] = OpInBoundsPtrAccessChain %[[#F32_PTR]] %[[#P_MR]] %[[#OFFSET2]]
+; CHECK-NEXT:      %[[#TMP3:]] = OpIMul %[[#I64]] %[[#P_OFFSET]] %[[I64_C1]]
+; CHECK-NEXT:   %[[#OFFSET3:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[#TMP3]]
+; CHECK-NEXT:      %[[#TMP4:]] = OpIMul %[[#I64]] %[[#I64_C4]] %[[#P_STRIDE1]]
+; CHECK-NEXT:   %[[#OFFSET4:]] = OpIAdd %[[#I64]] %[[#OFFSET3]] %[[#TMP4]]
+; CHECK-NEXT:           %[[#]] = OpInBoundsPtrAccessChain %[[#F32_PTR]] %[[#P_MR]] %[[#OFFSET4]]
+; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#P_SIZE]]
+; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#P_SIZE]]
+}

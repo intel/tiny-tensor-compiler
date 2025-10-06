@@ -1,24 +1,20 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
-C++-API:
+C++-API <Level Zero C++-API>:
   Common:
     function:
       - tinytc::ZE_CHECK_STATUS
   Device Info:
     function:
       - tinytc::get_support_level(ze_device_handle_t)
-      - tinytc::make_core_info(ze_device_handle_t)
+      - tinytc::create_core_info(ze_device_handle_t)
   Kernel:
     function:
-      - tinytc::compile_to_binary
-      - tinytc::get_group_count
       - tinytc::get_group_size(ze_kernel_handle_t)
-      - tinytc::make_kernel(ze_module_handle_t,char const *)
-      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&,source_context)
-      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t,source_context)
-      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,source const&,source_context)
+      - tinytc::create_kernel(ze_module_handle_t,char const *)
+      - tinytc::create_kernel_bundle(ze_context_handle_t,ze_device_handle_t,const_tinytc_binary_t)
+      - tinytc::create_kernel_bundle(ze_context_handle_t,ze_device_handle_t,tinytc_prog_t,tinytc_core_feature_flags_t)
   Recipe:
     function:
-      - tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&,source_context)
-    class:
-      - tinytc::level_zero_recipe_handler
+      - tinytc::create_recipe_handler(ze_context_handle_t,ze_device_handle_t,tinytc_recipe_t)
+      - tinytc::submit(tinytc_recipe_handler_t,ze_command_list_handle_t,ze_event_handle_t,uint32_t,ze_event_handle_t*)

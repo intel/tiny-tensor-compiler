@@ -1,15 +1,20 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "args.hpp"
+#include "../gemm_common.hpp"
 
+#include <argparser.hpp>
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 #include <tinytc/tinytc_sycl.hpp>
 
 #include <algorithm>
+#include <cerrno>
 #include <chrono>
+#include <complex>
 #include <cstdlib>
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include <limits>
@@ -21,29 +26,29 @@
 using namespace sycl;
 using namespace tinytc;
 
-template <typename F> double bench(F f, int nrepeat = 10) {
-    f();
-    double min_exec_time_ns = std::numeric_limits<double>::max();
-    for (int i = 0; i < nrepeat; ++i) {
-        auto start = std::chrono::high_resolution_clock::now();
-        f();
-        auto end = std::chrono::high_resolution_clock::now();
-        double exec_time_ns =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        min_exec_time_ns = std::min(min_exec_time_ns, exec_time_ns);
-    }
-    return min_exec_time_ns;
-}
+struct args {
+    std::int32_t alignment = 0;
+    bool atomic = false;
+    bool dump = false;
+    std::int32_t internal_repetitions = 1;
+    bool trans_a = false;
+    bool trans_b = false;
+    examples::test_type ty = examples::test_type::f32;
+    bool update = false;
+    bool verify = false;
+    std::vector<examples::test_case> tc;
+};
 
-auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose tB, bool atomic,
-                                       std::int64_t M, std::int64_t N, std::int64_t K,
+auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, transpose tB,
+                                       bool atomic, std::int64_t M, std::int64_t N, std::int64_t K,
                                        std::array<std::int64_t, 2> A_stride,
-                                       std::array<std::int64_t, 2> B_stride, double beta,
-                                       std::array<std::int64_t, 2> C_stride,
-                                       std::int32_t repetitions, queue q) -> source {
-    auto ctx = make_source_context();
+                                       std::array<std::int64_t, 2> B_stride, bool update,
+                                       std::array<std::int64_t, 2> C_stride, std::int32_t alignment,
+                                       std::int32_t repetitions, bool dump_code, queue q)
+    -> shared_handle<tinytc_binary_t> {
+    auto ctx = get_compiler_context(element_ty);
     char const *file_name = std::source_location::current().file_name();
-    auto const source_id = ctx.add_source(file_name, "");
+    auto const source_id = add_source(ctx.get(), file_name, "");
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -54,88 +59,117 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         ++l.end.column;
         return l;
     };
+    auto const make_memref = [](tinytc_type_t element_ty, transpose t, int64_t A, std::int64_t B,
+                                std::array<std::int64_t, 2u> const &stride) {
+        auto s = std::array<std::int64_t, 2u>{A, B};
+        if (t == transpose::T) {
+            std::swap(s[0], s[1]);
+        }
+        return get<memref_type>(element_ty, s, stride, address_space::global);
+    };
 
-    auto kernel = [&](function_builder &fb) {
-        auto A = fb.argument(
-            make_group(make_memref(
-                ty, {M, K}, std::vector<std::int64_t>(A_stride.begin(), A_stride.end()), my_loc())),
-            "A", my_loc());
-        auto B = fb.argument(
-            make_group(make_memref(
-                ty, {K, N}, std::vector<std::int64_t>(B_stride.begin(), B_stride.end()), my_loc())),
-            "B", my_loc());
-        auto C = fb.argument(
-            make_group(make_memref(
-                ty, {M, N}, std::vector<std::int64_t>(C_stride.begin(), C_stride.end()), my_loc())),
-            "C", my_loc());
-        fb.body(
-            [&](region_builder &bb) {
-                auto gid = bb.add(make_group_id(my_loc()));
-                auto a = bb.add(make_load(A, {gid}, my_loc()));
-                auto b = bb.add(make_load(B, {gid}, my_loc()));
-                auto c = bb.add(make_load(C, {gid}, my_loc()));
-                bb.for_loop(
-                    scalar_type::index, make_index(0, my_loc()), make_index(repetitions, my_loc()),
-                    [&](region_builder &bb) {
-                        bb.add(make_gemm(tA, tB, atomic, make_imm(1.0, ty, my_loc()), a, b,
-                                         make_imm(beta, ty, my_loc()), c, my_loc()));
-                    },
-                    "r", my_loc());
+    auto kernel = [&](tinytc_compiler_context_t ctx) {
+        auto index_ty = get<index_type>(ctx);
+        auto A_ty = make_memref(element_ty, tA, M, K, A_stride);
+        auto B_ty = make_memref(element_ty, tB, K, N, B_stride);
+        auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride);
+        auto void_ty = get<void_type>(ctx);
+        auto f = create_func("gemm",
+                             {get<group_type>(A_ty, dynamic, 0), get<group_type>(B_ty, dynamic, 0),
+                              get<group_type>(C_ty, dynamic, 0)},
+                             void_ty, my_loc());
+        if (alignment > 0) {
+            auto align_attr = get_dictionary_attr_with_sorted(
+                ctx, tinytc_named_attr_t{get<string_attr>(ctx, "align"),
+                                         get<integer_attr>(ctx, alignment)});
+            set_parameter_attr(f.get(), 0, align_attr);
+            set_parameter_attr(f.get(), 1, align_attr);
+            set_parameter_attr(f.get(), 2, align_attr);
+        }
+        auto fn_body = get_body(f.get());
+        auto params = std::array<tinytc_value_t, 3u>{};
+        get_parameters(fn_body, params);
+
+        auto bb = region_builder{fn_body};
+        auto gid = bb.create<group_id_inst>(comp3::x, index_ty, my_loc());
+        auto from = bb.constant_zero(index_ty, my_loc());
+        auto to = bb.create<constant_inst>(repetitions, index_ty, my_loc());
+        auto calpha = bb.constant_one(element_ty, my_loc());
+        auto cbeta =
+            update ? bb.constant_one(element_ty, my_loc()) : bb.constant_zero(element_ty, my_loc());
+        auto a = bb.create<load_inst>(params[0], array_view{gid}, A_ty, my_loc());
+        auto b = bb.create<load_inst>(params[1], array_view{gid}, B_ty, my_loc());
+        auto c = bb.create<load_inst>(params[2], array_view{gid}, C_ty, my_loc());
+        bb.for_loop(
+            from, to,
+            [&](region_builder &bb, tinytc_value_t const &) {
+                bb.create<gemm_inst>(atomic, tA, tB, calpha, a, b, cbeta, c, my_loc());
             },
-            my_loc());
+            nullptr, my_loc());
+
+        return f;
     };
 
     try {
-        auto pb = program_builder{};
-        pb.create("gemm", kernel, my_loc());
+        auto p = create_prog(ctx.get(), my_loc());
+        add_function(p.get(), kernel(ctx.get()));
+        if (dump_code) {
+            dump(p.get());
+        }
 
-        auto info = make_core_info(q.get_device());
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        return compile_to_opencl(pb.get_product(my_loc()), info, ctx);
+        auto info = create_core_info(q.get_device());
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        return compile_to_spirv_and_assemble(p.get(), info.get());
     } catch (builder_error const &e) {
-        ctx.report_error(e.loc(), e.what());
-        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << std::endl
-                  << ctx.get_error_log() << std::endl;
+        report_error(ctx.get(), e.loc(), e.what());
+        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << to_string(e.code())
+                  << std::endl;
     } catch (status const &st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl
-                  << "Error log:" << std::endl
-                  << ctx.get_error_log() << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
     }
-    return source{nullptr};
+    return {};
 }
 
 template <typename T> void test(queue q, args &a) {
-    auto const fill = [](T *ptr, std::size_t n) {
-        for (std::size_t i = 0; i < n; ++i) {
-            ptr[i] = i % 101;
-        }
-    };
+    auto ctx = create_compiler_context();
+    set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
+
     auto total_reals = 1024 * 1024 * 1024 / sizeof(T);
     T *A_host = new T[total_reals];
     T *B_host = new T[total_reals];
     T *C_host = new T[total_reals];
-    T *C_ref_host = new T[total_reals];
-    T *C_ref = malloc_device<T>(total_reals, q);
-    T *A = malloc_device<T>(total_reals, q);
-    T *B = malloc_device<T>(total_reals, q);
-    T *C = malloc_device<T>(total_reals, q);
-    fill(A_host, total_reals);
-    fill(B_host, total_reals);
-    q.copy(A_host, A, total_reals).wait();
-    q.copy(B_host, B, total_reals).wait();
+    auto const alloc_device = [&a, &q](std::size_t num_bytes) {
+        if (a.alignment == 0) {
+            return malloc_device<T>(num_bytes, q);
+        } else {
+            return aligned_alloc_device<T>(a.alignment, num_bytes, q);
+        }
+    };
+    T *A = alloc_device(total_reals);
+    T *B = alloc_device(total_reals);
+    T *C = alloc_device(total_reals);
 
-    auto const check = [&](std::int64_t M, std::int64_t N, std::size_t howmany) {
-        q.copy(C_ref, C_ref_host, total_reals).wait();
+    auto const check = [&](std::int64_t M, std::int64_t N, std::int64_t K, std::int64_t howmany) {
         q.copy(C, C_host, total_reals).wait();
         std::size_t num_err = 0;
-        for (std::size_t i = 0; i < M * N * howmany; ++i) {
-            auto err = std::abs(C_host[i] - C_ref_host[i]);
-            if (err > 10.0 * std::numeric_limits<T>::epsilon()) {
-                if (num_err < 10) {
-                    std::cout << i << " " << err << " " << C_host[i] << " " << C_ref_host[i]
-                              << std::endl;
+        const auto error_bound = examples::test_gemm_error_bound<T>(K);
+        for (std::int64_t b = 0; b < howmany; ++b) {
+            auto C_host_b = C_host + b * M * N;
+            for (std::int64_t j = 0; j < N; ++j) {
+                for (std::int64_t i = 0; i < M; ++i) {
+                    const auto relerr = examples::test_gemm_rel_error<T>(C_host_b, i, j, M);
+                    if (relerr > error_bound) {
+                        if (num_err < 10) {
+                            std::cout
+                                << "C_{" << i << "," << j << "," << b << "}=" << C_host_b[i + j * M]
+                                << ", relative_error=" << relerr << ", error_bound=" << error_bound
+                                << std::endl;
+                        }
+                        ++num_err;
+                    }
                 }
-                ++num_err;
             }
         }
         if (num_err > 10) {
@@ -143,7 +177,6 @@ template <typename T> void test(queue q, args &a) {
         }
     };
 
-    auto const &type = typeid(T);
     for (auto &c : a.tc) {
         auto na = c.m * c.k;
         auto nb = c.k * c.n;
@@ -151,29 +184,13 @@ template <typename T> void test(queue q, args &a) {
         auto max_reals = std::max(std::max(na, nb), nc);
         auto howmany = total_reals / max_reals;
 
-        if (a.verify && a.internal_repetitions == 1) {
-            q.submit([&](auto &h) {
-                bool transa = a.transA == transpose::T;
-                bool transb = a.transB == transpose::T;
-                h.parallel_for(range{howmany, 32}, [=](id<2> it) {
-                    auto batch = it[0];
-                    auto m = it[1];
-                    auto a = A + batch * na;
-                    auto b = B + batch * nb;
-                    auto c_ref = C_ref + batch * nc;
-                    for (std::int64_t mb = m; mb < c.m; mb += 32) {
-                        for (std::int64_t n = 0; n < c.n; ++n) {
-                            auto c_acc = 0.0f;
-                            for (std::int64_t k = 0; k < c.k; ++k) {
-                                c_acc += a[transa ? k + mb * c.k : mb + k * c.m] *
-                                         b[transb ? n + k * c.n : k + n * c.k];
-                            }
-                            c_ref[mb + n * c.m] = c_acc;
-                        }
-                    }
-                });
-            });
+        for (std::size_t i = 0; i < howmany; ++i) {
+            examples::test_gemm_matrix<T, matrix_use::a>(A_host + i * na, c.m, c.k, a.trans_a);
+            examples::test_gemm_matrix<T, matrix_use::b>(B_host + i * nb, c.k, c.n, a.trans_b);
         }
+        q.copy(A_host, A, total_reals).wait();
+        q.copy(B_host, B, total_reals).wait();
+        q.memset(C, 0, total_reals * sizeof(T)).wait();
 
         T const **AA = malloc_shared<T const *>(howmany, q);
         T const **BB = malloc_shared<T const *>(howmany, q);
@@ -186,42 +203,53 @@ template <typename T> void test(queue q, args &a) {
 
         double min_exec_time_ns = 0.0;
         try {
+            auto element_ty = to_type<T>(ctx.get());
             auto src = gemm_kernel_with_inner_repetition(
-                to_scalar_type_v<T>, a.transA, a.transB, a.atomic, c.m, c.n, c.k,
-                {1, a.transA == transpose::T ? c.k : c.m},
-                {1, a.transB == transpose::T ? c.n : c.k}, a.beta, {1, c.m}, a.internal_repetitions,
-                q);
+                element_ty, a.trans_a ? transpose::T : transpose::N,
+                a.trans_b ? transpose::T : transpose::N, a.atomic, c.m, c.n, c.k,
+                {1, a.trans_a ? c.k : c.m}, {1, a.trans_b ? c.n : c.k}, a.update, {1, c.m},
+                a.alignment, a.internal_repetitions, a.dump, q);
             if (src) {
-                auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), src);
-                auto kernel = make_kernel(bundle, "gemm");
-                auto exe_range = get_execution_range(kernel, howmany);
+                auto bundle = create_kernel_bundle(q.get_context(), q.get_device(), src.get());
+                auto kernel = create_kernel(bundle, "gemm");
+                auto exe_range = get_execution_range(kernel, sycl::range<3u>{1u, 1u, howmany});
                 q.submit([&](handler &h) {
-                     h.set_args(AA, BB, CC);
+                     h.set_args(AA, howmany, BB, howmany, CC, howmany);
                      h.parallel_for(exe_range, kernel);
                  }).wait();
                 if (a.internal_repetitions == 1 && a.verify) {
-                    check(c.m, c.n, howmany);
+                    check(c.m, c.n, c.k, howmany);
                 }
-                min_exec_time_ns = bench([&]() {
+                min_exec_time_ns = examples::bench([&]() {
                     q.submit([&](handler &h) {
-                         h.set_args(AA, BB, CC);
+                         h.set_args(AA, howmany, BB, howmany, CC, howmany);
                          h.parallel_for(exe_range, kernel);
                      }).wait();
                 });
 
-                auto gflops =
-                    a.internal_repetitions * 2 * c.m * c.n * c.k * howmany / min_exec_time_ns;
+                const auto ops_per_mnk = [&] {
+                    switch (a.ty) {
+                    case examples::test_type::c32:
+                    case examples::test_type::c64:
+                        return 8;
+                    default:
+                        return 2;
+                    }
+                }();
+
+                auto gflops = a.internal_repetitions * ops_per_mnk * c.m * c.n * c.k * howmany /
+                              min_exec_time_ns;
                 auto roofline_gflops =
                     std::min(512 * 32 * 1.6e9, a.internal_repetitions * 2 * c.m * c.n * c.k /
                                                    (sizeof(T) * (na + nb + nc) / 1.1e12)) /
                     1e9;
-                std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << howmany
-                          << "," << min_exec_time_ns / 1e9 << "," << gflops << ","
+                std::cout << to_string(a.ty) << "," << c.m << "," << c.n << "," << c.k << ","
+                          << howmany << "," << min_exec_time_ns / 1e9 << "," << gflops << ","
                           << roofline_gflops << "," << std::round(gflops / roofline_gflops * 100)
                           << "%," << a.internal_repetitions << std::endl;
             }
         } catch (status const &st) {
-            std::cerr << "Error: " << error_string(st) << std::endl;
+            std::cerr << "Error: " << to_string(st) << std::endl;
         } catch (std::exception const &e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }
@@ -234,24 +262,45 @@ template <typename T> void test(queue q, args &a) {
     free(A, q);
     free(B, q);
     free(C, q);
-    free(C_ref, q);
     delete[] A_host;
     delete[] B_host;
     delete[] C_host;
-    delete[] C_ref_host;
 };
 
 int main(int argc, char **argv) {
     auto a = args{};
+    bool help = false;
+
+    auto parser = cmd::arg_parser{};
     try {
-        a = arg_parser::parse_args(argc, argv);
-    } catch (std::runtime_error const &e) {
+        parser.set_short_opt('a', &a.atomic, "Update C atomically");
+        parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
+        parser.set_short_opt('f', &a.ty, "Data type (bf16, f16, f32, f64, c32, c64)")
+            .converter(examples::convert_data_type);
+        parser
+            .set_short_opt('i', &a.internal_repetitions,
+                           "Number of GEMM repetitions inside kernel (default: 1)")
+            .validator([](std::int32_t rep) { return 0 <= rep; });
+        parser.set_short_opt('h', &help, "Show help");
+        parser.set_short_opt('u', &a.update,
+                             "Add A*B to C (beta=1) instead of overwriting C (beta=0)");
+        parser.set_short_opt('v', &a.verify, "Verify optimized implementation");
+        parser.set_long_opt("help", &help, "Show help");
+        parser.set_long_opt("alignment", &a.alignment, "Memory alignment");
+        parser.set_long_opt("transpose-a", &a.trans_a, "Transpose A matrix");
+        parser.set_long_opt("transpose-b", &a.trans_b, "Transpose B matrix");
+        parser.add_positional_arg("test-case", &a.tc, "MxNxK triplet (e.g. 64x64x64)")
+            .converter(examples::convert_test_case)
+            .validator(examples::validate_test_case);
+
+        parser.parse(argc, argv);
+    } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;
     }
-    if (a.help || a.tc.empty()) {
-        arg_parser::show_help(std::cout);
-        return 0;
+    if (help || a.tc.empty()) {
+        parser.print_help(std::cout, "tinytc-bench", "");
+        return !help ? -1 : 0;
     }
 
     auto q = queue{};
@@ -260,11 +309,7 @@ int main(int argc, char **argv) {
                  "repetitions"
               << std::endl;
     try {
-        if (a.double_precision) {
-            test<double>(std::move(q), a);
-        } else {
-            test<float>(std::move(q), a);
-        }
+        dispatch(a.ty, [&]<typename T>() { test<T>(q, a); });
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;

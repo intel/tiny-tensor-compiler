@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "device_info_helper.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -49,28 +49,26 @@ TEST_CASE("device (OpenCL)") {
         return;
     }
 
-    auto info = make_core_info(device);
-    std::uint32_t sgs_size;
-    std::int32_t const *sgs;
-    info.get_subgroup_sizes(&sgs_size, &sgs);
+    auto info = create_core_info(device);
+    const auto sgs = get_subgroup_sizes(info.get());
 
     if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
-        REQUIRE(sgs_size == 2u);
+        REQUIRE(sgs.size() == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(info.get_register_space() == 64 * 128);
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_register_space() == 64 * 256);
+        CHECK(get_register_space(info.get()) == 64 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 64 * 256);
     } else if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::tgl)) {
-        REQUIRE(sgs_size == 3u);
+        REQUIRE(sgs.size() == 3u);
         CHECK(sgs[0] == 8);
         CHECK(sgs[1] == 16);
         CHECK(sgs[2] == 32);
 
-        CHECK(info.get_register_space() == 32 * 128);
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_register_space() == 32 * 128);
+        CHECK(get_register_space(info.get()) == 32 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 32 * 128);
     } else {
         WARN_MESSAGE(false, "Device test only works on Gen12 / PVC");
     }
@@ -81,10 +79,15 @@ TEST_CASE("device info helper") {
     static char const subgroups2[] = "foo cl_khr_subgroups ";
     static char const subgroups3[] = "    foo     cl_khr_subgroups    bar    ";
     static char const subgroups4[] = "cl_khr_ubgroups";
-    CHECK(has_subgroup_extension(sizeof(subgroups1), subgroups1));
-    CHECK(has_subgroup_extension(sizeof(subgroups2), subgroups2));
-    CHECK(has_subgroup_extension(sizeof(subgroups3), subgroups3));
-    CHECK(!has_subgroup_extension(sizeof(subgroups4), subgroups4));
+    static char const subgroups5[] = "cl_intel_subgroups cl_khr_fp16";
+
+    CHECK(get_opencl_extensions(sizeof(subgroups1) - 1, subgroups1) ==
+          opencl_ext_cl_intel_subgroups);
+    CHECK(get_opencl_extensions(sizeof(subgroups2) - 1, subgroups2) == opencl_ext_cl_khr_subgroups);
+    CHECK(get_opencl_extensions(sizeof(subgroups3) - 1, subgroups3) == opencl_ext_cl_khr_subgroups);
+    CHECK(get_opencl_extensions(sizeof(subgroups4) - 1, subgroups4) == 0);
+    const auto ocl_exts5 = get_opencl_extensions(sizeof(subgroups5) - 1, subgroups5);
+    CHECK(ocl_exts5 == (opencl_ext_cl_intel_subgroups | opencl_ext_cl_khr_fp16));
 
     static char const version1[] = "OpenCL 2.0";
     static char const version2[] = "OpenCL 2.0 foobar";

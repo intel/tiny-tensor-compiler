@@ -3,21 +3,23 @@
 
 #include "small_gemm_batched.hpp"
 #include "error.hpp"
-#include "parser.hpp"
+#include "node/type.hpp"
+#include "number.hpp"
 #include "recipe.hpp"
-#include "reference_counted.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.h"
+#include "tinytc/builder.hpp"
+#include "tinytc/core.h"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util.hpp"
+#include "util/casting.hpp"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <source_location>
 #include <utility>
-#include <vector>
 
 namespace tinytc {
 
@@ -32,8 +34,10 @@ auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *
     }
     throw status::invalid_arguments;
 }
-small_gemm_batched_recipe::small_gemm_batched_recipe(prog prg, source src, scalar_type ty)
-    : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty) {}
+small_gemm_batched_recipe::small_gemm_batched_recipe(shared_handle<tinytc_prog_t> prg,
+                                                     shared_handle<tinytc_binary_t> bin,
+                                                     tinytc_type_t ty)
+    : ::tinytc_recipe(std::move(prg), std::move(bin)), ty_(ty) {}
 auto small_gemm_batched_recipe::num_kernels() const -> int {
     return static_cast<int>(small_gemm_batched_kernel::num_kernels);
 }
@@ -46,24 +50,21 @@ auto small_gemm_batched_recipe::kernel_name(int kernel_num) const -> char const 
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t
-tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_core_info_t info,
-                                        tinytc_scalar_type_t ty, tinytc_transpose_t tA,
-                                        tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K,
-                                        int64_t ldA, int64_t strideA, int64_t ldB, int64_t strideB,
-                                        int64_t ldC, int64_t strideC, tinytc_source_context_t ctx) {
-    if (recipe == nullptr || info == nullptr || M == TINYTC_DYNAMIC || N == TINYTC_DYNAMIC ||
-        K == TINYTC_DYNAMIC || ldA == TINYTC_DYNAMIC || strideA == TINYTC_DYNAMIC ||
-        ldB == TINYTC_DYNAMIC || strideB == TINYTC_DYNAMIC || ldC == TINYTC_DYNAMIC ||
-        strideC == TINYTC_DYNAMIC) {
+tinytc_status_t tinytc_recipe_small_gemm_batched_create(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t ty, tinytc_transpose_t tA,
+    tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA, int64_t strideA,
+    int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC) {
+    if (recipe == nullptr || info == nullptr || ty == nullptr || M == TINYTC_DYNAMIC ||
+        N == TINYTC_DYNAMIC || K == TINYTC_DYNAMIC || ldA == TINYTC_DYNAMIC ||
+        strideA == TINYTC_DYNAMIC || ldB == TINYTC_DYNAMIC || strideB == TINYTC_DYNAMIC ||
+        ldC == TINYTC_DYNAMIC || strideC == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
 
+    auto ctx = ty->context();
     std::int32_t source_id = 0;
-    if (ctx) {
-        TINYTC_CHECK_STATUS(
-            tinytc_source_context_add_source(ctx, "small gemm batched recipe", "", &source_id));
-    }
+    TINYTC_CHECK_STATUS(
+        tinytc_compiler_context_add_source(ctx, "recipe/small_gemm_batched.cpp", "", &source_id));
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -74,58 +75,77 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
         ++l.end.column;
         return l;
     };
+    auto const make_static_sizes = [](transpose t, std::int64_t A, std::int64_t B) {
+        auto s = std::array<std::int64_t, 3u>{A, B, 0};
+        if (t == transpose::T) {
+            std::swap(s[0], s[1]);
+        }
+        return s;
+    };
 
-    auto const selA = [&](std::int64_t N1, std::int64_t N2) {
-        return tA == tinytc_transpose_T ? N2 : N1;
-    };
-    auto const selB = [&](std::int64_t N1, std::int64_t N2) {
-        return tB == tinytc_transpose_T ? N2 : N1;
-    };
     return exception_to_status_code(
         [&] {
-            auto const ty_ = enum_cast<scalar_type>(ty);
+            auto const index_ty = get<index_type>(ctx);
+            auto const void_ty = get<void_type>(ctx);
             auto const tA_ = enum_cast<transpose>(tA);
             auto const tB_ = enum_cast<transpose>(tB);
 
-            auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
-                auto A = fb.argument(make_memref(ty_, {selA(M, K), selA(K, M), dynamic},
-                                                 {1, ldA, strideA}, my_loc()),
-                                     "A", my_loc());
-                auto B = fb.argument(make_memref(ty_, {selB(K, N), selB(N, K), dynamic},
-                                                 {1, ldB, strideB}, my_loc()),
-                                     "B", my_loc());
-                auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
-                auto C = fb.argument(make_memref(ty_, {M, N, dynamic}, {1, ldC, strideC}, my_loc()),
-                                     "C", my_loc());
+            auto const kernel = [&](char const *name, bool is_beta_nonzero) {
+                auto const static_offsets = std::array<std::int64_t, 3u>{0, 0, dynamic};
+                auto const A_static_sizes = make_static_sizes(tA_, M, K);
+                auto const B_static_sizes = make_static_sizes(tB_, K, N);
+                auto const C_static_sizes = make_static_sizes(transpose::N, M, N);
 
-                auto beta = is_beta_nonzero ? std::move(beta_arg) : make_imm(0.0, ty_, my_loc());
-                fb.body(
-                    [&](region_builder &bb) {
-                        auto gid = bb.add(make_group_id(my_loc()));
-                        auto offsets = std::vector<value>{make_index(0, my_loc()),
-                                                          make_index(0, my_loc()), gid};
-                        auto size = std::vector<value>{make_dynamic(my_loc()),
-                                                       make_dynamic(my_loc()), value{}};
-                        auto a = bb.add(make_subview(A, offsets, size, my_loc()));
-                        auto b = bb.add(make_subview(B, offsets, size, my_loc()));
-                        auto c = bb.add(make_subview(C, offsets, size, my_loc()));
-                        bb.add(make_gemm(tA_, tB_, false, alpha, std::move(a), std::move(b), beta,
-                                         std::move(c), my_loc()));
-                    },
-                    my_loc());
+                const auto A_shape = std::array{A_static_sizes[0], A_static_sizes[1], dynamic};
+                const auto B_shape = std::array{B_static_sizes[0], B_static_sizes[1], dynamic};
+                const auto C_shape = std::array{M, N, dynamic};
+                const auto A_stride = std::array{std::int64_t{1}, ldA, strideA};
+                const auto B_stride = std::array{std::int64_t{1}, ldB, strideB};
+                const auto C_stride = std::array{std::int64_t{1}, ldC, strideC};
+                auto A_ty = get<memref_type>(ty, A_shape, A_stride, address_space::global);
+                auto B_ty = get<memref_type>(ty, B_shape, B_stride, address_space::global);
+                auto C_ty = get<memref_type>(ty, C_shape, C_stride, address_space::global);
+                auto f = create_func(name, {ty, A_ty, B_ty, ty, C_ty}, void_ty, my_loc());
+                auto fn_body = get_body(f.get());
+                auto params = std::array<tinytc_value_t, 5u>{};
+                get_parameters(fn_body, params);
+                set_name(params[0], "alpha");
+                set_name(params[1], "A");
+                set_name(params[2], "B");
+                set_name(params[3], "beta");
+                set_name(params[4], "C");
+
+                auto bb = region_builder{fn_body};
+
+                auto gid = bb.create<group_id_inst>(comp3::x, index_ty, my_loc());
+                auto at = get<memref_type>(ty, array_view(A_static_sizes.data(), 2),
+                                           array_view{A_stride.data(), 2}, address_space::global);
+                auto bt = get<memref_type>(ty, array_view(B_static_sizes.data(), 2),
+                                           array_view{B_stride.data(), 2}, address_space::global);
+                auto ct = get<memref_type>(ty, array_view(C_static_sizes.data(), 2),
+                                           array_view{C_stride.data(), 2}, address_space::global);
+                auto empty = array_view<tinytc_value_t>{};
+                auto a = bb.create<subview_inst>(static_offsets, A_static_sizes, params[1],
+                                                 array_view{gid}, empty, at, my_loc());
+                auto b = bb.create<subview_inst>(static_offsets, B_static_sizes, params[2],
+                                                 array_view{gid}, empty, bt, my_loc());
+                auto c = bb.create<subview_inst>(static_offsets, C_static_sizes, params[4],
+                                                 array_view{gid}, empty, ct, my_loc());
+                auto beta = is_beta_nonzero ? params[3] : bb.constant_zero(ty, my_loc());
+                bb.create<gemm_inst>(false, tA_, tB_, params[0], std::move(a), std::move(b), beta,
+                                     std::move(c), my_loc());
+
+                return f;
             };
-            auto pb = program_builder{};
-            pb.create(
-                small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm),
-                [&](function_builder &fb) { kernel(fb, true); }, my_loc());
-            pb.create(
-                small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0),
-                [&](function_builder &fb) { kernel(fb, false); }, my_loc());
-            auto p = pb.get_product(my_loc());
-            tinytc_source_t src;
-            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info, ctx));
-            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), source(src), ty_)
+            auto p = create_prog(ctx, my_loc());
+            add_function(
+                p.get(),
+                kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm), true));
+            add_function(p.get(), kernel(small_gemm_batched_kernel_name(
+                                             small_gemm_batched_kernel::gemm_beta0),
+                                         false));
+            auto bin = compile_to_spirv_and_assemble(p.get(), info);
+            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), std::move(bin), ty)
                           .release();
         },
         ctx);
@@ -138,7 +158,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
     if (handler == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    auto recipe = dynamic_cast<small_gemm_batched_recipe const *>(handler->get_recipe().get());
+    auto recipe = dynamic_cast<small_gemm_batched_recipe const *>(handler->get_recipe());
     if (recipe == nullptr) {
         return tinytc_status_invalid_arguments;
     }

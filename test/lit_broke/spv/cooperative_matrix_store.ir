@@ -1,0 +1,35 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK:               %[[#I32:]] = OpTypeInt 32 0
+; CHECK:           %[[#I32_PTR:]] = OpTypePointer CrossWorkgroup %[[#I32]]
+; CHECK:               %[[#I64:]] = OpTypeInt 64 0
+; CHECK:           %[[#I64_C64:]] = OpConstant %[[#I64]] 64
+; CHECK:            %[[#I64_C1:]] = OpConstant %[[#I64]] 1
+; CHECK:            %[[#I32_C3:]] = OpConstant %[[#I32]] 3
+; CHECK:            %[[#I32_C8:]] = OpConstant %[[#I32]] 8
+; CHECK:           %[[#I32_C16:]] = OpConstant %[[#I32]] 16
+; CHECK:            %[[#I32_C2:]] = OpConstant %[[#I32]] 2
+; CHECK: %[[#COOP_I32_8x16_ACC:]] = OpTypeCooperativeMatrixKHR %[[#I32]] %[[#I32_C3]] %[[#I32_C8]] %[[#I32_C16]] %[[#I32_C2]]
+; CHECK:            %[[#I32_C0:]] = OpConstant %[[#I32]] 0
+
+
+func @coopmatrix_a_store_n(%A: memref<i32x64x48>, %x: index, %y: index) attributes{subgroup_size=16} {
+    parallel {
+        %0 = constant 1 : coopmatrix<i32x16x8,matrix_acc>
+        cooperative_matrix_store %0, %A[%x,%y], align 64
+    }
+; CHECK:                  %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:       %[[#T1_MR:]] = OpFunctionParameter %[[#I32_PTR]]
+; CHECK-NEXT:        %[[#T1_X:]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:        %[[#T1_Y:]] = OpFunctionParameter %[[#I64]]
+; CHECK:           %[[#T1_CST:]] = OpCompositeConstruct %[[#COOP_I32_8x16_ACC]] %[[#]]
+; CHECK:      %[[#T1_X_OFFSET:]] = OpIMul %[[#I64]] %[[#T1_X]] %[[#I64_C1]]
+; CHECK:      %[[#T1_Y_OFFSET:]] = OpIMul %[[#I64]] %[[#T1_Y]] %[[#I64_C64]]
+; CHECK:        %[[#T1_OFFSET:]] = OpIAdd %[[#I64]] %[[#T1_X_OFFSET]] %[[T1_Y_OFFSET]]
+; CHECK:           %[[#T1_PTR:]] = OpInBoundsPtrAccessChain %[[#I32_PTR]] %[[#T1_MR]] %[[#T1_OFFSET]]
+; CHECK:                           OpCooperativeMatrixStoreKHR %[[#T1_PTR]] %[[#T1_CST]] %[[#I32_C0]] %[[#I64_C64]]
+}
+

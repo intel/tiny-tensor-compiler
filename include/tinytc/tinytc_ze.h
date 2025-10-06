@@ -17,13 +17,11 @@ extern "C" {
 /////////// Error //////////
 ////////////////////////////
 
-TINYTC_EXPORT tinytc_status_t tinytc_ze_convert_status(ze_result_t result);
-
 #define TINYTC_ZE_CHECK_STATUS(X)                                                                  \
     do {                                                                                           \
         ze_result_t result = X;                                                                    \
         if (result != ZE_RESULT_SUCCESS) {                                                         \
-            return tinytc_ze_convert_status(result);                                               \
+            return tinytc_status_compute_runtime_error;                                            \
         }                                                                                          \
     } while (0)
 
@@ -58,38 +56,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *inf
 ////////////////////////////
 
 /**
- * @brief Compile OpenCL-C source to device binary
- *
- * @param bin [out] pointer to the binary object created
- * @param src [in] source text
- * @param ip_version [in] IP version (pass tinytc_intel_gpu_architecture_t here)
- * @param format [in] binary format (SPIR-V or native)
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_ze_source_compile_to_binary(
-    tinytc_binary_t *bin, const_tinytc_source_t src, uint32_t ip_version,
-    tinytc_bundle_format_t format, tinytc_source_context_t source_ctx);
-
-/**
- * @brief Compile OpenCL-C source to device binary
- *
- * @param bundle [out] pointer to the kernel bundle (ze_module_handle_t) object created
- * @param context [in] context handle
- * @param device [in] device handle
- * @param src [in] source text and extensions
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_bundle_create_with_source(
-    ze_module_handle_t *bundle, ze_context_handle_t context, ze_device_handle_t device,
-    const_tinytc_source_t src, tinytc_source_context_t source_ctx);
-
-/**
  * @brief Compile tensor program
  *
  * @param bundle [out] pointer to the kernel bundle (ze_module_handle_t) object created
@@ -98,15 +64,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_bundle_create_with_source(
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param core_features [in][optional] requested core features; must be 0 (default) or a combination
  * of tinytc_core_feature_flag_t
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_bundle_create_with_program(
     ze_module_handle_t *bundle, ze_context_handle_t context, ze_device_handle_t device,
-    tinytc_prog_t prg, tinytc_core_feature_flags_t core_features,
-    tinytc_source_context_t source_ctx);
+    tinytc_prog_t prg, tinytc_core_feature_flags_t core_features);
 
 /**
  * @brief Create an OpenCL program from a tinytc binary
@@ -115,14 +78,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_bundle_create_with_program(
  * @param context [in] context handle
  * @param device [in] device handle
  * @param bin [in] binary object
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_bundle_create_with_binary(
-    ze_module_handle_t *bundle, ze_context_handle_t context, ze_device_handle_t device,
-    const_tinytc_binary_t bin, tinytc_source_context_t source_ctx);
+TINYTC_EXPORT tinytc_status_t
+tinytc_ze_kernel_bundle_create_with_binary(ze_module_handle_t *bundle, ze_context_handle_t context,
+                                           ze_device_handle_t device, const_tinytc_binary_t bin);
 
 /**
  * @brief Create a kernel and set group size
@@ -149,15 +110,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_create(ze_kernel_handle_t *krnl,
 TINYTC_EXPORT tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
                                                        uint32_t *y, uint32_t *z);
 
-/**
- * @brief Convert group size to level zero group count
- *
- * @param howmany group size
- *
- * @return group count
- */
-TINYTC_EXPORT ze_group_count_t tinytc_ze_get_group_count(int64_t howmany);
-
 ////////////////////////////
 ////////// Recipe //////////
 ////////////////////////////
@@ -169,16 +121,13 @@ TINYTC_EXPORT ze_group_count_t tinytc_ze_get_group_count(int64_t howmany);
  * @param context [in] context handle
  * @param device [in] device handle
  * @param recipe [in] recipe object
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_ze_recipe_handler_create(tinytc_recipe_handler_t *handler,
                                                               ze_context_handle_t context,
                                                               ze_device_handle_t device,
-                                                              tinytc_recipe_t recipe,
-                                                              tinytc_source_context_t source_ctx);
+                                                              tinytc_recipe_t recipe);
 
 /**
  * @brief Submit recipe to device

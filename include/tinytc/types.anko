@@ -1,0 +1,58 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+include "tinytc/enums.anko"
+
+type @boolean "Bool type" {}
+
+type @number "Number type" {}
+
+type @integer : @number  "Integer type" {}
+type @i8      : @integer "Signed 8 bit integer type" {}
+type @i16     : @integer "Signed 16 bit integer type" {}
+type @i32     : @integer "Signed 32 bit integer type" {}
+type @i64     : @integer "Signed 64 bit integer type" {}
+type @index   : @integer "Integer type for indices" {}
+
+type @float : @number "Floating point type" {}
+type @bf16  : @float  "Brain floating point (16 bit)" {}
+type @f16   : @float  "Half precision floating point (16 bit)" {}
+type @f32   : @float  "Single precision floating point (32 bit)" {}
+type @f64   : @float  "Double precision floating point (64 bit)" {}
+
+type @complex : @number "Complex number type" {}
+type @c32     : @complex  "Single precision floating point (32 bit)" {}
+type @c64     : @complex  "Double precision floating point (64 bit)" {}
+
+type @coopmatrix "Coopmatrix type" {
+    prop %component_ty => type_t "component type"
+    prop %rows => i64            "number of rows"
+    prop %cols => i64            "number of columns"
+    prop %use => @matrix_use     "matrix use"
+    cxx "inline auto shape(int mode) const -> std::int64_t { return mode == 1 ? cols() : rows(); }"
+}
+
+type @group "Group type" {
+    prop %element_ty => type_t  "element type"
+    prop %size => i64   "group size"
+    prop %offset => i64 "offset added on element access"
+}
+
+type @memref "Memref type" {
+    prop %element_ty => type_t        "element type"
+    prop* %shape => i64               "tensor shape"
+    prop* %stride => i64              "tensor stride"
+    prop %addrspace => @address_space "address space"
+    cxx "static auto canonical_stride(array_view<std::int64_t> shape) -> std::vector<std::int64_t>;"
+    cxx "inline auto dim() const -> std::int64_t { return shape_.size(); }"
+    cxx "inline auto shape(std::int64_t i) const -> std::int64_t { return shape_[i]; }"
+    cxx "inline auto stride(std::int64_t i) const -> std::int64_t { return stride_[i]; }"
+    cxx "auto is_dynamic_shape() const -> bool;"
+    cxx "auto is_dynamic_stride() const -> bool;"
+    cxx "auto is_dynamic() const -> bool;"
+    cxx "auto is_canonical_stride() const -> bool;"
+    cxx "auto element_alignment() const -> std::int32_t;"
+    cxx "auto size_in_bytes() const -> std::int64_t;"
+}
+
+type @void "Void type" {}

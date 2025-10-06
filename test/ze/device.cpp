@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -34,18 +34,16 @@ TEST_CASE("device (Level Zero)") {
     ZE_CHECK_STATUS(zeDeviceGetProperties(device, &dev_props));
 
     if (dev_ip_ver.ipVersion >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
-        auto info = make_core_info(device);
+        auto info = create_core_info(device);
 
-        std::uint32_t sgs_size;
-        std::int32_t const *sgs;
-        info.get_subgroup_sizes(&sgs_size, &sgs);
-        REQUIRE(sgs_size == 2u);
+        const auto sgs = get_subgroup_sizes(info.get());
+        REQUIRE(sgs.size() == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(info.get_register_space() == 64 * 128);
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_register_space() == 64 * 256);
+        CHECK(get_register_space(info.get()) == 64 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 64 * 256);
     } else {
         WARN_MESSAGE(false, "Device test only works on PVC");
     }

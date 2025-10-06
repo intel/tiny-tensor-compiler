@@ -1,0 +1,210 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -pconstant-propagation < %s | filecheck %s
+func @known_size(%a: memref<f32x64x32>, %b: index) {
+    %0 = size %a[0] : index
+    %1 = size %a[1] : index
+    %2 = add %0, %1 : index
+    %3 = add %2, %b : index
+; CHECK-LABEL: func @known_size({{.*}}
+; CHECK:       %0 = constant 64 : index
+; CHECK-NEXT:  %1 = size %a[0] : index
+; CHECK-NEXT:  %2 = constant 32 : index
+; CHECK-NEXT:  %3 = size %a[1] : index
+; CHECK-NEXT:  %4 = constant 96 : index
+; CHECK-NEXT:  %5 = add %0, %2 : index
+; CHECK-NEXT:  %6 = add %4, %b : index
+}
+
+func @known_loop_bounds() {
+    %one = constant 1 : index
+    %lb = constant 5 : index
+    %size = constant 42 : index
+    %tmp = sub %size, %lb : index
+    %ub = sub %tmp, %one : index
+    for %i=%lb,%ub {
+    }
+; CHECK-LABEL: func @known_loop_bounds({{.*}}
+; CHECK-NEXT:  %one = constant 1 : index
+; CHECK-NEXT:  %lb = constant 5 : index
+; CHECK-NEXT:  %size = constant 42 : index
+; CHECK-NEXT:  %0 = constant 37 : index
+; CHECK-NEXT:  %tmp = sub %size, %lb : index
+; CHECK-NEXT:  %1 = constant 36 : index
+; CHECK-NEXT:  %ub = sub %0, %one : index
+; CHECK-NEXT:  for %i=%lb,%1 {
+}
+
+func @known_loop_iter_args() {
+    %c1 = constant 1 : index
+    %c5 = constant 5 : index
+    %0 = add %c1, %c5 : index
+    %2 = for %i=%c1,%c5 init(%1=%0) -> (index) {
+        yield (%1)
+    }
+; CHECK-LABEL: func @known_loop_iter_args({{.*}}
+; CHECK-NEXT:  %c1 = constant 1 : index
+; CHECK-NEXT:  %c5 = constant 5 : index
+; CHECK-NEXT:  %0 = constant 6 : index
+; CHECK-NEXT:  %1 = add %c1, %c5 : index
+; CHECK-NEXT:  %3 = for %i=%c1,%c5 init(%2=%0) -> (index) {
+; CHECK-NEXT:    yield (%2)
+; CHECK-NEXT:  }
+}
+
+func @known_arith() {
+    %0 = constant 1 : i64
+    %1 = constant 2 : i64
+    %2 = constant -2.0 : f32
+    %3 = constant [1.0, -1.0] : c32
+    %4 = constant false : bool
+    %5 = constant true : bool
+    %6 = not %0 : i64
+    %7 = add %0, %1 : i64
+    %8 = neg %2 : f32
+    %9 = add %3, %3 : c32
+    %10 = abs %2 : f32
+    %11 = and %4, %5 : bool
+    %12 = or %4, %5 : bool
+    %13 = xor %5, %5 : bool
+    %14 = not %4 : bool
+; CHECK-LABEL: func @known_arith({{.*}}
+; CHECK:      %6 = constant -2 : i64
+; CHECK-NEXT: %7 = not %0 : i64
+; CHECK-NEXT: %8 = constant 3 : i64
+; CHECK-NEXT: %9 = add %0, %1 : i64
+; CHECK-NEXT: %10 = constant 0x1p+1 : f32
+; CHECK-NEXT: %11 = neg %2 : f32
+; CHECK-NEXT: %12 = constant [0x1p+1,-0x1p+1] : c32
+; CHECK-NEXT: %13 = add %3, %3 : c32
+; CHECK-NEXT: %14 = constant 0x1p+1 : f32
+; CHECK-NEXT: %15 = abs %2 : f32
+; CHECK-NEXT: %16 = constant false : bool
+; CHECK-NEXT: %17 = and %4, %5 : bool
+; CHECK-NEXT: %18 = constant true : bool
+; CHECK-NEXT: %19 = or %4, %5 : bool
+; CHECK-NEXT: %20 = constant false : bool
+; CHECK-NEXT: %21 = xor %5, %5 : bool
+; CHECK-NEXT: %22 = constant true : bool
+; CHECK-NEXT: %23 = not %4 : bool
+}
+
+func @known_cast() {
+    %c0 = constant 32768 : i32
+    %c1 = constant [3.0, -2.0] : c32
+    %0 = cast %c0 : i16
+    %1 = cast %c0 : f32
+    %2 = cast %c0 : c32
+    %3 = cast %c0 : c32
+    %4 = cast %c1 : c64
+; CHECK-LABEL: func @known_cast({{.*}}
+; CHECK:       %0 = constant -32768 : i16
+; CHECK-NEXT:  %1 = cast %c0 : i16
+; CHECK-NEXT:  %2 = constant 0x1p+15 : f32
+; CHECK-NEXT:  %3 = cast %c0 : f32
+; CHECK-NEXT:  %4 = constant [0x1p+15,0x0p+0] : c32
+; CHECK-NEXT:  %5 = cast %c0 : c32
+; CHECK-NEXT:  %6 = constant [0x1p+15,0x0p+0] : c32
+; CHECK-NEXT:  %7 = cast %c0 : c32
+; CHECK-NEXT:  %8 = constant [0x1.8p+1,-0x1p+1] : c64
+; CHECK-NEXT:  %9 = cast %c1 : c64
+}
+
+func @known_compare() {
+    %0 = constant 1.0 : f32
+    %1 = constant 2.0 : f32
+    %2 = equal %0, %0 : bool
+    %3 = equal %0, %1 : bool
+; CHECK-LABEL: func @known_compare({{.*}}
+; CHECK:       %2 = constant true : bool
+; CHECK-NEXT:  %3 = equal %0, %0 : bool
+; CHECK-NEXT:  %4 = constant false : bool
+; CHECK-NEXT:  %5 = equal %0, %1 : bool
+}
+
+func @known_math() {
+    %0 = constant 1.0 : f32
+    %1 = constant -2.0 : f32
+    %2 = constant 2.0 : f32
+    %3 = exp %0 : f32
+    %4 = exp %1 : f32
+    %5 = log %0 : f32
+    %6 = log2 %2 : f32
+; CHECK-LABEL: func @known_math({{.*}}
+; CHECK:      %3 = constant 0x1.5bf0a8p+1 : f32
+; CHECK-NEXT: %4 = exp %0 : f32
+; CHECK-NEXT: %5 = constant 0x1.152aaap-3 : f32
+; CHECK-NEXT: %6 = exp %1 : f32
+; CHECK-NEXT: %7 = constant 0x0p+0 : f32
+; CHECK-NEXT: %8 = log %0 : f32
+; CHECK-NEXT: %9 = constant 0x1p+0 : f32
+; CHECK-NEXT: %10 = log2 %2 : f32
+}
+
+func @known_arith_complex() {
+    %a = constant [3.0, 2.0] : c32
+    %b = constant [-1.0, 5.0] : c32
+    %b2 = constant [1.0, 5.0] : c32
+    %0 = add %a, %b : c32
+    %1 = sub %a, %b : c32
+    %2 = mul %a, %b : c32
+    %3 = div %a, %b2 : c32
+    %4 = neg %a : c32
+    %5 = conj %a : c32
+    %6 = abs %a : f32
+    %7 = im %a : f32
+    %8 = re %a : f32
+; CHECK-LABEL: func @known_arith_complex({{.*}}
+; CHECK:       %0 = constant [0x1p+1,0x1.cp+2] : c32
+; CHECK-NEXT:  %1 = add %a, %b : c32
+; CHECK-NEXT:  %2 = constant [0x1p+2,-0x1.8p+1] : c32
+; CHECK-NEXT:  %3 = sub %a, %b : c32
+; CHECK-NEXT:  %4 = constant [-0x1.ap+3,0x1.ap+3] : c32
+; CHECK-NEXT:  %5 = mul %a, %b : c32
+; CHECK-NEXT:  %6 = constant [0x1p-1,-0x1p-1] : c32
+; CHECK-NEXT:  %7 = div %a, %b2 : c32
+; CHECK-NEXT:  %8 = constant [-0x1.8p+1,-0x1p+1] : c32
+; CHECK-NEXT:  %9 = neg %a : c32
+; CHECK-NEXT:  %10 = constant [0x1.8p+1,-0x1p+1] : c32
+; CHECK-NEXT:  %11 = conj %a : c32
+; CHECK-NEXT:  %12 = constant 0x1.cd82b4p+1 : f32
+; CHECK-NEXT:  %13 = abs %a : f32
+; CHECK-NEXT:  %14 = constant 0x1p+1 : f32
+; CHECK-NEXT:  %15 = im %a : f32
+; CHECK-NEXT:  %16 = constant 0x1.8p+1 : f32
+; CHECK-NEXT:  %17 = re %a : f32
+}
+
+func @known_arith_f16() {
+    %a = constant 3.0 : f16
+    %b = constant -1.0 : f16
+    %0 = add %a, %b : f16
+    %1 = sub %a, %b : f16
+    %2 = mul %a, %b : f16
+    %3 = div %a, %b : f16
+    %4 = neg %a : f16
+    %5 = abs %b : f16
+; CHECK-LABEL: func @known_arith_f16({{.*}}
+; CHECK:       %0 = constant 0x1p+1 : f16
+; CHECK-NEXT:  %1 = add %a, %b : f16
+; CHECK-NEXT:  %2 = constant 0x1p+2 : f16
+; CHECK-NEXT:  %3 = sub %a, %b : f16
+; CHECK-NEXT:  %4 = constant -0x1.8p+1 : f16
+; CHECK-NEXT:  %5 = mul %a, %b : f16
+; CHECK-NEXT:  %6 = constant -0x1.8p+1 : f16
+; CHECK-NEXT:  %7 = div %a, %b : f16
+; CHECK-NEXT:  %8 = constant -0x1.8p+1 : f16
+; CHECK-NEXT:  %9 = neg %a : f16
+; CHECK-NEXT:  %10 = constant 0x1p+0 : f16
+; CHECK-NEXT:  %11 = abs %b : f16
+}
+
+func @known_subgroup_broadcast() {
+    %c5 = constant 5 : i32
+    %0 = subgroup_broadcast %c5, %c5 : i32
+    %1 = neg %0 : i32
+; CHECK-LABEL: func @known_subgroup_broadcast({{.*}}
+; CHECK:  %1 = constant -5 : i32
+; CHECK:  %2 = neg %c5 : i32
+}

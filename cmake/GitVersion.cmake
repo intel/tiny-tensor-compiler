@@ -13,7 +13,7 @@ function(git_version)
 
     if(GIT_FOUND)
         execute_process(
-            COMMAND ${GIT_EXECUTABLE} describe --tags --long
+            COMMAND ${GIT_EXECUTABLE} describe --tags --long --match "v[0-9]*"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             RESULT_VARIABLE status_code
             OUTPUT_VARIABLE output

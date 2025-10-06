@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedFiles)
 include(GenerateExportHeader)
 include(GitVersion)
 include(InstallLib)
@@ -12,75 +13,119 @@ else ()
     set(type static)
 endif ()
 
-find_package(clir 0.5.1 REQUIRED ${type})
-find_package(re2c REQUIRED)
-find_package(BISON 3.8.2 REQUIRED)
-
 set(SOURCES
+    analysis/aa_results.cpp
+    analysis/alias.cpp
+    analysis/cfg.cpp
+    analysis/gcd.cpp
+    analysis/stack.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
-    data_type.cpp
+    compiler_context.cpp
+    compiler_context_cache.cpp
+    coopmatrix_layout.cpp
     device_info.cpp
     error.cpp
-    func.cpp
-    gemm_generator.cpp
-    inst.cpp
+    gemm_tools.cpp
+    half.cpp
     location.cpp
-    node/data_type_node.cpp
-    node/inst_node.cpp
+    matrix_ext_info.cpp
+    node/attr.cpp
+    node/func.cpp
+    node/inst.cpp
+    node/inst_view_impl.cpp
+    node/region.cpp
+    node/prog.cpp
+    node/value.cpp
+    number.cpp
     parser/parse_context.cpp
     parser.cpp
-    passes.cpp
-    precision_helper.cpp
-    prog.cpp
+    pass/check_ir.cpp
+    pass/clone.cpp
+    pass/constant_folding.cpp
+    pass/constant_propagation.cpp
+    pass/convert_to_spirv.cpp
+    pass/dead_code_elimination.cpp
+    pass/dump_cfg.cpp
+    pass/dump_def_use.cpp
+    pass/dump_gcd.cpp
+    pass/dump_ir.cpp
+    pass/insert_barrier.cpp
+    pass/insert_lifetime_stop.cpp
+    pass/lower_coopmatrix.cpp
+    pass/lower_foreach.cpp
+    pass/lower_linalg.cpp
+    pass/slot_tracker.cpp
+    pass/stack.cpp
+    pass/work_group_size.cpp
     recipe.cpp
     recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
-    region.cpp
-    required_extensions.cpp
-    scalar_type.cpp
-    source.cpp
+    spv/block2d_diy.cpp
+    spv/capex_util.cpp
+    spv/converter.cpp
+    spv/converter_aux.cpp
+    spv/coopmatrix_impl.cpp
+    spv/coopmatrix_impl_block.cpp
+    spv/coopmatrix_impl_dpas.cpp
+    spv/dope_vector.cpp
+    spv/inst_assembler.cpp
+    spv/matrix_walker.cpp
+    spv/module.cpp
+    spv/names.cpp
+    spv/opencl.std.cpp
+    spv/pass/assemble.cpp
+    spv/pass/assign_ids.cpp
+    spv/pass/dump_asm.cpp
+    spv/pass/capex.cpp
+    spv/uniquifier.cpp
+    support/temp_counter.cpp
     tiling.cpp
-    value.cpp
-    visitor/aa_results.cpp
-    visitor/alias_analysis.cpp
-    visitor/check_ir.cpp
-    visitor/dump_ir.cpp
-    visitor/equal.cpp
-    visitor/insert_barrier.cpp
-    visitor/lifetime_analysis.cpp
-    visitor/metadata.cpp
-    visitor/opencl_ast.cpp
-    visitor/slot_tracker.cpp
-    visitor/stack.cpp
-    visitor/work_group_size.cpp
+    support/walk.cpp
 )
-set(RE2C_SOURCES
-    parser/lexer.re
-)
-BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
-             DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
+
+add_library(tinytc-objects OBJECT ${SOURCES})
+
+add_re2c_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
+add_bison_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/parser_impl.yy)
+add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
+                                    SOURCES
+                                        builder.cpp.mochi
+                                        enums.cpp.mochi
+                                        node/inst_kind.cpp.mochi
+                                        node/inst_view.cpp.mochi
+                                        node/inst_view.hpp.mochi
+                                        node/type.cpp.mochi
+                                        node/type.hpp.mochi
+                                        node/visit.hpp.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/builder.h.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/builder.hpp.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.h.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.hpp.mochi
+                                    DEPENDS
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/enums.anko
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/instructions.anko
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.anko
+                                    SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
+
 set(PUBLIC_HEADERS
-    tinytc.h
-    tinytc.hpp
-    types.h
-    types.hpp
+    ${PROJECT_BINARY_DIR}/include/tinytc/builder.h
+    ${PROJECT_BINARY_DIR}/include/tinytc/builder.hpp
+    ${PROJECT_SOURCE_DIR}/include/tinytc/core.h
+    ${PROJECT_SOURCE_DIR}/include/tinytc/core.hpp
+    ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.h
+    ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.hpp
+    ${PROJECT_BINARY_DIR}/include/tinytc/types.h
+    ${PROJECT_BINARY_DIR}/include/tinytc/types.hpp
 )
-list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
-add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
-
-add_library(tinytc-objects OBJECT ${SOURCES} ${BISON_parser_OUTPUTS})
-add_re2c_to_target(TARGET tinytc-objects SOURCES ${RE2C_SOURCES})
 set_cxx_common_options(tinytc-objects)
-target_link_libraries(tinytc-objects PUBLIC clir::clir)
 target_compile_definitions(tinytc-objects PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
 
 add_library(tinytc $<TARGET_OBJECTS:tinytc-objects>)
 add_library(tinytc::tinytc ALIAS tinytc)
-target_link_libraries(tinytc PRIVATE clir::clir)
 set_cxx_common_options(tinytc)
 
 # Generate export header
@@ -98,6 +143,7 @@ configure_file(${tinytc_version_header_in} ${tinytc_version_header})
 target_include_directories(tinytc-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utilities>"
 )
 target_include_directories(tinytc-objects PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
@@ -113,7 +159,6 @@ target_sources(tinytc PUBLIC FILE_SET HEADERS
 
 
 # install
-
 install_lib(tinytc tinytc)
 
 # subdirs
@@ -126,3 +171,9 @@ endif()
 if(BUILD_LEVEL_ZERO)
     add_subdirectory(ze)
 endif()
+
+# cpack
+
+include(GeneratedFiles)
+write_generated_files(tinytc-objects)
+

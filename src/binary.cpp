@@ -3,9 +3,9 @@
 
 #include "binary.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
-#include "util.hpp"
+#include "util/casting.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -13,20 +13,24 @@
 
 using namespace tinytc;
 
-tinytc_binary::tinytc_binary(std::vector<std::uint8_t> data, bundle_format format,
+tinytc_binary::tinytc_binary(shared_handle<tinytc_compiler_context_t> ctx,
+                             std::vector<std::uint8_t> data, bundle_format format,
                              tinytc_core_feature_flags_t core_features)
-    : data_(std::move(data)), format_(format), core_features_(core_features) {}
+    : ctx_(std::move(ctx)), data_(std::move(data)), format_(format), core_features_(core_features) {
+}
 
 extern "C" {
 
-tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin, tinytc_bundle_format_t format,
-                                     size_t data_size, uint8_t const *data,
+tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin, tinytc_compiler_context_t ctx,
+                                     tinytc_bundle_format_t format, size_t data_size,
+                                     uint8_t const *data,
                                      tinytc_core_feature_flags_t core_features) {
-    if (bin == nullptr || data == nullptr) {
+    if (bin == nullptr || ctx == nullptr || data == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *bin = std::make_unique<tinytc_binary>(std::vector<std::uint8_t>(data, data + data_size),
+        *bin = std::make_unique<tinytc_binary>(shared_handle{ctx, true},
+                                               std::vector<std::uint8_t>(data, data + data_size),
                                                enum_cast<bundle_format>(format), core_features)
                    .release();
     });
@@ -41,6 +45,14 @@ tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin, tinytc_bundle_f
     *data_size = bin->size();
     *data = bin->data();
     return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_binary_get_compiler_context(const_tinytc_binary_t bin,
+                                                   tinytc_compiler_context_t *ctx) {
+    if (bin == nullptr || ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *ctx = bin->context(); });
 }
 
 tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,

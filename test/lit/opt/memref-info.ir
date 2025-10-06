@@ -1,0 +1,79 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -pset-stack-ptr -pdump-gcd < %s | filecheck %s
+func @alloca() {
+    %0 = alloca : memref<f16x16x23,local>
+; CHECK-LABEL: GCD in @alloca
+; CHECK:       offset_gcd(%0) = 64
+; CHECK:       shape_gcd(%0) = [16,23]
+; CHECK:       stride_gcd(%0) = [1,16]
+}
+
+func @expand(%a: memref<i8x64>, %b: memref<i8x?x?> {shape_gcd=[16,3], stride_gcd=[1,16]}) {
+    %c4 = constant 4 : index
+    %0 = expand %a[0->8x8] : memref<i8x8x8>
+    %1 = size %b[0] : index
+    %2 = div %1, %c4 : index
+    %3 = expand %b[0->4x%2] : memref<i8x4x?x?,strided<1,4,?>>
+; CHECK-LABEL: GCD in @expand
+; CHECK:       offset_gcd(%0) = 128
+; CHECK:       shape_gcd(%0) = [8,8]
+; CHECK:       stride_gcd(%0) = [1,8]
+; CHECK:       offset_gcd(%3) = 128
+; CHECK:       shape_gcd(%3) = [4,4,3]
+; CHECK:       stride_gcd(%3) = [1,4,16]
+}
+
+func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_gcd=[1,4,16]}) {
+    %0 = fuse %a[0,1] : memref<i8x64>
+    %1 = fuse %b[0,1] : memref<i8x?x?>
+; CHECK-LABEL: GCD in @fuse
+; CHECK:       offset_gcd(%0) = 128
+; CHECK:       shape_gcd(%0) = [64]
+; CHECK:       stride_gcd(%0) = [1]
+; CHECK:       offset_gcd(%1) = 128
+; CHECK:       shape_gcd(%1) = [16,42]
+; CHECK:       stride_gcd(%1) = [1,16]
+}
+
+func @load(%a: group<memref<i8x?>x?> {shape_gcd=[4]}) {
+    %gid = group_id.x : index
+    %0 = load %a[%gid] : memref<i8x?>
+; CHECK-LABEL: GCD in @load
+; CHECK:       offset_gcd(%0) = 128
+; CHECK:       shape_gcd(%0) = [4]
+; CHECK:       stride_gcd(%0) = [1]
+}
+
+func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {
+    %c16 = constant 16 : index
+    %c96 = constant 96 : index
+    %c128 = constant 128 : index
+    %0 = subview %a[0:8,0:8] : memref<i16x8x8>
+    %1 = subview %a[4:8,0:8] : memref<i16x8x8>
+    %2 = subview %a[4:8,5:8] : memref<i16x8x8>
+    %3 = subview %a[%x,0] : memref<i16x8>
+    %4 = subview %a[0,%x] : memref<i16x8>
+    %5 = mul %c16, %x : index
+    %6 = add %5, %c128 : index
+    %7 = subview %a[%6:8,0:8] : memref<i16x8x8>
+    %8 = mul %c96, %x : index
+    %9 = subview %b[%8:%5] : memref<i16x?>
+; CHECK-LABEL: GCD in @subview
+; CHECK:       offset_gcd(%0) = 64
+; CHECK:       shape_gcd(%0) = [8,8]
+; CHECK:       stride_gcd(%0) = [1,8]
+; CHECK:       offset_gcd(%1) = 4
+; CHECK:       shape_gcd(%1) = [8,8]
+; CHECK:       stride_gcd(%1) = [1,8]
+; CHECK:       offset_gcd(%2) = 4
+; CHECK:       shape_gcd(%2) = [8,8]
+; CHECK:       stride_gcd(%2) = [1,8]
+; CHECK:       offset_gcd(%3) = 1
+; CHECK:       offset_gcd(%4) = 8
+; CHECK:       offset_gcd(%7) = 16
+; CHECK:       offset_gcd(%9) = 32
+; CHECK:       shape_gcd(%9) = [16]
+; CHECK:       stride_gcd(%9) = [1]
+}

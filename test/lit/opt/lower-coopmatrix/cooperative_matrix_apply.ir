@@ -1,0 +1,151 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -plower-coopmatrix < %s | filecheck %s
+
+func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
+    parallel {
+        %0 = constant 42.0 : coopmatrix<f32x16x2,matrix_acc>
+        %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x16x2,matrix_acc> {
+            %mask = less_than_equal %i, %j : bool
+            %exp_v_masked = if %mask -> (f32) {
+                %exp_v = native_exp %v : f32
+                yield (%exp_v)
+            } else {
+                %zero = constant 0.0 : f32
+                yield (%zero)
+            }
+            yield (%exp_v_masked)
+        }
+        %2 = neg %1 : coopmatrix<f32x16x2,matrix_acc>
+    }
+; CHECK-LABEL: func @tmatrix_acc({{.*}}
+; CHECK:      %1 = subgroup_local_id : i32
+; CHECK-NEXT: %2 = constant 0 : i32
+; CHECK-NEXT: %3 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %4 = less_than_equal %1, %2 : bool
+; CHECK-NEXT: %5 = if %4 -> (f32) {
+; CHECK-NEXT:   %6 = native_exp %3 : f32
+; CHECK-NEXT:   yield (%6)
+; CHECK-NEXT: } else {
+; CHECK-NEXT:   %7 = constant 0x0p+0 : f32
+; CHECK-NEXT:   yield (%7)
+; CHECK-NEXT: }
+; CHECK-NEXT: %8 = cooperative_matrix_insert %5, %0[0] : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %9 = constant 1 : i32
+; CHECK-NEXT: %10 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %11 = less_than_equal %1, %9 : bool
+; CHECK-NEXT: %12 = if %11 -> (f32) {
+; CHECK-NEXT:   %13 = native_exp %10 : f32
+; CHECK-NEXT:   yield (%13)
+; CHECK-NEXT: } else {
+; CHECK-NEXT:   %14 = constant 0x0p+0 : f32
+; CHECK-NEXT:   yield (%14)
+; CHECK-NEXT: }
+; CHECK-NEXT: %15 = cooperative_matrix_insert %12, %8[1] : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %16 = neg %15 : coopmatrix<f32x16x2,matrix_acc>
+}
+
+func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
+    parallel {
+        %0 = constant 42.0 : coopmatrix<f32x8x4,matrix_b>
+        %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x8x4,matrix_b> {
+            %mask = less_than_equal %i, %j : bool
+            %exp_v_masked = if %mask -> (f32) {
+                %exp_v = native_exp %v : f32
+                yield (%exp_v)
+            } else {
+                %zero = constant 0.0 : f32
+                yield (%zero)
+            }
+            yield (%exp_v_masked)
+        }
+        %2 = neg %1 : coopmatrix<f32x8x4,matrix_b>
+    }
+; CHECK-LABEL: func @tmatrix_b({{.*}}
+; CHECK:      %1 = subgroup_local_id : i32
+; CHECK-NEXT: %2 = constant 8 : i32
+; CHECK-NEXT: %3 = rem %1, %2 : i32
+; CHECK-NEXT: %4 = div %1, %2 : i32
+; CHECK-NEXT: %5 = constant 0 : i32
+; CHECK-NEXT: %6 = add %4, %5 : i32
+; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %8 = less_than_equal %3, %6 : bool
+; CHECK-NEXT: %9 = if %8 -> (f32) {
+; CHECK-NEXT:   %10 = native_exp %7 : f32
+; CHECK-NEXT:   yield (%10)
+; CHECK-NEXT: } else {
+; CHECK-NEXT:   %11 = constant 0x0p+0 : f32
+; CHECK-NEXT:   yield (%11)
+; CHECK-NEXT: }
+; CHECK-NEXT: %12 = cooperative_matrix_insert %9, %0[0] : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %13 = constant 2 : i32
+; CHECK-NEXT: %14 = add %4, %13 : i32
+; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %16 = less_than_equal %3, %14 : bool
+; CHECK-NEXT: %17 = if %16 -> (f32) {
+; CHECK-NEXT:   %18 = native_exp %15 : f32
+; CHECK-NEXT:   yield (%18)
+; CHECK-NEXT: } else {
+; CHECK-NEXT:   %19 = constant 0x0p+0 : f32
+; CHECK-NEXT:   yield (%19)
+; CHECK-NEXT: }
+; CHECK-NEXT: %20 = cooperative_matrix_insert %17, %12[1] : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %21 = neg %20 : coopmatrix<f32x8x4,matrix_b>
+}
+
+func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
+    parallel {
+        %0 = constant 42.0 : coopmatrix<f32x1x17,matrix_b>
+        %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x1x17,matrix_b> {
+            %mask = less_than_equal %i, %j : bool
+            %exp_v_masked = if %mask -> (f32) {
+                %exp_v = native_exp %v : f32
+                yield (%exp_v)
+            } else {
+                %zero = constant 0.0 : f32
+                yield (%zero)
+            }
+            yield (%exp_v_masked)
+        }
+        %2 = neg %1 : coopmatrix<f32x1x17,matrix_b>
+    }
+; CHECK-LABEL: func @tmatrix_b_mask({{.*}}
+; CHECK:      %1 = subgroup_local_id : i32
+; CHECK-NEXT: %2 = constant 1 : i32
+; CHECK-NEXT: %3 = rem %1, %2 : i32
+; CHECK-NEXT: %4 = div %1, %2 : i32
+; CHECK-NEXT: %5 = constant 0 : i32
+; CHECK-NEXT: %6 = add %4, %5 : i32
+; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %8 = less_than_equal %3, %6 : bool
+; CHECK-NEXT: %9 = if %8 -> (f32) {
+; CHECK-NEXT:   %10 = native_exp %7 : f32
+; CHECK-NEXT:   yield (%10)
+; CHECK-NEXT: } else {
+; CHECK-NEXT:   %11 = constant 0x0p+0 : f32
+; CHECK-NEXT:   yield (%11)
+; CHECK-NEXT: }
+; CHECK-NEXT: %12 = cooperative_matrix_insert %9, %0[0] : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %13 = constant 16 : i32
+; CHECK-NEXT: %14 = add %4, %13 : i32
+; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %16 = constant 17 : i32
+; CHECK-NEXT: %17 = less_than %14, %16 : bool
+; CHECK-NEXT: %18 = if %17 -> (f32) {
+; CHECK-NEXT:   %19 = less_than_equal %3, %14 : bool
+; CHECK-NEXT:   %20 = if %19 -> (f32) {
+; CHECK-NEXT:     %21 = native_exp %15 : f32
+; CHECK-NEXT:     yield (%21)
+; CHECK-NEXT:   } else {
+; CHECK-NEXT:     %22 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%22)
+; CHECK-NEXT:   }
+; CHECK-NEXT:   yield (%20)
+; CHECK-NEXT: } else {
+; CHECK-NEXT:   %23 = constant 0x0p+0 : f32
+; CHECK-NEXT:   yield (%23)
+; CHECK-NEXT: }
+; CHECK-NEXT: %24 = cooperative_matrix_insert %18, %12[1] : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %25 = neg %24 : coopmatrix<f32x1x17,matrix_b>
+}

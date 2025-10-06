@@ -1,0 +1,13 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
+func @illegal_nesting() {
+    %lb = constant 1 : index
+    %ub = constant 16 : index
+    parallel {
+        foreach (%j)=(%lb),(%ub) {
+        }
+; CHECK: 9.9-32: Collective instruction must not be called from SPMD region
+    }
+}

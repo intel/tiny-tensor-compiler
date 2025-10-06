@@ -5,8 +5,8 @@
 #define ZE_RECIPE_HANDLER_20240419_HPP
 
 #include "../recipe.hpp"
-#include <tinytc/tinytc.hpp>
 #include <tinytc/types.h>
+#include <tinytc/types.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -17,12 +17,12 @@ namespace tinytc {
 
 struct ze_recipe_handler : ::tinytc_recipe_handler {
   public:
-    ze_recipe_handler(ze_context_handle_t context, ze_device_handle_t device, recipe rec,
-                      source_context source_ctx);
+    ze_recipe_handler(ze_context_handle_t context, ze_device_handle_t device,
+                      shared_handle<tinytc_recipe_t> rec);
 
     void active_kernel(int kernel_num) override;
     void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) override;
-    void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) override;
+    void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t ty) override;
     void howmany(std::int64_t num) override;
 
     auto kernel() -> ze_kernel_handle_t;

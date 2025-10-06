@@ -2,20 +2,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedFiles)
 include(GNUInstallDirs)
 include(InstallLib)
 
 find_package(OpenCL REQUIRED)
-find_package(re2c REQUIRED)
 
 set(SOURCES
     device_info.cpp
-    error.cpp
     kernel.cpp
     recipe_handler.cpp
-)
-set(RE2C_SOURCES
-    device_info_helper.re
 )
 set(PUBLIC_HEADERS
     tinytc_cl.h
@@ -24,12 +20,13 @@ set(PUBLIC_HEADERS
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
 add_library(tinytc_cl-objects OBJECT ${SOURCES})
-add_re2c_to_target(TARGET tinytc_cl-objects SOURCES ${RE2C_SOURCES} FLAGS "--tags")
 set_cxx_common_options(tinytc_cl-objects)
 target_link_libraries(tinytc_cl-objects PUBLIC tinytc OpenCL::OpenCL)
 target_include_directories(tinytc_cl-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
 )
+
+add_re2c_or_pregenerated_to_target(TARGET tinytc_cl-objects SOURCES device_info_helper.re)
 
 add_library(tinytc_cl $<TARGET_OBJECTS:tinytc_cl-objects>)
 add_library(tinytc::tinytc_cl ALIAS tinytc_cl)
@@ -52,3 +49,8 @@ install(FILES
     "${PROJECT_SOURCE_DIR}/cmake/FindOpenCL.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinytc_cl
 )
+
+# cpack
+
+include(GeneratedFiles)
+write_generated_files(tinytc_cl-objects)

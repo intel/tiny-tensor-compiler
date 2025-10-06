@@ -1,0 +1,196 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK-DAG: OpCapability BFloat16ConversionINTEL
+; CHECK-DAG: OpCapability Float16
+; CHECK-DAG: OpCapability Int64
+; CHECK-DAG: OpCapability Int16
+; CHECK: OpExtension "SPV_INTEL_bfloat16_conversion"
+; CHECK: %[[#OCLEXT:]] = OpExtInstImport "OpenCL.std"
+; CHECK: %[[#BOOL:]] = OpTypeBool
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F16:]] = OpTypeFloat 16
+; CHECK: %[[#I16:]] = OpTypeInt 16 0
+; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+; CHECK: %[[#C32_NULL:]] = OpConstantNull %[[#C32]]
+; CHECK: %[[#F32_3:]] = OpTypeVector %[[#F32]] 3
+
+func @tbool(%a: bool, %b: bool) {
+    %0 = and %a, %b : bool
+    %1 = or %a, %b : bool
+    %2 = xor %a, %b : bool
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:      %[[#]] = OpLogicalAnd %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpLogicalOr %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpLogicalNotEqual %[[#BOOL]] %[[#]] %[[#]]
+}
+
+func @tint(%a: i64, %b: i64) {
+    %0 = add %a, %b : i64
+    %1 = sub %a, %b : i64
+    %2 = mul %a, %b : i64
+    %3 = div %a, %b : i64
+    %4 = rem %a, %b : i64
+    %5 = shl %a, %b : i64
+    %6 = shr %a, %b : i64
+    %7 = and %a, %b : i64
+    %8 = or %a, %b : i64
+    %9 = xor %a, %b : i64
+    %10 = min %a, %b : i64
+    %11 = max %a, %b : i64
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:      %[[#]] = OpIAdd %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpISub %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpIMul %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSDiv %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSRem %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpShiftLeftLogical %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpShiftRightArithmetic %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpBitwiseAnd %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpBitwiseOr %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpBitwiseXor %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#I64]] %[[#OCLEXT]] s_min %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#I64]] %[[#OCLEXT]] s_max %[[#]] %[[#]]
+}
+
+func @tfloat(%a: f32, %b: f32) {
+    %0 = add %a, %b : f32
+    %1 = sub %a, %b : f32
+    %2 = mul %a, %b : f32
+    %3 = div %a, %b : f32
+    %4 = rem %a, %b : f32
+    %5 = min %a, %b : f32
+    %6 = max %a, %b : f32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFRem %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F32]] %[[#OCLEXT]] fmin %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F32]] %[[#OCLEXT]] fmax %[[#]] %[[#]]
+}
+
+func @thalf(%a: f16, %b: f16) {
+    %0 = add %a, %b : f16
+    %1 = sub %a, %b : f16
+    %2 = mul %a, %b : f16
+    %3 = div %a, %b : f16
+    %4 = rem %a, %b : f16
+    %5 = min %a, %b : f16
+    %6 = max %a, %b : f16
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:      %[[#]] = OpFAdd %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFRem %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F16]] %[[#OCLEXT]] fmin %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F16]] %[[#OCLEXT]] fmax %[[#]] %[[#]]
+}
+
+func @tbf16(%a: bf16, %b: bf16) {
+    %0 = add %a, %b : bf16
+    %1 = sub %a, %b : bf16
+    %2 = mul %a, %b : bf16
+    %3 = div %a, %b : bf16
+    %4 = rem %a, %b : bf16
+    %5 = min %a, %b : bf16
+    %6 = max %a, %b : bf16
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:          %[[#BF16_AF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF1:]] = OpFAdd %[[#F32]] %[[#BF16_AF1]] %[[#BF16_BF1]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF1]]
+; CHECK-NEXT:     %[[#BF16_AF2:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF2:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF2:]] = OpFSub %[[#F32]] %[[#BF16_AF2]] %[[#BF16_BF2]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF2]]
+; CHECK-NEXT:     %[[#BF16_AF3:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF3:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF3:]] = OpFMul %[[#F32]] %[[#BF16_AF3]] %[[#BF16_BF3]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF3]]
+; CHECK-NEXT:     %[[#BF16_AF4:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF4:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF4:]] = OpFDiv %[[#F32]] %[[#BF16_AF4]] %[[#BF16_BF4]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF4]]
+; CHECK-NEXT:     %[[#BF16_AF5:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF5:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF5:]] = OpFRem %[[#F32]] %[[#BF16_AF5]] %[[#BF16_BF5]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF5]]
+; CHECK-NEXT:     %[[#BF16_AF6:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF6:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF6:]] = OpExtInst %[[#F32]] %[[OCLEXT]] fmin %[[#BF16_AF6]] %[[#BF16_BF6]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF6]]
+; CHECK-NEXT:     %[[#BF16_AF7:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF7:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF7:]] = OpExtInst %[[#F32]] %[[OCLEXT]] fmax %[[#BF16_AF7]] %[[#BF16_BF7]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF7]]
+}
+
+func @tcomplex(%a: c32, %b: c32) {
+    %0 = add %a, %b : c32
+    %1 = sub %a, %b : c32
+    %2 = mul %a, %b : c32
+    %3 = div %a, %b : c32
+; CHECK-LABEL:                        %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:                    %[[#TC_A:]] = OpFunctionParameter %[[#C32]]
+; CHECK-NEXT:                    %[[#TC_B:]] = OpFunctionParameter %[[#C32]]
+; CHECK:                              %[[#]] = OpFAdd %[[#C32]] %[[#TC_A]] %[[#TC_B]]
+; CHECK-NEXT:                         %[[#]] = OpFSub %[[#C32]] %[[#TC_A]] %[[#TC_B]]
+; CHECK-NEXT:                %[[#TC_NEG_A:]] = OpFNegate %[[#C32]] %[[#TC_A]]
+; CHECK-NEXT:            %[[#TC_A_TIMES_I:]] = OpVectorShuffle %[[#C32]] %[[#TC_NEG_A]] %[[#TC_A]] 1 2
+; CHECK-NEXT:                  %[[#TC_B_1:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 1 1
+; CHECK-NEXT:        %[[#TC_B_1_A_TIMES_I:]] = OpFMul %[[#C32]] %[[#TC_B_1]] %[[#TC_A_TIMES_I]]
+; CHECK-NEXT:                  %[[#TC_B_0:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 0 0
+; CHECK-NEXT:                         %[[#]] = OpExtInst %[[#C32]] %[[#]] fma %[[#TC_A]] %[[#TC_B_0]] %[[#TC_B_1_A_TIMES_I]]
+; CHECK-NEXT:              %[[#TC_NEG_A_2:]] = OpFNegate %[[#C32]] %[[#TC_A]]
+; CHECK-NEXT:       %[[#TC_A_TIMES_CONJ_I:]] = OpVectorShuffle %[[#C32]] %[[#TC_A]] %[[#TC_NEG_A_2]] 1 2
+; CHECK-NEXT:                %[[#TC_B_1_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 1 1
+; CHECK-NEXT: %[[#TC_B_1_2_A_TIMES_CONJ_I:]] = OpFMul %[[#C32]] %[[#TC_B_1_2]] %[[#TC_A_TIMES_CONJ_I]]
+; CHECK-NEXT:                %[[#TC_B_0_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 0 0
+; CHECK-NEXT:       %[[#TC_A_TIMES_CONJ_B:]] = OpExtInst %[[#C32]] %1 fma %[[#TC_A]] %[[#TC_B_0_2]] %[[#TC_B_1_2_A_TIMES_CONJ_I]]
+; CHECK-NEXT:            %[[#TC_B_SQUARED:]] = OpFMul %[[#C32]] %[[#TC_B]] %[[#TC_B]]
+; CHECK-NEXT:          %[[#TC_B_SQUARED_0:]] = OpCompositeExtract %[[#F32]] %[[#TC_B_SQUARED]] 0
+; CHECK-NEXT:          %[[#TC_B_SQUARED_1:]] = OpCompositeExtract %[[#F32]] %[[#TC_B_SQUARED]] 1
+; CHECK-NEXT:                %[[#TC_B_ABS:]] = OpFAdd %[[#F32]] %[[#TC_B_SQUARED_0]] %[[#TC_B_SQUARED_1]]
+; CHECK-NEXT:                %[[#TC_DUMMY:]] = OpUndef %[[#C32]]
+; CHECK-NEXT:              %[[#TC_B_ABS_1:]] = OpCompositeInsert %[[#C32]] %[[#TC_B_ABS]] %[[#TC_DUMMY]] 0
+; CHECK-NEXT:              %[[#TC_B_ABS_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B_ABS_1]] %[[#TC_DUMMY]] 0 0
+; CHECK-NEXT:                         %[[#]] = OpFDiv %[[#C32]] %[[#TC_A_TIMES_CONJ_B]] %[[#TC_B_ABS_2]]
+}
+
+func @tfloatcomplex(%a: f32, %b: c32) {
+    %a2 = cast %a : c32
+    %0 = mul %a2, %b : c32
+    %1 = mul %b, %a2 : c32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:        %[[#A2:]] = OpCompositeInsert %[[#C32]] %[[#]] %[[#C32_NULL]] 0
+; CHECK-NEXT: %[[#A2_1:]] = OpVectorShuffle %[[#C32]] %[[#A2]] %[[#A2]] 0 0
+; CHECK-NEXT:      %[[#]] = OpFMul %[[#C32]] %[[#A2_1]] %[[#]]
+; CHECK-NEXT: %[[#A2_2:]] = OpVectorShuffle %[[#C32]] %[[#A2]] %[[#A2]] 0 0
+; CHECK-NEXT:      %[[#]] = OpFMul %[[#C32]] %[[#]] %[[#A2_2]]
+}
+
+func @tfloatcoopmatrix() attributes{subgroup_size=16} {
+    %0 = constant 1.0 : coopmatrix<f32x16x3,matrix_a>
+    %1 = constant 2.0 : coopmatrix<f32x16x3,matrix_a>
+    %2 = add %0, %1 : coopmatrix<f32x16x3,matrix_a>
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:         %[[#R3:]] = OpUndef %[[#F32_3]]
+; CHECK-NEXT:  %[[#A3_0:]] = OpCompositeExtract %[[#F32]] %[[#]] 0
+; CHECK-NEXT:  %[[#B3_0:]] = OpCompositeExtract %[[#F32]] %[[#]] 0
+; CHECK-NEXT: %[[#AB3_0:]] = OpFAdd %[[#F32]] %[[#A3_0]] %[[#B3_0]]
+; CHECK-NEXT:  %[[#R3_0:]] = OpCompositeInsert %[[#F32_3]] %[[#AB3_0]] %[[#R3]] 0
+; CHECK-NEXT:  %[[#A3_1:]] = OpCompositeExtract %[[#F32]] %[[#]] 1
+; CHECK-NEXT:  %[[#B3_1:]] = OpCompositeExtract %[[#F32]] %[[#]] 1
+; CHECK-NEXT: %[[#AB3_1:]] = OpFAdd %[[#F32]] %[[#A3_1]] %[[#B3_1]]
+; CHECK-NEXT:  %[[#R3_1:]] = OpCompositeInsert %[[#F32_3]] %[[#AB3_1]] %[[#R3_0]] 1
+; CHECK-NEXT:  %[[#A3_2:]] = OpCompositeExtract %[[#F32]] %[[#]] 2
+; CHECK-NEXT:  %[[#B3_2:]] = OpCompositeExtract %[[#F32]] %[[#]] 2
+; CHECK-NEXT: %[[#AB3_2:]] = OpFAdd %[[#F32]] %[[#A3_2]] %[[#B3_2]]
+; CHECK-NEXT:       %[[#]] = OpCompositeInsert %[[#F32_3]] %[[#AB3_2]] %[[#R3_1]] 2
+}

@@ -1,0 +1,77 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef INST_VIEW_HPP_20250616
+#define INST_VIEW_HPP_20250616
+
+#include "node/inst.hpp"
+#include "node/region.hpp"
+#include "tinytc/core.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
+#include "util/iterator.hpp"
+
+#include <complex>
+#include <cstdint>
+#include <iterator>
+#include <limits>
+#include <type_traits>
+#include <variant>
+#include <vector>
+
+namespace tinytc {
+
+using constant_value_type = std::variant<bool, std::int64_t, double, std::complex<double>>;
+
+enum support_flag {
+    supports_bool = 0x1,
+    supports_int = 0x2,
+    supports_float = 0x4,
+    supports_complex = 0x8
+};
+using support_flags = std::uint32_t;
+
+class inst_view {
+  public:
+    struct properties {};
+
+    inline inst_view(tinytc_inst_t in) : in_{in} {}
+
+    inline auto get() -> tinytc_inst & { return *in_; }
+    inline auto loc() noexcept -> tinytc::location const & { return get().loc(); }
+
+    inline explicit operator bool() const { return in_ != nullptr; }
+
+  private:
+    tinytc_inst_t in_;
+};
+
+template <typename To>
+requires(std::is_base_of_v<inst_view, std::decay_t<To>>)
+auto isa(tinytc_inst &obj) -> bool {
+    return To::classof(obj);
+}
+
+template <typename To>
+requires(std::is_base_of_v<inst_view, std::decay_t<To>>)
+auto dyn_cast(tinytc_inst_t obj) -> To {
+    if (obj != nullptr && isa<To>(*obj)) {
+        return To(obj);
+    }
+    return To(nullptr);
+}
+
+template <typename To, typename F>
+requires(std::is_base_of_v<inst_view, std::decay_t<To>>)
+auto dyn_cast_or_throw(tinytc_inst_t obj, F &&make_exception) -> To * {
+    if (auto c = dyn_cast<To>(obj); c) {
+        return c;
+    }
+    throw make_exception();
+}
+
+// もち inst_hpp "tinytc/instructions.anko"
+
+} // namespace tinytc
+
+#endif // INST_VIEW_HPP_20250616

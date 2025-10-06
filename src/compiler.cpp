@@ -1,59 +1,164 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "device_info.hpp"
+#include "compiler_context.hpp"
 #include "error.hpp"
-#include "node/program_node.hpp"
-#include "parser.hpp"
+#include "node/prog.hpp"
+// IWYU pragma: begin_keep
+#include "pass/dump_cfg.hpp"
+#include "pass/dump_def_use.hpp"
+#include "pass/dump_gcd.hpp"
+#include "pass/dump_ir.hpp"
+// IWYU pragma: end_keep
+#include "pass/check_ir.hpp"
+#include "pass/constant_propagation.hpp"
+#include "pass/convert_to_spirv.hpp"
+#include "pass/dead_code_elimination.hpp"
+#include "pass/insert_barrier.hpp"
+#include "pass/insert_lifetime_stop.hpp"
+#include "pass/lower_coopmatrix.hpp"
+#include "pass/lower_foreach.hpp"
+#include "pass/lower_linalg.hpp"
+#include "pass/stack.hpp"
+#include "pass/work_group_size.hpp"
 #include "passes.hpp"
-#include "reference_counted.hpp"
-#include "required_extensions.hpp"
-#include "source.hpp"
-#include "tinytc/tinytc.h"
+#include "spv/pass/assemble.hpp"
+#include "spv/pass/assign_ids.hpp"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
-#include <clir/visitor/codegen_opencl.hpp>
-#include <clir/visitor/unique_names.hpp>
-
-#include <memory>
-#include <sstream>
+#include <cstring>
+#include <iostream> // IWYU pragma: keep
 #include <utility>
-#include <vector>
 
 using namespace tinytc;
 
+namespace tinytc {
+
+template <typename PassT> struct optflag_setter {
+    PassT &pass;
+    tinytc_compiler_context_t ctx;
+
+    template <typename... Flags> void operator()(Flags &&...flags) {
+        (pass.set_opt_flag(flags, ctx->opt_flag(flags)), ...);
+    }
+};
+
+void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_info_t info) {
+    auto ctx = prg->context();
+    const auto opt_level = ctx->opt_level();
+
+    // passes
+    auto cpp = constant_propagation_pass{};
+    optflag_setter{cpp, ctx}(tinytc::optflag::unsafe_fp_math);
+
+    run_function_pass(check_ir_pass{}, *prg);
+
+    if (opt_level >= 1) {
+        // We run constant propagation + dead code elimination early to capture dead allocas
+        // (later on they are maybe "in use" due to the lifetime_stop instruction)
+        run_function_pass(cpp, *prg);
+        run_function_pass(dead_code_elimination_pass{}, *prg);
+    }
+
+    run_function_pass(insert_lifetime_stop_pass{}, *prg);
+    run_function_pass(set_stack_ptr_pass{}, *prg);
+    run_function_pass(insert_barrier_pass{}, *prg);
+    run_function_pass(work_group_size_pass{info}, *prg);
+
+    run_function_pass(lower_linalg_pass{info}, *prg);
+    // Run set stack ptr again as lower linalg may introduce allocas for the duration of the
+    // linalg op. Lower linalg is expected to insert lifetime_stop instructions, after it is done
+    // so we do not need to run the lifetime stop pass again.
+    run_function_pass(set_stack_ptr_pass{}, *prg);
+    run_function_pass(lower_foreach_pass{info}, *prg);
+    if (opt_level >= 1) {
+        run_function_pass(cpp, *prg);
+        run_function_pass(dead_code_elimination_pass{}, *prg);
+    }
+    run_function_pass(lower_coopmatrix_pass{info}, *prg);
+
+    run_function_pass(check_ir_pass{}, *prg);
+}
+
+} // namespace tinytc
+
 extern "C" {
 
-tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
-                                              const_tinytc_core_info_t info,
-                                              tinytc_source_context_t ctx) {
-    if (src == nullptr || prg == nullptr || info == nullptr) {
+tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t prg,
+                                         const_tinytc_core_info_t info) {
+    if (prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
         [&] {
-            // passes
-            check_ir(*prg);
-            insert_lifetime_stop_inst(*prg);
-            set_stack_ptrs(*prg);
-            insert_barriers(*prg);
-            set_work_group_size(*prg, *info);
-            // opencl
-            auto ast = generate_opencl_ast(*prg, *info);
-            clir::make_names_unique(ast);
-
-            auto oss = std::ostringstream{};
-            auto ext = required_extensions(ast);
-            for (auto const &e : ext) {
-                oss << "#pragma OPENCL EXTENSION " << e << " : enable" << std::endl;
-            }
-
-            clir::generate_opencl(oss, std::move(ast));
-
-            *src = std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(ext),
-                                                     info->core_features())
-                       .release();
+#define FUNCTION_PASS(NAME, CREATE_PASS, ...)                                                      \
+    if (strcmp(NAME, pass_name) == 0) {                                                            \
+        auto pass = CREATE_PASS;                                                                   \
+        optflag_setter{pass, prg->context()}(__VA_ARGS__);                                         \
+        return run_function_pass(std::move(pass), *prg);                                           \
+    }
+#define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS)                                                 \
+    if (strcmp(NAME, pass_name) == 0) {                                                            \
+        return run_function_pass(CREATE_PASS(info), *prg);                                         \
+    }
+#include "passes.def"
+#undef FUNCTION_PASS
+#undef FUNCTION_PASS_WITH_INFO
+            throw status::unknown_pass_name;
         },
-        ctx);
+        prg->context());
+}
+
+tinytc_status_t tinytc_list_function_passes(size_t *names_size, char const *const **names) {
+    if (names_size == nullptr || names == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+#define FUNCTION_PASS(NAME, CREATE_PASS, ...) NAME,
+#define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS) NAME,
+    static char const *const pass_names[] = {
+#include "passes.def"
+    };
+#undef FUNCTION_PASS
+#undef FUNCTION_PASS_WITH_INFO
+    *names_size = sizeof(pass_names) / sizeof(char const *);
+    *names = pass_names;
+
+    return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_spv_mod_t *mod, tinytc_prog_t prg,
+                                             const_tinytc_core_info_t info) {
+    if (mod == nullptr || prg == nullptr || info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] {
+            apply_default_optimization_pipeline(prg, info);
+
+            *mod = convert_to_spirv_pass{info}.run_on_program(*prg).release();
+            spv::id_assigner{}.run_on_module(**mod);
+        },
+        prg->context());
+}
+
+tinytc_status_t tinytc_prog_compile_to_spirv_and_assemble(tinytc_binary_t *bin, tinytc_prog_t prg,
+                                                          const_tinytc_core_info_t info) {
+    if (bin == nullptr || prg == nullptr || info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    tinytc_spv_mod_t mod;
+    TINYTC_CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg, info));
+    auto mod_ = shared_handle{mod}; // For clean-up
+    TINYTC_CHECK_STATUS(tinytc_spirv_assemble(bin, mod_.get()));
+    return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_spirv_assemble(tinytc_binary_t *bin, const_tinytc_spv_mod_t mod) {
+    if (bin == nullptr || mod == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *bin = spv::assembler{}.run_on_module(*mod).release(); });
 }
 }

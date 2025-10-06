@@ -4,7 +4,7 @@
 #ifndef CL_ERROR_20240423_HPP
 #define CL_ERROR_20240423_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 
 #include <new>
 

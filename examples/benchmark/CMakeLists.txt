@@ -5,7 +5,7 @@ include(CommonOptions)
 
 find_package(SYCL REQUIRED)
 
-add_executable(tinytc-bench main.cpp args.cpp)
+add_executable(tinytc-bench main.cpp)
 add_sycl_to_target(TARGET tinytc-bench SOURCES main.cpp)
-target_link_libraries(tinytc-bench PRIVATE tinytc tinytc_sycl)
+target_link_libraries(tinytc-bench PRIVATE tinytc tinytc_sycl argparser)
 set_cxx_common_options(tinytc-bench)
