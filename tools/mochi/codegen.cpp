@@ -807,7 +807,7 @@ public:
     sw("}\n");
 
     // property access
-    for (auto &p : ty->props()) {
+    for (auto const &p : ty->props()) {
         auto type = p.quantity == quantifier::many
                         ? mochi::format("array_view<%s>", to_cxx_type(p.type))
                         : to_cxx_type(p.type);
@@ -909,6 +909,16 @@ void generate_visit_hpp(std::ostream &os, objects const &obj) {
             });
         }
         sw("default: break;\n}\nthrow status::internal_compiler_error;\n}\n");
+
+        sw("template <typename Visitor> void visit_noexcept(Visitor && visitor, tinytc_inst &in) "
+           "noexcept {\n");
+        sw("switch(in.type_id()) {\n");
+        for (auto &i : obj.insts()) {
+            walk_down<walk_order::pre_order, inst, true>(i.get(), [&sw](inst *in) {
+                sw("case IK::%s: visitor(%s{&in}); break;\n", in->kind_name(), in->class_name());
+            });
+        }
+        sw("default: break;\n}\n}\n");
     }
 
     if (!obj.types().empty()) {
@@ -921,6 +931,17 @@ void generate_visit_hpp(std::ostream &os, objects const &obj) {
             });
         }
         sw("default: break;\n}\nthrow status::internal_compiler_error;\n}\n");
+
+        sw("template <typename Visitor> void visit_noexcept(Visitor && visitor, tinytc_type &ty) "
+           "noexcept {\n");
+        sw("switch(ty.type_id()) {\n");
+        for (auto &t : obj.types()) {
+            walk_down<walk_order::pre_order, type, true>(t.get(), [&sw](type *ty) {
+                sw("case TK::%s: visitor(*static_cast<%s*>(&ty)); break;\n", ty->kind_name(),
+                   ty->class_name());
+            });
+        }
+        sw("default: break;\n}\n}\n");
     }
 }
 

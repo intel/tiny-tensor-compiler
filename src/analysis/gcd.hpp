@@ -31,7 +31,7 @@ class memref_info {
     inline auto stride_gcd(std::size_t i) const -> std::int64_t { return stride_gcd_[i]; }
 
   private:
-    std::int64_t offset_gcd_;
+    std::int64_t offset_gcd_ = 1;
     std::vector<std::int64_t> shape_gcd_, stride_gcd_;
 };
 

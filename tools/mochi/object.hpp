@@ -108,7 +108,7 @@ class inst {
     std::vector<ret> rets_;
     std::vector<std::string> cxx_;
     std::vector<std::unique_ptr<inst>> children_;
-    std::uint32_t flags_;
+    std::uint32_t flags_ = 0x0;
 };
 
 using type_member = std::variant<prop, raw_cxx>;
@@ -141,7 +141,7 @@ class type {
     std::vector<prop> props_;
     std::vector<std::string> cxx_;
     std::vector<std::unique_ptr<type>> children_;
-    std::uint32_t flags_;
+    std::uint32_t flags_ = 0x0;
 };
 
 } // namespace mochi

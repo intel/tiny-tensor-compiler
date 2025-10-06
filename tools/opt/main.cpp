@@ -62,7 +62,12 @@ int main(int argc, char **argv) {
 
         std::size_t names_size = 0;
         char const *const *names = nullptr;
-        list_function_passes(names_size, names);
+        try {
+            list_function_passes(names_size, names);
+        } catch (status const &st) {
+            std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
+            return 1;
+        }
 
         std::cout << std::endl << "Passes:" << std::endl;
         for (std::size_t i = 0; i < names_size; ++i) {

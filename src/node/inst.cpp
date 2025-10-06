@@ -97,10 +97,10 @@ tinytc_inst::~tinytc_inst() {
 
     // properties
     if (layout_.sizeof_properties > 0) {
-        visit(overloaded{[&](auto view) {
-                  std::destroy_at(static_cast<decltype(view)::properties *>(props()));
-              }},
-              *this);
+        visit_noexcept(overloaded{[&](auto view) {
+                           std::destroy_at(static_cast<decltype(view)::properties *>(props()));
+                       }},
+                       *this);
     }
 
     // uses

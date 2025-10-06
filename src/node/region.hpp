@@ -85,7 +85,7 @@ struct alignas(8) tinytc_region final {
 
     tinytc_inst_t def_inst_;
     tinytc::region_kind kind_;
-    tinytc::location loc_;
+    tinytc::location loc_ = {};
     // params_ must come before insts_ such that the dtors are called in the correct order
     std::vector<tinytc_value> params_;
     tinytc::ilist<tinytc_inst> insts_;

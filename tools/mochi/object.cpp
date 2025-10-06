@@ -33,10 +33,10 @@ inst::inst(std::string name, std::string doc, std::vector<inst_member> members, 
             overloaded{
                 [&](op &&i) {
                     i.has_offset_property = needs_offset_property;
-                    ops_.emplace_back(std::move(i));
                     if (i.quantity != quantifier::single) {
                         needs_offset_property = true;
                     }
+                    ops_.emplace_back(std::move(i));
                 },
                 [&](prop &&i) { props_.emplace_back(std::move(i)); },
                 [&](reg &&i) { regs_.emplace_back(std::move(i)); },

@@ -45,7 +45,7 @@ class dope_vector {
     std::vector<std::int64_t> static_shape_, static_stride_;
     std::vector<spv_inst *> shape_, stride_;
     spv_inst *size_ty_ = nullptr, *offset_ty_ = nullptr;
-    std::int64_t static_size_, static_offset_;
+    std::int64_t static_size_ = 0, static_offset_ = 0;
     spv_inst *size_ = nullptr;
     spv_inst *offset_ = nullptr;
 };

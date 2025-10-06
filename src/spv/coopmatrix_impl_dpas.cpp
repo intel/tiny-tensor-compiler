@@ -258,7 +258,7 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_type const *at, coopmatrix_typ
         auto bt_sty = bt->component_ty();
         auto ct_sty = ct->component_ty();
         auto rt_sty = rt->component_ty();
-        const std::int32_t ops_per_chan = xe::channel_size / size(at_sty);
+        const std::int32_t ops_per_chan = 1 + (xe::channel_size - 1) / size(at_sty);
         const std::int32_t K = ops_per_chan * xe::sdepth;
 
         oasm << "{\n";

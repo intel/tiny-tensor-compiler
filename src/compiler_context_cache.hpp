@@ -27,11 +27,17 @@ namespace tinytc {
 
 template <typename T> class unique_storage {
   public:
+    unique_storage() = default;
     ~unique_storage() {
         for (auto &m : map_) {
             delete m.second;
         }
     }
+
+    unique_storage(unique_storage const &) = delete;
+    unique_storage(unique_storage &&) = delete;
+    unique_storage &operator=(unique_storage const &) = delete;
+    unique_storage &operator=(unique_storage &&) = delete;
 
     template <typename EqualFun, typename MakeFun>
     auto get(std::uint64_t hash, EqualFun &&is_equal, MakeFun &&make) -> T {
@@ -55,7 +61,9 @@ class compiler_context_cache {
     ~compiler_context_cache();
 
     compiler_context_cache(compiler_context_cache const &) = delete;
+    compiler_context_cache(compiler_context_cache &&) = delete;
     compiler_context_cache &operator=(compiler_context_cache const &) = delete;
+    compiler_context_cache &operator=(compiler_context_cache &&) = delete;
 
     std::unique_ptr<tinytc_type> void_ty, bool_ty;
     std::unique_ptr<tinytc_type> i8_ty, i16_ty, i32_ty, i64_ty, index_ty, bf16_ty, f16_ty, f32_ty,

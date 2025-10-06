@@ -195,7 +195,8 @@ void gcd_helper::operator()(expand_inst in) {
             stride_gcd.push_back(mi->stride_gcd(i));
         }
 
-        gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
+        gcd_.set_memref(in.result(),
+                        memref_info(offset_gcd, std::move(shape_gcd), std::move(stride_gcd)));
     }
 }
 void gcd_helper::operator()(for_inst in) {
@@ -230,7 +231,8 @@ void gcd_helper::operator()(fuse_inst in) {
             stride_gcd.push_back(mi->stride_gcd(i));
         }
 
-        gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
+        gcd_.set_memref(in.result(),
+                        memref_info(offset_gcd, std::move(shape_gcd), std::move(stride_gcd)));
     }
 }
 void gcd_helper::operator()(load_inst in) {
@@ -302,7 +304,8 @@ void gcd_helper::operator()(subview_inst in) {
             }
         }
 
-        gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
+        gcd_.set_memref(in.result(),
+                        memref_info(offset_gcd, std::move(shape_gcd), std::move(stride_gcd)));
     }
 }
 

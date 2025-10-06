@@ -198,14 +198,14 @@ auto instant_constant_fold_add(region_builder &bb, unique_handle<tinytc_inst_t> 
     }
 
     auto fold = visit(constant_folding{ctx->opt_flag(optflag::unsafe_fp_math)}, *i);
-    auto val = std::visit(overloaded{[](tinytc_value_t &v) -> tinytc_value_t { return v; },
-                                     [&bb](unique_handle<tinytc_inst_t> &j) -> tinytc_value_t {
+    auto val = std::visit(overloaded{[](tinytc_value_t &&v) -> tinytc_value_t { return v; },
+                                     [&bb](unique_handle<tinytc_inst_t> &&j) -> tinytc_value_t {
                                          if (j) {
                                              return bb.add(std::move(j));
                                          }
                                          return nullptr;
                                      }},
-                          fold);
+                          std::move(fold));
     if (val) {
         return val;
     }
