@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.0] - 2025-XX-XX
+## [0.4.0] - 2025-10-06
 
 ### Major changes
 * Support for complex numbers (c32 and c64) with optimized complex GEMM

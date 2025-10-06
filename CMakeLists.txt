@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.23)
 
-project(tiny-tensor-compiler VERSION 0.3.1 LANGUAGES C CXX)
+project(tiny-tensor-compiler VERSION 0.4.0 LANGUAGES C CXX)
 
 include(CMakeDependentOption)
 option(BUILD_DOCUMENTATION "Build documentation" OFF)
