@@ -21,7 +21,9 @@ Consider the following simple copy kernel
 .. code-block::
 
     func @copy(%A: memref<${type}x${M}x${N}>, %B: memref<${type}x${M}x${M}>) {
-        axpby.n 1.0, %A, 0.0, %B : ${type}, memref<${type}x${M}x${N}>, ${type}, memref<${type}x${M}x${N}>
+        %c0 = constant 0.0 : ${type}
+        %c1 = constant 1.0 : ${type}
+        axpby %c1, %A, %c0, %B
     }
 
 In the following example we build the above code programmatically and replace the place-holders (${.})
@@ -33,63 +35,91 @@ by actual values:
 
        .. code:: C
 
-          tinytc_scalar_type_t type = ...;
           int64_t M = ...;
           int64_t N = ...;
 
-          tinytc_data_type_t dt;
-          int64_t shape[2] = {M, N};
-          tinytc_memref_type_create(&dt, type, 2, shape, 0, NULL, NULL);
-
-          tinytc_value_t A, B, alpha, beta;
-          tinytc_value_create(&A, dt, NULL);
-          tinytc_value_create(&B, dt, NULL);
-          tinytc_float_imm_create(&alpha, 1.0, type, NULL);
-          tinytc_float_imm_create(&beta, 0.0, type, NULL);
-          tinytc_data_type_release(dt);
-
-          tinytc_inst_t copy_inst;
-          tinytc_axpby_inst_create(&copy_inst, tinytc_transpose_N, 0, alpha, A, beta, B, NULL);
-          tinytc_value_release(alpha);
-          tinytc_value_release(beta);
-
-          tinytc_func_t copy_proto;
-          tinytc_value_t args[2] = {A, B};
-          tinytc_function_prototype_create(&copy_proto, "copy", 2, args, NULL);
-          tinytc_value_release(A);
-          tinytc_value_release(B);
-
-          tinytc_region_t copy_body;
-          tinytc_region_create(&copy_body, 1, &copy_inst, NULL);
-          tinytc_inst_release(copy_inst);
-
-          tinytc_func_t copy_fun;
-          tinytc_function_create(&copy_fun, copy_proto, copy_body, NULL);
-          tinytc_func_release(copy_proto);
-          tinytc_region_release(copy_body);
-
+          char const *copy_fun_name = "copy";
+          size_t num_results;
+          size_t num_params;
+          tinytc_compiler_context_t ctx;
           tinytc_prog_t program;
-          tinytc_program_create(&program, 1, &copy_fun, NULL);
-          tinytc_func_release(copy_fun);
+          tinytc_type_t void_ty, element_ty, ty;
+          tinytc_func_t copy_fun;
+          tinytc_region_t copy_body;
+          tinytc_inst_t tmp;
+          tinytc_value_t params[2];
+          tinytc_value_t alpha, beta;
+
+          tinytc_compiler_context_create(&ctx);
+
+          // Create program
+          tinytc_prog_create(&program, ctx, NULL);
+
+          // Get types
+          tinytc_f32_type_get(&element_ty, ctx);
+          int64_t shape[2] = {M, N};
+          tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global);
+
+          // Get void type
+          tinytc_void_type_get(&void_ty, ctx);
+
+          // Create function
+          tinytc_type_t param_types[2] = {ty, ty};
+          tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, void_ty,
+                             NULL);
+          tinytc_prog_add_function(program, copy_fun);
+
+          // Get body
+          tinytc_func_get_body(copy_fun, &copy_body);
+          num_params = 2;
+          tinytc_region_get_parameters(copy_body, &num_params, params);
+
+          // Create instructions
+          tinytc_constant_inst_create_one(&tmp, element_ty, NULL);
+          num_results = 1;
+          tinytc_inst_get_values(tmp, &num_results, &alpha);
+          tinytc_region_append(copy_body, tmp);
+
+          tinytc_constant_inst_create_zero(&tmp, element_ty, NULL);
+          num_results = 1;
+          tinytc_inst_get_values(tmp, &num_results, &beta);
+          tinytc_region_append(copy_body, tmp);
+
+          tinytc_axpby_inst_create(&tmp, 0, tinytc_transpose_N, alpha, params[0], beta, params[1], NULL);
+          tinytc_region_append(copy_body, tmp);
+
+          // Dump program
+          tinytc_prog_dump(program);
+
+          // Clean-up
+          tinytc_prog_release(program);
+          tinytc_compiler_context_release(ctx);
 
     .. tab:: C++
 
        .. code:: C++
 
-          scalar_type type = ...;
           int64_t M = ...;
           int64_t N = ...;
 
-          auto pb = program_builder{};
-          pb.create("copy", [&](function_builder &fb) {
-              auto dt = make_memref(type, {M, N});
-              auto A = fb.argument(dt);
-              auto B = fb.argument(dt);
-              fb.body([&](region_builder &bb) {
-                  auto alpha = make_imm(1.0, type);
-                  auto beta = make_imm(0.0, type);
-                  bb.add(make_axpby(transpose::N, false, alpha, A, beta, B));
-              });
-          });
-          auto program = pb.get_product();
+          auto ctx = create_compiler_context();
+          auto element_ty = get<f32_type>(ctx.get());
+          auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
+                                     address_space::global);
 
+          auto void_ty = get<void_type>(ctx.get());
+          auto f = create_func("copy", {ty, ty}, void_ty);
+
+          auto body = get_body(f.get());
+          std::array<tinytc_value_t, 2u> params;
+          get_parameters(body, params);
+
+          auto bb = region_builder{body};
+          auto alpha = bb.constant_one(element_ty);
+          auto beta = bb.constant_zero(element_ty);
+          bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
+
+          auto p = create_prog(ctx.get());
+          add_function(p.get(), std::move(f));
+
+          dump(p.get());

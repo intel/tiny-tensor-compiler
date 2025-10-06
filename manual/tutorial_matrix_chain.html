@@ -14,42 +14,45 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-  
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'manual/tutorial_matrix_chain';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="tinytc" href="../api/index.html" />
-    <link rel="prev" title="Tensor language reference" href="tensor-ir.html" />
+    <link rel="prev" title="Preprocessor reference" href="preprocessor.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -57,31 +60,16 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -89,7 +77,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -97,10 +84,15 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
     </header>
   
 
@@ -109,7 +101,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -124,6 +117,8 @@
         <div class="sidebar-primary-item">
 
   
+    
+  
 
 <a class="navbar-brand logo" href="../index.html">
   
@@ -137,15 +132,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
@@ -155,31 +146,36 @@
 <li class="toctree-l1"><a class="reference internal" href="builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calling_convention.html">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessor.html">Preprocessor reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/core_capi.html">Core C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/builder_capi.html">Builder C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/core_cxxapi.html">Core C++-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc_cl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/cl/capi.html">C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/cl/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc_sycl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/sycl/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc_ze</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/ze/capi.html">C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/ze/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../dev/coopmatrix_layout.html">Coopmatrix layout</a></li>
 </ul>
 
     </div>
@@ -188,14 +184,19 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -204,14 +205,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -368,24 +369,16 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
+</button>
 
 </div></div>
       
@@ -426,87 +419,90 @@ and likewise for <span class="math notranslate nohighlight">\(P(:,:,e)\)</span>.
 <p>In the <a class="reference internal" href="tensor-ir.html#tensor-language"><span class="std std-ref">tensor language</span></a> we can implement the kernel as following:</p>
 <div class="highlight-default notranslate" id="fused-kernel-example"><div class="highlight"><pre><span></span>func @fused_kernel(%K: memref&lt;f32x56x56&gt;,
                    %P: memref&lt;f32x56x9x?&gt;,
-                   %A: group&lt;memref&lt;f32x9x9&gt;&gt;,
+                   %A: group&lt;memref&lt;f32x9x9&gt;x?&gt;,
                    %Q: memref&lt;f32x56x9x?&gt;) {
-    %gid = group_id                                ; Get our index e
+    %gid = group_id.x : index                         ; Get our index e
 
-    %p = subview %P[:,:,%gid] : memref&lt;f32x56x9x?&gt; ; %p has type memref&lt;f32x56x9&gt;
-    %a = load %A[%gid] : group&lt;memref&lt;f32x9x9&gt;&gt;    ; %a has type memref&lt;f32x9x9&gt;
-    %q = subview %Q[:,:,%gid] : memref&lt;f32x56x9x?&gt; ; %q has type memref&lt;f32x56x9&gt;
+    %p = subview %P[0:56,0:9,%gid] : memref&lt;f32x56x9&gt; ; Get view on submatrix
+    %a = load %A[%gid]             : memref&lt;f32x9x9&gt;  ; Load matrix from group
+    %q = subview %Q[0:56,0:9,%gid] : memref&lt;f32x56x9&gt; ; Get view on submatrix
 
-    %tmp = alloca -&gt; memref&lt;f32x56x9&gt;              ; Reserve temporary memory
-
-    gemm.n.n 1.0, %K, %p, 0.0, %tmp                ; Compute tmp &lt;- K P(:,:,e)
-        : f32, memref&lt;f32x56x56&gt;, memref&lt;f32x56x9&gt;, f32, memref&lt;f32x56x9&gt;
-    gemm.n.n 1.0, %tmp, %a, 1.0, %q                ; Update Q(:,:,e) &lt;- Q(:,:,e) + tmp A_e
-        : f32, memref&lt;f32x56x9&gt;, memref&lt;f32x9x9&gt;, f32, memref&lt;f32x56x9&gt;
+    %tmp = alloca : memref&lt;f32x56x9,local&gt;            ; Reserve temporary memory
+                                                      ; in the Shared Local Memory
+    %c0 = constant 0.0 : f32
+    %c1 = constant 1.0 : f32
+    gemm.n.n %c1, %K, %p, %c0, %tmp                   ; Compute tmp &lt;- K P(:,:,e)
+    gemm.n.n %c1, %tmp, %a, %c1, %q                   ; Update Q(:,:,e) &lt;- Q(:,:,e) + tmp A_e
 }
 </pre></div>
 </div>
-<p>Compilation with the Tiny Tensor Compiler generates the following OpenCL-C code</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">kernel</span>
-<span class="nf">__attribute__</span><span class="p">((</span><span class="n">reqd_work_group_size</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
-<span class="n">__attribute__</span><span class="p">((</span><span class="n">intel_reqd_sub_group_size</span><span class="p">(</span><span class="mi">32</span><span class="p">)))</span>
-<span class="n">fused_kernel</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">P</span><span class="p">,</span><span class="w"> </span><span class="n">uint</span><span class="w"> </span><span class="n">P_shape2</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">global</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span>
-<span class="w">             </span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="n">uint</span><span class="w"> </span><span class="n">Q_shape2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">local</span><span class="w"> </span><span class="n">uchar</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="mi">2016</span><span class="p">]</span><span class="w"> </span><span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="mi">64</span><span class="p">)));</span>
-<span class="w">    </span><span class="n">uint</span><span class="w"> </span><span class="n">gid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_id</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
-<span class="w">    </span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">P</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0l</span><span class="n">l</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0l</span><span class="n">l</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">56</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">gid</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">504</span><span class="p">;</span>
-<span class="w">    </span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">gid</span><span class="p">);</span>
-<span class="w">    </span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Q</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0l</span><span class="n">l</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0l</span><span class="n">l</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">56</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">gid</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">504</span><span class="p">;</span>
-<span class="w">    </span><span class="n">local</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">local</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="p">)(</span><span class="n">stack</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="w">    </span><span class="n">gemm_f32f32f32f32f32_An_Bn_M56_N9_K56_Astride1_56_Bstride1_56_Cstride1_56_alpha3ff0000000000000_beta0</span><span class="p">(</span>
-<span class="w">        </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="mf">0x1p+0f</span><span class="p">,</span><span class="w"> </span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="mf">0x0p+0f</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">);</span>
-<span class="w">    </span><span class="n">barrier</span><span class="p">(</span><span class="n">CLK_LOCAL_MEM_FENCE</span><span class="p">);</span>
-<span class="w">    </span><span class="n">gemm_f32f32f32f32f32_An_Bn_M56_N9_K9_Astride1_56_Bstride1_9_Cstride1_56_alpha3ff0000000000000_beta3ff0000000000000</span><span class="p">(</span>
-<span class="w">        </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mf">0x1p+0f</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mf">0x1p+0f</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">);</span>
-<span class="p">}</span>
+<p>Using the <em>tinytc-opt</em> tool we can run compiler passes on the code to get insight on what is happening under the hood.
+For example, running the insert-lifetime-stop, insert-barrier, and work-group-size pass,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tinytc-opt<span class="w"> </span>-pinsert-lifetime-stop<span class="w"> </span>-pinsert-barrier<span class="w"> </span>-pwork-group-size<span class="w"> </span>test.ir
 </pre></div>
 </div>
-<p>where the definition of the generated GEMM functions have been omitted for brevity.
-We observe that</p>
+<p>we get</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func @fused_kernel(%K: memref&lt;f32x56x56&gt;,
+                   %P: memref&lt;f32x56x9x?&gt;,
+                   %A: group&lt;memref&lt;f32x9x9&gt;x?&gt;,
+<span class="hll">                   %Q: memref&lt;f32x56x9x?&gt;) attributes{subgroup_size=32, work_group_size=[64,1]} {
+</span>    %gid = group_id.x : index
+    %p = subview %P[0:56,0:9,%gid] : memref&lt;f32x56x9&gt;
+    %a = load %A[%gid] : memref&lt;f32x9x9&gt;
+    %q = subview %Q[0:56,0:9,%gid] : memref&lt;f32x56x9&gt;
+    %tmp = alloca : memref&lt;f32x56x9,local&gt;
+    %c0 = constant 0x0p+0 : f32
+    %c1 = constant 0x1p+0 : f32
+    gemm %c1, %K, %p, %c0, %tmp
+<span class="hll">    barrier.local
+</span>    gemm %c1, %tmp, %a, %c1, %q
+<span class="hll">    lifetime_stop %tmp
+</span>}
+</pre></div>
+</div>
+<p>We observe that</p>
 <ul class="simple">
-<li><p>a GEMM is processed in parallel by a work-group with 64 threads,</p></li>
-<li><p>temporary memory is mapped to shared local memory (local uchar stack),</p></li>
-<li><p>load and subview calls translate to simple pointer manipulation,</p></li>
+<li><p>the kernel is executed concurrently by 64 work-items,</p></li>
+<li><p>temporary memory is only needed until after the lifetime_stop instruction after the GEMM
+(if multiple alloca’s are present that do not overlap, that is, lifetime_stop for alloca #1 appears before alloca #2,
+then Shared Local Memory is reused, reducing the total amount needed),</p></li>
 <li><p>and that a barrier has been introduced between the GEMM calls to avoid data races.</p></li>
 </ul>
 <p>When using SYCL, we can run the kernel using the following pseudo-code:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc.hpp&gt;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sycl/sycl.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc.hpp&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc_sycl.hpp&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sycl/sycl.hpp&gt;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">source_ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_source_context</span><span class="p">();</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_compiler_context</span><span class="p">();</span>
+<span class="n">set_error_reporter</span><span class="p">([](</span><span class="n">ctx</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">*</span><span class="n">what</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">tinytc_location_t</span><span class="w"> </span><span class="o">*</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">what</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">                   </span><span class="k">nullptr</span><span class="p">);</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// Parse tensor program</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">prog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;fused_kernel.ir&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">prog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;fused_kernel.ir&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+
+<span class="w">    </span><span class="c1">// Initialize tensors</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">K</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">P</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="o">**</span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">Q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
 
 <span class="w">    </span><span class="c1">// JIT compile program</span>
 <span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sycl</span><span class="o">::</span><span class="n">queue</span><span class="p">{};</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_core_info</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">get_device</span><span class="p">());</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">bin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">compile_to_binary</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">prog</span><span class="p">),</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">bundle_format</span><span class="o">::</span><span class="n">native</span><span class="p">,</span>
-<span class="w">                                         </span><span class="n">source_ctx</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">bundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">create_kernel_bundle</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">get_context</span><span class="p">(),</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">get_device</span><span class="p">(),</span><span class="w"> </span><span class="n">prog</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
 
-<span class="w">    </span><span class="c1">// Initialize tensors</span>
-<span class="w">    </span><span class="kt">float</span><span class="o">*</span><span class="w"> </span><span class="n">K</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-<span class="w">    </span><span class="kt">float</span><span class="o">*</span><span class="w"> </span><span class="n">P</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-<span class="w">    </span><span class="kt">float</span><span class="o">**</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-<span class="w">    </span><span class="kt">float</span><span class="o">*</span><span class="w"> </span><span class="n">Q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">bundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_kernel_bundle</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">get_context</span><span class="p">(),</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">get_device</span><span class="p">(),</span><span class="w"> </span><span class="n">bin</span><span class="p">);</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_kernel</span><span class="p">(</span><span class="n">bundle</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fused_kernel&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">exe_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">get_execution_range</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">create_kernel</span><span class="p">(</span><span class="n">bundle</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fused_kernel&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">exe_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">get_execution_range</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="n">sycl_range</span><span class="o">&lt;</span><span class="mi">3u</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">});</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">timestep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">timestep</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">num_timesteps</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">timestep</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">submit</span><span class="p">([</span><span class="o">&amp;</span><span class="p">](</span><span class="n">sycl</span><span class="o">::</span><span class="n">handler</span><span class="w"> </span><span class="o">&amp;</span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">h</span><span class="p">.</span><span class="n">set_args</span><span class="p">(</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">P</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">);</span>
-<span class="w">            </span><span class="n">h</span><span class="p">.</span><span class="n">parallel_for</span><span class="p">(</span><span class="n">exec_range</span><span class="p">,</span><span class="w"> </span><span class="n">kernel</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}).</span><span class="n">wait</span><span class="p">();</span>
+<span class="w">             </span><span class="n">h</span><span class="p">.</span><span class="n">set_args</span><span class="p">(</span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="n">P</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">,</span><span class="w"> </span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">);</span>
+<span class="w">             </span><span class="n">h</span><span class="p">.</span><span class="n">parallel_for</span><span class="p">(</span><span class="n">exe_range</span><span class="p">,</span><span class="w"> </span><span class="n">kernel</span><span class="p">);</span>
+<span class="w">         </span><span class="p">}).</span><span class="n">wait</span><span class="p">();</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">tinytc</span><span class="o">::</span><span class="n">status</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Error (&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;): &quot;</span>
-<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">error_string</span><span class="p">(</span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Error log:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span>
-<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">.</span><span class="n">get_error_log</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">tinytc</span><span class="o">::</span><span class="n">status</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Error (&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
@@ -525,16 +521,16 @@ hence, a compiled program should be reused many times.</p>
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="tensor-ir.html"
+       href="preprocessor.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Tensor language reference</p>
+        <p class="prev-next-title">Preprocessor reference</p>
       </div>
     </a>
     <a class="right-next"
@@ -552,8 +548,6 @@ hence, a compiled program should be reused many times.</p>
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"></div>
               
             
           </div>
@@ -574,7 +568,7 @@ By Intel
 
   <p class="copyright">
     
-      © Copyright 2024, Intel Corporation.
+      © Copyright 2025, Intel Corporation.
       <br/>
     
   </p>
@@ -598,8 +592,8 @@ By Intel
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

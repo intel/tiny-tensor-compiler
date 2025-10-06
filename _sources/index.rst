@@ -29,6 +29,7 @@ Table of contents
    manual/builder
    manual/calling_convention
    manual/tensor-ir
+   manual/preprocessor
    manual/tutorial_matrix_chain
 
 .. toctree::
@@ -39,6 +40,12 @@ Table of contents
    api/cl/index
    api/sycl/index
    api/ze/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer guide
+
+   dev/coopmatrix_layout
 
 Index
 -----

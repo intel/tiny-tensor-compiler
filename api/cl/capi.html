@@ -14,34 +14,36 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-  
-  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../../_static/fix-scrollbar-bug.css?v=1c140a14" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/cl/capi';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,6 +51,7 @@
     <link rel="prev" title="tinytc_cl" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -56,31 +59,16 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../../search.html"
       method="get">
@@ -88,7 +76,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -96,10 +83,15 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
     </header>
   
 
@@ -108,7 +100,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -123,6 +116,8 @@
         <div class="sidebar-primary-item">
 
   
+    
+  
 
 <a class="navbar-brand logo" href="../../index.html">
   
@@ -136,15 +131,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
@@ -154,31 +145,36 @@
 <li class="toctree-l1"><a class="reference internal" href="../../manual/builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual/calling_convention.html">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual/tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/preprocessor.html">Preprocessor reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">tinytc</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../core_capi.html">Core C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../builder_capi.html">Builder C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../core_cxxapi.html">Core C++-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">tinytc_cl</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">tinytc_cl</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cxxapi.html">C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sycl/index.html">tinytc_sycl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../sycl/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ze/index.html">tinytc_ze</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../ze/capi.html">C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../ze/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../dev/coopmatrix_layout.html">Coopmatrix layout</a></li>
 </ul>
 
     </div>
@@ -187,14 +183,19 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -203,14 +204,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -367,27 +368,19 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -408,36 +401,52 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-convert-status">tinytc_cl_convert_status</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-core-info-create">tinytc_cl_core_info_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-support-level">tinytc_cl_get_support_level</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-core-info-create">tinytc_cl_core_info_create</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_core_info_create"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_core_info_create()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-support-level">tinytc_cl_get_support_level</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_get_support_level"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_get_support_level()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel">Kernel</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-functions">Kernel Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-global-size">tinytc_cl_get_global_size</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-group-size">tinytc_cl_get_group_size</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-source">tinytc_cl_kernel_bundle_create_with_source</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-program">tinytc_cl_kernel_bundle_create_with_program</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-binary">tinytc_cl_kernel_bundle_create_with_binary</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-global-size">tinytc_cl_get_global_size</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_get_global_size"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_get_global_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-group-size">tinytc_cl_get_group_size</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_get_group_size"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_get_group_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-program">tinytc_cl_kernel_bundle_create_with_program</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_kernel_bundle_create_with_program"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_kernel_bundle_create_with_program()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-binary">tinytc_cl_kernel_bundle_create_with_binary</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_kernel_bundle_create_with_binary"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_kernel_bundle_create_with_binary()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-create">tinytc_cl_recipe_handler_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-submit">tinytc_cl_recipe_handler_submit</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-create">tinytc_cl_recipe_handler_create</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_recipe_handler_create"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_recipe_handler_create()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-submit">tinytc_cl_recipe_handler_submit</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_recipe_handler_submit"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_recipe_handler_submit()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -454,28 +463,7 @@ document.write(`
                 <article class="bd-article">
                   
   <section id="c-api">
-<h1>C-API<a class="headerlink" href="#c-api" title="Link to this heading">#</a></h1>
-<section id="common">
-<h2>Common<a class="headerlink" href="#common" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Functions</p>
-<ul>
-<li><p><a class="reference internal" href="#tinytc-cl-convert-status"><span class="std std-ref">tinytc_cl_convert_status</span></a></p></li>
-</ul>
-</li>
-</ul>
-<section id="common-functions">
-<h3>Common Functions<a class="headerlink" href="#common-functions" title="Link to this heading">#</a></h3>
-<section id="tinytc-cl-convert-status">
-<h4>tinytc_cl_convert_status<a class="headerlink" href="#tinytc-cl-convert-status" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_cl_convert_status">
-<span class="target" id="tinytc__cl_8h_1a1b51817498cdee3957c1aac6f887718d"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_convert_status</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_int</span></span><span class="w"> </span><span class="n"><span class="pre">status</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_convert_status" title="Link to this definition">#</a><br /></dt>
-<dd></dd></dl>
-
-</section>
-</section>
-</section>
+<span id="opencl-c-api"></span><h1>C-API<a class="headerlink" href="#c-api" title="Link to this heading">#</a></h1>
 <section id="device-info">
 <h2>Device Info<a class="headerlink" href="#device-info" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -489,7 +477,7 @@ document.write(`
 <section id="device-info-functions">
 <h3>Device Info Functions<a class="headerlink" href="#device-info-functions" title="Link to this heading">#</a></h3>
 <section id="tinytc-cl-core-info-create">
-<h4>tinytc_cl_core_info_create<a class="headerlink" href="#tinytc-cl-core-info-create" title="Link to this heading">#</a></h4>
+<span id="id1"></span><h4>tinytc_cl_core_info_create<a class="headerlink" href="#tinytc-cl-core-info-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_core_info_create">
 <span class="target" id="tinytc__cl_8h_1a15916a507af9c94ac6147713b2eccd2b"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_core_info_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_core_info_create" title="Link to this definition">#</a><br /></dt>
@@ -509,7 +497,7 @@ document.write(`
 
 </section>
 <section id="tinytc-cl-get-support-level">
-<h4>tinytc_cl_get_support_level<a class="headerlink" href="#tinytc-cl-get-support-level" title="Link to this heading">#</a></h4>
+<span id="id2"></span><h4>tinytc_cl_get_support_level<a class="headerlink" href="#tinytc-cl-get-support-level" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_get_support_level">
 <span class="target" id="tinytc__cl_8h_1ab971fbbc02725183878feec4329cff35"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_get_support_level</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_support_level_t" title="tinytc_support_level_t"><span class="n"><span class="pre">tinytc_support_level_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">level</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_get_support_level" title="Link to this definition">#</a><br /></dt>
@@ -537,7 +525,6 @@ document.write(`
 <ul>
 <li><p><a class="reference internal" href="#tinytc-cl-get-global-size"><span class="std std-ref">tinytc_cl_get_global_size</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cl-get-group-size"><span class="std std-ref">tinytc_cl_get_group_size</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-cl-kernel-bundle-create-with-source"><span class="std std-ref">tinytc_cl_kernel_bundle_create_with_source</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cl-kernel-bundle-create-with-program"><span class="std std-ref">tinytc_cl_kernel_bundle_create_with_program</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cl-kernel-bundle-create-with-binary"><span class="std std-ref">tinytc_cl_kernel_bundle_create_with_binary</span></a></p></li>
 </ul>
@@ -546,15 +533,15 @@ document.write(`
 <section id="kernel-functions">
 <h3>Kernel Functions<a class="headerlink" href="#kernel-functions" title="Link to this heading">#</a></h3>
 <section id="tinytc-cl-get-global-size">
-<h4>tinytc_cl_get_global_size<a class="headerlink" href="#tinytc-cl-get-global-size" title="Link to this heading">#</a></h4>
+<span id="id3"></span><h4>tinytc_cl_get_global_size<a class="headerlink" href="#tinytc-cl-get-global-size" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_get_global_size">
-<span class="target" id="tinytc__cl_8h_1a6813b1ff7e2a9843dedc1452aede21e7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_get_global_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">howmany</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">local_size</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">global_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_get_global_size" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc__cl_8h_1a12eb9f9d933b6352c935d8b39706be4a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_get_global_size</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">num_groups</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">local_size</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">global_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_get_global_size" title="Link to this definition">#</a><br /></dt>
 <dd><p>Convert group size to opencl global range. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>howmany</strong> – group size </p></li>
+<li><p><strong>num_groups</strong> – [in][range(0,3)] pointer to number of groups of size &gt;= 3 </p></li>
 <li><p><strong>local_size</strong> – [in][range(0,3)] pointer to local size array of size &gt;= 3 </p></li>
 <li><p><strong>global_size</strong> – [out][range(0,3)] pointer to global size array of size &gt;= 3 </p></li>
 </ul>
@@ -564,7 +551,7 @@ document.write(`
 
 </section>
 <section id="tinytc-cl-get-group-size">
-<h4>tinytc_cl_get_group_size<a class="headerlink" href="#tinytc-cl-get-group-size" title="Link to this heading">#</a></h4>
+<span id="id4"></span><h4>tinytc_cl_get_group_size<a class="headerlink" href="#tinytc-cl-get-group-size" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_get_group_size">
 <span class="target" id="tinytc__cl_8h_1a7de9f25a0e7319887b836486d8e8c130"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_get_group_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_kernel</span></span><span class="w"> </span><span class="n"><span class="pre">kernel</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">local_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_get_group_size" title="Link to this definition">#</a><br /></dt>
@@ -583,34 +570,11 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-cl-kernel-bundle-create-with-source">
-<h4>tinytc_cl_kernel_bundle_create_with_source<a class="headerlink" href="#tinytc-cl-kernel-bundle-create-with-source" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_cl_kernel_bundle_create_with_source">
-<span class="target" id="tinytc__cl_8h_1a424d5ef0285f6f4dc7b7b42a96731639"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_kernel_bundle_create_with_source</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_program</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_kernel_bundle_create_with_source" title="Link to this definition">#</a><br /></dt>
-<dd><p>Compile OpenCL-C source to device binary. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bundle</strong> – [out] pointer to the kernel bundle (cl_program) object created </p></li>
-<li><p><strong>context</strong> – [in] context handle </p></li>
-<li><p><strong>device</strong> – [in] device handle </p></li>
-<li><p><strong>src</strong> – [in] source text and extensions </p></li>
-<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="tinytc-cl-kernel-bundle-create-with-program">
-<h4>tinytc_cl_kernel_bundle_create_with_program<a class="headerlink" href="#tinytc-cl-kernel-bundle-create-with-program" title="Link to this heading">#</a></h4>
+<span id="id5"></span><h4>tinytc_cl_kernel_bundle_create_with_program<a class="headerlink" href="#tinytc-cl-kernel-bundle-create-with-program" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_kernel_bundle_create_with_program">
-<span class="target" id="tinytc__cl_8h_1a6da0712bf39b39df2e9a1b47f50feee2"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_kernel_bundle_create_with_program</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_program</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../builder_capi.html#c.tinytc_prog_t" title="tinytc_prog_t"><span class="n"><span class="pre">tinytc_prog_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">prg</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">core_features</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_kernel_bundle_create_with_program" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc__cl_8h_1a1f5c78730516f0ff8710ba5ec0780ad1"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_kernel_bundle_create_with_program</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_program</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_prog_t" title="tinytc_prog_t"><span class="n"><span class="pre">tinytc_prog_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">prg</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">core_features</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_kernel_bundle_create_with_program" title="Link to this definition">#</a><br /></dt>
 <dd><p>Compile tensor program. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -619,8 +583,7 @@ document.write(`
 <li><p><strong>context</strong> – [in] context handle </p></li>
 <li><p><strong>device</strong> – [in] device handle </p></li>
 <li><p><strong>prg</strong> – [inout] tensor program; modified as compiler passes are run </p></li>
-<li><p><strong>core_features</strong> – [in][optional] requested core features; must be 0 (default) or a combination of tinytc_core_feature_flag_t </p></li>
-<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
+<li><p><strong>core_features</strong> – [in][optional] requested core features; must be 0 (default) or a combination of <a class="reference internal" href="../core_capi.html#types_8h_1a4b4968f0ff5aaeb117bc9b3b6b39f124"><span class="std std-ref">tinytc_core_feature_flag_t</span></a></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -631,10 +594,10 @@ document.write(`
 
 </section>
 <section id="tinytc-cl-kernel-bundle-create-with-binary">
-<h4>tinytc_cl_kernel_bundle_create_with_binary<a class="headerlink" href="#tinytc-cl-kernel-bundle-create-with-binary" title="Link to this heading">#</a></h4>
+<span id="id6"></span><h4>tinytc_cl_kernel_bundle_create_with_binary<a class="headerlink" href="#tinytc-cl-kernel-bundle-create-with-binary" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_kernel_bundle_create_with_binary">
-<span class="target" id="tinytc__cl_8h_1a7e7d8053395dd1c25196ba43a0994413"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_kernel_bundle_create_with_binary</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_program</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_kernel_bundle_create_with_binary" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc__cl_8h_1a1316b84d08b0faf38d68b84e7a778d43"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_kernel_bundle_create_with_binary</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_program</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_kernel_bundle_create_with_binary" title="Link to this definition">#</a><br /></dt>
 <dd><p>Create an OpenCL program from a tinytc binary. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -642,8 +605,7 @@ document.write(`
 <li><p><strong>bundle</strong> – [out] pointer to the kernel bundle (cl_program) object created </p></li>
 <li><p><strong>context</strong> – [in] context handle </p></li>
 <li><p><strong>device</strong> – [in] device handle </p></li>
-<li><p><strong>bin</strong> – [in] binary object </p></li>
-<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
+<li><p><strong>bin</strong> – [in] binary object</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -668,10 +630,10 @@ document.write(`
 <section id="recipe-functions">
 <h3>Recipe Functions<a class="headerlink" href="#recipe-functions" title="Link to this heading">#</a></h3>
 <section id="tinytc-cl-recipe-handler-create">
-<h4>tinytc_cl_recipe_handler_create<a class="headerlink" href="#tinytc-cl-recipe-handler-create" title="Link to this heading">#</a></h4>
+<span id="id7"></span><h4>tinytc_cl_recipe_handler_create<a class="headerlink" href="#tinytc-cl-recipe-handler-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_recipe_handler_create">
-<span class="target" id="tinytc__cl_8h_1abfda66893588308805608c7319573871"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_recipe_handler_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_recipe_handler_create" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc__cl_8h_1a37fbbb803b8dbc5f781ea84cff9ab553"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_recipe_handler_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">recipe</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_recipe_handler_create" title="Link to this definition">#</a><br /></dt>
 <dd><p>Create kernel object for recipe. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -679,8 +641,7 @@ document.write(`
 <li><p><strong>handler</strong> – [out] pointer to recipe handler object </p></li>
 <li><p><strong>context</strong> – [in] context handle </p></li>
 <li><p><strong>device</strong> – [in] device handle </p></li>
-<li><p><strong>recipe</strong> – [in] recipe object </p></li>
-<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
+<li><p><strong>recipe</strong> – [in] recipe object</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -691,7 +652,7 @@ document.write(`
 
 </section>
 <section id="tinytc-cl-recipe-handler-submit">
-<h4>tinytc_cl_recipe_handler_submit<a class="headerlink" href="#tinytc-cl-recipe-handler-submit" title="Link to this heading">#</a></h4>
+<span id="id8"></span><h4>tinytc_cl_recipe_handler_submit<a class="headerlink" href="#tinytc-cl-recipe-handler-submit" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_cl_recipe_handler_submit">
 <span class="target" id="tinytc__cl_8h_1aaf6a4a619ee3b94637ec6c45e75ba08d"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_cl_recipe_handler_submit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">cl_command_queue</span></span><span class="w"> </span><span class="n"><span class="pre">queue</span></span>, <span class="n"><span class="pre">cl_uint</span></span><span class="w"> </span><span class="n"><span class="pre">num_wait_events</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">cl_event</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wait_events</span></span>, <span class="n"><span class="pre">cl_event</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">event</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_cl_recipe_handler_submit" title="Link to this definition">#</a><br /></dt>
@@ -725,7 +686,7 @@ document.write(`
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -753,7 +714,8 @@ document.write(`
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -762,36 +724,52 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-convert-status">tinytc_cl_convert_status</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-core-info-create">tinytc_cl_core_info_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-support-level">tinytc_cl_get_support_level</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-core-info-create">tinytc_cl_core_info_create</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_core_info_create"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_core_info_create()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-support-level">tinytc_cl_get_support_level</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_get_support_level"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_get_support_level()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel">Kernel</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-functions">Kernel Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-global-size">tinytc_cl_get_global_size</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-group-size">tinytc_cl_get_group_size</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-source">tinytc_cl_kernel_bundle_create_with_source</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-program">tinytc_cl_kernel_bundle_create_with_program</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-binary">tinytc_cl_kernel_bundle_create_with_binary</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-global-size">tinytc_cl_get_global_size</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_get_global_size"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_get_global_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-get-group-size">tinytc_cl_get_group_size</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_get_group_size"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_get_group_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-program">tinytc_cl_kernel_bundle_create_with_program</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_kernel_bundle_create_with_program"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_kernel_bundle_create_with_program()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-kernel-bundle-create-with-binary">tinytc_cl_kernel_bundle_create_with_binary</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_kernel_bundle_create_with_binary"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_kernel_bundle_create_with_binary()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-create">tinytc_cl_recipe_handler_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-submit">tinytc_cl_recipe_handler_submit</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-create">tinytc_cl_recipe_handler_create</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_recipe_handler_create"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_recipe_handler_create()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cl-recipe-handler-submit">tinytc_cl_recipe_handler_submit</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#c.tinytc_cl_recipe_handler_submit"><code class="docutils literal notranslate"><span class="pre">tinytc_cl_recipe_handler_submit()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -820,7 +798,7 @@ By Intel
 
   <p class="copyright">
     
-      © Copyright 2024, Intel Corporation.
+      © Copyright 2025, Intel Corporation.
       <br/>
     
   </p>
@@ -844,8 +822,8 @@ By Intel
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

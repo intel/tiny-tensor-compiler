@@ -14,34 +14,36 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-  
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'manual/calling_convention';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -49,6 +51,7 @@
     <link rel="prev" title="Builder programming guide" href="builder.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -56,31 +59,16 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -88,7 +76,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -96,10 +83,15 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
     </header>
   
 
@@ -108,7 +100,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -123,6 +116,8 @@
         <div class="sidebar-primary-item">
 
   
+    
+  
 
 <a class="navbar-brand logo" href="../index.html">
   
@@ -136,15 +131,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
@@ -154,31 +145,36 @@
 <li class="toctree-l1"><a class="reference internal" href="builder.html">Builder programming guide</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessor.html">Preprocessor reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/core_capi.html">Core C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/builder_capi.html">Builder C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/core_cxxapi.html">Core C++-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc_cl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/cl/capi.html">C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/cl/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc_sycl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/sycl/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc_ze</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/ze/capi.html">C-API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/ze/cxxapi.html">C++-API</a></li>
 </ul>
-</li>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../dev/coopmatrix_layout.html">Coopmatrix layout</a></li>
 </ul>
 
     </div>
@@ -187,14 +183,19 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -203,14 +204,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -367,27 +368,19 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -423,13 +416,13 @@ document.write(`
                 <article class="bd-article">
                   
   <section id="calling-convention">
-<h1>Calling convention<a class="headerlink" href="#calling-convention" title="Link to this heading">#</a></h1>
+<span id="id1"></span><h1>Calling convention<a class="headerlink" href="#calling-convention" title="Link to this heading">#</a></h1>
 <p>A <a class="reference internal" href="tensor-ir.html#tensor-language-functions"><span class="std std-ref">function argument</span></a> corresponds to one or multiple
 arguments in the generated OpenCL-C code.</p>
 <section id="scalar-types">
 <h2>Scalar types<a class="headerlink" href="#scalar-types" title="Link to this heading">#</a></h2>
 <p>A scalar argument always corresponds to a single scalar argument in the OpenCL-C code.</p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Argument type</p></th>
 <th class="head"><p>OpenCL C type</p></th>
@@ -439,7 +432,7 @@ arguments in the generated OpenCL-C code.</p>
 <tbody>
 <tr class="row-even"><td><p>i1</p></td>
 <td><p>bool</p></td>
-<td><p>n/a <a class="footnote-reference brackets" href="#f1" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></td>
+<td><p>n/a <a class="footnote-reference brackets" href="#f1" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>i8</p></td>
 <td><p>char</p></td>
@@ -469,8 +462,17 @@ arguments in the generated OpenCL-C code.</p>
 <td><p>double</p></td>
 <td><p>cl_double</p></td>
 </tr>
+<tr class="row-even"><td><p>c32</p></td>
+<td><p>float2</p></td>
+<td><p>cl_float[2]</p></td>
+</tr>
+<tr class="row-odd"><td><p>c64</p></td>
+<td><p>double2</p></td>
+<td><p>cl_double[2]</p></td>
+</tr>
 </tbody>
 </table>
+</div>
 <p>For example,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span> <span class="nd">@scalar_example</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">:</span> <span class="n">i16</span><span class="p">)</span> <span class="p">{}</span>
 </pre></div>
@@ -482,7 +484,7 @@ arguments in the generated OpenCL-C code.</p>
 <p class="rubric">Footnotes</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="f1" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
 <p>Arguments to kernel functions cannot be declared with the type bool in OpenCL</p>
 </aside>
 </aside>
@@ -508,6 +510,14 @@ func @memref_example4(%a: memref&lt;i64x5x?x6&gt;) {}
 </div>
 <p>Note that <cite>memref_example3</cite> and <cite>memref_example4</cite> have the same signature,
 because <cite>memref&lt;i64x5x?x6&gt;</cite> has the canonical stride <cite>strided&lt;1,5,?&gt;</cite>.</p>
+<p id="memref-alignment-requirements"><strong>Memory alignment:</strong> The base pointer must be sufficiently aligned.
+The required alignment depends on the core info and may be queried with
+<a class="reference internal" href="../api/core_capi.html#tinytc-core-info-get-default-alignment"><span class="std std-ref">tinytc_core_info_get_default_alignment</span></a>.
+Using <a class="reference internal" href="../api/core_capi.html#tinytc-core-info-set-default-alignment"><span class="std std-ref">tinytc_core_info_set_default_alignment</span></a> the alignment requirements may be overriden.
+The alignment requirement may also be overriden per memref using the
+<a class="reference internal" href="tensor-ir.html#tensor-language-functions"><span class="std std-ref">“alignment” attribute</span></a>.
+When the core info object is created using <a class="reference internal" href="../api/cl/capi.html#tinytc-cl-core-info-create"><span class="std std-ref">tinytc_cl_core_info_create</span></a> the default alignment
+is queried from <a class="reference external" href="https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_API.html#platform-querying-devices">CL_DEVICE_MEM_BASE_ADDR_ALIGN</a>.</p>
 </section>
 <section id="group-types">
 <h2>Group types<a class="headerlink" href="#group-types" title="Link to this heading">#</a></h2>
@@ -515,21 +525,25 @@ because <cite>memref&lt;i64x5x?x6&gt;</cite> has the canonical stride <cite>stri
 The rule is that the first argument in the OpenCL kernel is a global pointer to a global pointer to the
 underlying scalar type of the memref.
 Then a global pointer argument follows for every ‘?’ in the memref’s shape or stride, ordered from left-to-right.
-If an dynamic offset is given, the offset is the last argument.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func @group_example1(%a: group&lt;memref&lt;i16x5x6&gt;) {}
-func @group_example2(%a: group&lt;memref&lt;i32x5x?x6&gt;&gt;) {}
-func @group_example3(%a: group&lt;memref&lt;f32x?&gt;, offset: ?&gt;) {}
+Afterwards, the dynamic group size and the dynamic offset follow if necessary.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func @group_example1(%a: group&lt;memref&lt;i16x5x6&gt;x42) {}
+func @group_example2(%a: group&lt;memref&lt;i32x5x?x6&gt;x?&gt;) {}
+func @group_example3(%a: group&lt;memref&lt;f32x?&gt;x?, offset: ?&gt;) {}
+func @group_example4(%a: group&lt;memref&lt;f32x42&gt;x42, offset: ?&gt;) {}
 </pre></div>
 </div>
 <p>leads to</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example1</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">short</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
-<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example2</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
-<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example3</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape0</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_offset</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example2</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_size</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example3</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape0</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_size</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_offset</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example4</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_offset</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
 </pre></div>
 </div>
-<p>Note that <cite>a_shape_0</cite>, <cite>a_shape1</cite>, and <cite>a_stride2</cite> must contain at least as many values as the group size.
-That is, if a is accessed with <cite>load %a[%id] : group&lt;memref&lt;i32x5x?x6&gt;&gt;</cite>, then
+<p>Note that <cite>a_shape_0</cite>, <cite>a_shape1</cite>, and <cite>a_stride2</cite> must contain at least as many values as the group size (<cite>a_size</cite>).
+That is, if a is accessed with <cite>load %a[%id] : memref&lt;i32x5x?x6&gt;</cite>, then
 <cite>*(a_shape0 + id)</cite>, <cite>*(a_shape1 + id)</cite>, and <cite>*(a_stride2 + id)</cite> must not lead to out-of-bounds memory access.</p>
+<p><strong>Memory alignment:</strong> The memrefs the group points to are subject to the same alignment requirements as a
+<a class="reference internal" href="#memref-alignment-requirements"><span class="std std-ref">regular memref argument (see above)</span></a>.</p>
 </section>
 </section>
 
@@ -541,7 +555,7 @@ That is, if a is accessed with <cite>load %a[%id] : group&lt;memref&lt;i32x5x?x6
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -569,7 +583,8 @@ That is, if a is accessed with <cite>load %a[%id] : group&lt;memref&lt;i32x5x?x6
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -605,7 +620,7 @@ By Intel
 
   <p class="copyright">
     
-      © Copyright 2024, Intel Corporation.
+      © Copyright 2025, Intel Corporation.
       <br/>
     
   </p>
@@ -629,8 +644,8 @@ By Intel
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

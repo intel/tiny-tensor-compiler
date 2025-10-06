@@ -1,0 +1,841 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Coopmatrix layout &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dev/coopmatrix_layout';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="C++-API" href="../api/ze/cxxapi.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../manual/build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/core.html">Core programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/builder.html">Builder programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/preprocessor.html">Preprocessor reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/builder_cxxapi.html">Builder C++-API</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc_cl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/cxxapi.html">C++-API</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc_sycl</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/sycl/cxxapi.html">C++-API</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc_ze</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/cxxapi.html">C++-API</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Coopmatrix layout</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/dev/coopmatrix_layout.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/dev/coopmatrix_layout.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fdev/coopmatrix_layout.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/dev/coopmatrix_layout.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Coopmatrix layout</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-layout">General layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#work-item-mapping">Work-item mapping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-properties">Mapping properties</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-pseudo-code-simt">Load pseudo-code (SIMT)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-accumulator">Matrix Accumulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-a">Matrix A</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-b">Matrix B</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="coopmatrix-layout">
+<span id="id1"></span><h1>Coopmatrix layout<a class="headerlink" href="#coopmatrix-layout" title="Link to this heading">#</a></h1>
+<p>A cooperative matrix is distributed to work-items such that each work-item holds an equal
+share of the matrix, potentially with zero-padding if the matrix size is not divisible by
+the subgroup size.</p>
+<section id="general-layout">
+<h2>General layout<a class="headerlink" href="#general-layout" title="Link to this heading">#</a></h2>
+<p>Let a coopmatrix <span class="math notranslate nohighlight">\(A\)</span> of size <span class="math notranslate nohighlight">\(M\times N\)</span> be given and let the subgroup size
+be given by <span class="math notranslate nohighlight">\(S\)</span>.
+We require <span class="math notranslate nohighlight">\(M,S\)</span> to be powers of two and to be greater or equal than 1.
+Internally, we represent the <span class="math notranslate nohighlight">\(A\)</span> matrix as the <span class="math notranslate nohighlight">\(I \times K_1\times J \times K_2\)</span> tensor <span class="math notranslate nohighlight">\(A^*\)</span>.
+The mapping of <span class="math notranslate nohighlight">\(A\)</span> to <span class="math notranslate nohighlight">\(A^*\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}A^*_{i,k_1,j,k_2} = \left\{\begin{array}{rcl}
+                        A_{i+k_1I+k_2IK_1,j} &amp; \text{ if } &amp; i+k_1I+k_2IK_1 &lt; M \wedge j &lt; N, \\
+                        0 &amp; \text{ else.}
+                    \end{array}\right.\end{split}\]</div>
+<p>The shape of <span class="math notranslate nohighlight">\(A^*\)</span> is given by <span class="math notranslate nohighlight">\((I,K_1,J,K_2)\)</span>, where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+I &amp;:= \min(M, S),\\
+J &amp;:= \min(\{n\in\mathbb N : n \geq N \wedge (In) \bmod S = 0\})\\
+K &amp;:= K_1K_2 = M/I.\\
+\end{aligned}\end{split}\]</div>
+<p>As both <span class="math notranslate nohighlight">\(S\)</span> and <span class="math notranslate nohighlight">\(I\)</span> are powers of two, an explicit formula for <span class="math notranslate nohighlight">\(J\)</span> is given by
+<span class="math notranslate nohighlight">\(J = (\lceil IN/S\rceil S) / I\)</span>.</p>
+<section id="work-item-mapping">
+<h3>Work-item mapping<a class="headerlink" href="#work-item-mapping" title="Link to this heading">#</a></h3>
+<p>We linearize the index of the <span class="math notranslate nohighlight">\(A^*\)</span> tensor canonically:</p>
+<div class="math notranslate nohighlight">
+\[L(i,j,k) := i + k_1I + j IK_1 + k_2 IK_1J\]</div>
+<p>Every work-item stores a vector <span class="math notranslate nohighlight">\(v\)</span> with <span class="math notranslate nohighlight">\(V:=IKJ/S\)</span> components.
+We define the per work-item vector as</p>
+<div class="math notranslate nohighlight">
+\[W^p := (v \in [V] : A^*[L^{-1}(p+vS)]),\]</div>
+<p>where <span class="math notranslate nohighlight">\(p=0,\dots,S-1\)</span>.</p>
+<p>An example is helpful at this point.
+Say we have a <span class="math notranslate nohighlight">\(4\times 15\)</span> matrix and subgroup size <span class="math notranslate nohighlight">\(S=16\)</span>, then the following table
+shows how the work-item id maps to the 2d matrix index (the per work-item vectors are given by the
+columns):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>p</p></th>
+<th class="head"><p>0</p></th>
+<th class="head"><p>1</p></th>
+<th class="head"><p>2</p></th>
+<th class="head"><p>3</p></th>
+<th class="head"><p>4</p></th>
+<th class="head"><p>5</p></th>
+<th class="head"><p>6</p></th>
+<th class="head"><p>7</p></th>
+<th class="head"><p>8</p></th>
+<th class="head"><p>9</p></th>
+<th class="head"><p>10</p></th>
+<th class="head"><p>11</p></th>
+<th class="head"><p>12</p></th>
+<th class="head"><p>13</p></th>
+<th class="head"><p>14</p></th>
+<th class="head"><p>15</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>.x</p></td>
+<td><p>0,0</p></td>
+<td><p>1,0</p></td>
+<td><p>2,0</p></td>
+<td><p>3,0</p></td>
+<td><p>0,1</p></td>
+<td><p>1,1</p></td>
+<td><p>2,1</p></td>
+<td><p>3,1</p></td>
+<td><p>0,2</p></td>
+<td><p>1,2</p></td>
+<td><p>2,2</p></td>
+<td><p>3,2</p></td>
+<td><p>0,3</p></td>
+<td><p>1,3</p></td>
+<td><p>2,3</p></td>
+<td><p>3,3</p></td>
+</tr>
+<tr class="row-odd"><td><p>.y</p></td>
+<td><p>0,4</p></td>
+<td><p>1,4</p></td>
+<td><p>2,4</p></td>
+<td><p>3,4</p></td>
+<td><p>0,5</p></td>
+<td><p>1,5</p></td>
+<td><p>2,5</p></td>
+<td><p>3,5</p></td>
+<td><p>0,6</p></td>
+<td><p>1,6</p></td>
+<td><p>2,6</p></td>
+<td><p>3,6</p></td>
+<td><p>0,7</p></td>
+<td><p>1,7</p></td>
+<td><p>2,7</p></td>
+<td><p>3,7</p></td>
+</tr>
+<tr class="row-even"><td><p>.z</p></td>
+<td><p>0,8</p></td>
+<td><p>1,8</p></td>
+<td><p>2,8</p></td>
+<td><p>3,8</p></td>
+<td><p>0,9</p></td>
+<td><p>1,9</p></td>
+<td><p>2,9</p></td>
+<td><p>3,9</p></td>
+<td><p>0,10</p></td>
+<td><p>1,10</p></td>
+<td><p>2,10</p></td>
+<td><p>3,10</p></td>
+<td><p>0,11</p></td>
+<td><p>1,11</p></td>
+<td><p>2,11</p></td>
+<td><p>3,11</p></td>
+</tr>
+<tr class="row-odd"><td><p>.w</p></td>
+<td><p>0,12</p></td>
+<td><p>1,12</p></td>
+<td><p>2,12</p></td>
+<td><p>3,12</p></td>
+<td><p>0,13</p></td>
+<td><p>1,13</p></td>
+<td><p>2,13</p></td>
+<td><p>3,13</p></td>
+<td><p>0,14</p></td>
+<td><p>1,14</p></td>
+<td><p>2,14</p></td>
+<td><p>3,14</p></td>
+<td><p>-, -</p></td>
+<td><p>-, -</p></td>
+<td><p>-, -</p></td>
+<td><p>-, -</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For a <span class="math notranslate nohighlight">\(1\times 17\)</span> coopmatrix we have</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>p</p></th>
+<th class="head"><p>0</p></th>
+<th class="head"><p>1</p></th>
+<th class="head"><p>2</p></th>
+<th class="head"><p>3</p></th>
+<th class="head"><p>4</p></th>
+<th class="head"><p>5</p></th>
+<th class="head"><p>6</p></th>
+<th class="head"><p>7</p></th>
+<th class="head"><p>8</p></th>
+<th class="head"><p>9</p></th>
+<th class="head"><p>10</p></th>
+<th class="head"><p>11</p></th>
+<th class="head"><p>12</p></th>
+<th class="head"><p>13</p></th>
+<th class="head"><p>14</p></th>
+<th class="head"><p>15</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>.x</p></td>
+<td><p>0,0</p></td>
+<td><p>0,1</p></td>
+<td><p>0,2</p></td>
+<td><p>0,3</p></td>
+<td><p>0,4</p></td>
+<td><p>0,5</p></td>
+<td><p>0,6</p></td>
+<td><p>0,7</p></td>
+<td><p>0,8</p></td>
+<td><p>0,9</p></td>
+<td><p>0,10</p></td>
+<td><p>0,11</p></td>
+<td><p>0,12</p></td>
+<td><p>0,13</p></td>
+<td><p>0,14</p></td>
+<td><p>0,15</p></td>
+</tr>
+<tr class="row-odd"><td><p>.y</p></td>
+<td><p>0,16</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+<td><p>-,-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="mapping-properties">
+<h3>Mapping properties<a class="headerlink" href="#mapping-properties" title="Link to this heading">#</a></h3>
+<p>The inverse of <span class="math notranslate nohighlight">\(L\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+i &amp;= L \bmod I, \\
+k_1 &amp;= \lfloor L / I \rfloor \bmod K_1, \\
+j &amp;= \lfloor L / (IK_1)\rfloor \bmod J, \\
+k_2 &amp;= \lfloor L / (IK_1J)\rfloor. \\
+\end{aligned}\end{split}\]</div>
+<p>Let <span class="math notranslate nohighlight">\(v=w_1 + uK_1 + w_2K_1(V/K)\)</span>, with <span class="math notranslate nohighlight">\(u=0,\dots,V/K-1\)</span>,
+<span class="math notranslate nohighlight">\(w_1=0,\dots,K_1-1\)</span>, and <span class="math notranslate nohighlight">\(w=0,\dots,K_2-1\)</span>.
+(Note that <span class="math notranslate nohighlight">\(V/K=IJ/S\)</span>.)</p>
+<p>We first assume that <span class="math notranslate nohighlight">\(I=S\)</span>. Then</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+i &amp;= (p + (w_1 + uK_1 + w_2K_1J)S) \bmod S = p, \\
+k_1 &amp;= \lfloor (p + (w_1 + uK_1 + wK_1J)S) / S \rfloor \bmod K_1 = w_1, \\
+j &amp;= \lfloor (p + (w_1 + uK_1 + wK_1J)S) / (SK_1) \rfloor \bmod J = u, \\
+k_2 &amp;= \lfloor (p + (w_1 + uK_1 + wK_1J)S) / (SK_1J)\rfloor = w_2, \\
+\end{aligned}\end{split}\]</div>
+<p>Now we assume <span class="math notranslate nohighlight">\(I&lt;S\)</span> (which implies <span class="math notranslate nohighlight">\(K=K_1=K_2=1, w_1=w_2=0,\)</span> and <span class="math notranslate nohighlight">\(S/I\in\mathbb{N}\)</span>).
+We have</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+i &amp;= (p + uS) \bmod I = p \bmod I, \\
+k_1 &amp;= \lfloor (p + uS) / I \rfloor \bmod 1 = 0, \\
+j &amp;= \lfloor (p + uS) / I \rfloor \bmod J = \lfloor p/I \rfloor + u (S/I), \\
+k_2 &amp;= \lfloor (p + uS) / (IJ) \rfloor = 0, \\
+\end{aligned}\end{split}\]</div>
+<p>Combining both cases into a single formula we get</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+i &amp;= p \bmod I, \\
+k_1 &amp;= w_1, \\
+j &amp;= \lfloor p/I \rfloor + u (S/I) , \\
+k_2 &amp;= w_2, \\
+\end{aligned}\end{split}\]</div>
+</section>
+<section id="load-pseudo-code-simt">
+<h3>Load pseudo-code (SIMT)<a class="headerlink" href="#load-pseudo-code-simt" title="Link to this heading">#</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">RealT</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">K1</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">Transpose</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">RowsChecked</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">ColsChecked</span><span class="o">&gt;</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">load_coopmatrix</span><span class="p">(</span><span class="n">RealT</span><span class="o">*</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">pos0</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">pos1</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">shape0</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">shape1</span><span class="p">,</span>
+<span class="w">                          </span><span class="kt">int</span><span class="w"> </span><span class="n">stride0</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">stride1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">S</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_sub_group_size</span><span class="p">();</span>
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">S</span><span class="p">);</span>
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">J</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ceil</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">N</span><span class="o">/</span><span class="n">S</span><span class="p">)</span><span class="o">*</span><span class="n">S</span><span class="o">/</span><span class="n">I</span><span class="p">;</span>
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">K</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">M</span><span class="o">/</span><span class="n">I</span><span class="p">;</span>
+<span class="w">    </span><span class="k">static_assert</span><span class="p">(</span><span class="n">K</span><span class="o">%</span><span class="n">K1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">K2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">K</span><span class="o">/</span><span class="n">K1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">needs_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">J</span><span class="o">*</span><span class="n">S</span><span class="o">/</span><span class="n">I</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Transpose</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">shape0</span><span class="p">,</span><span class="w"> </span><span class="n">shape1</span><span class="p">);</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">stride0</span><span class="p">,</span><span class="w"> </span><span class="n">stride1</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">I</span><span class="o">*</span><span class="n">K</span><span class="o">*</span><span class="n">J</span><span class="o">/</span><span class="n">S</span><span class="p">;</span>
+<span class="w">    </span><span class="n">array</span><span class="o">&lt;</span><span class="n">RealT</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="o">&gt;</span><span class="w"> </span><span class="n">R</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="n">get_sub_group_local_id</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">I</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">j0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">I</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">w1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">w1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">K1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">w1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">w2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">w2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">K2</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">w2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">k1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">w1</span><span class="p">,</span><span class="w"> </span><span class="n">k2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">w2</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pos0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">k1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">k2</span><span class="o">*</span><span class="n">K1</span><span class="p">)</span><span class="o">*</span><span class="n">I</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">bool</span><span class="w"> </span><span class="n">row_ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">RowsChecked</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">row</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">shape0</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row_ok</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">V</span><span class="o">/</span><span class="n">K</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">u</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">u</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">/</span><span class="n">I</span><span class="p">);</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pos1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+<span class="w">                    </span><span class="kt">bool</span><span class="w"> </span><span class="n">col_ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">ColsChecked</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">col</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">shape1</span><span class="p">);</span>
+<span class="w">                    </span><span class="kt">bool</span><span class="w"> </span><span class="n">mask_ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">needs_mask</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">                    </span><span class="n">R</span><span class="p">[</span><span class="n">w1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">u</span><span class="o">*</span><span class="n">K1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">w2</span><span class="o">*</span><span class="n">K1</span><span class="o">*</span><span class="p">(</span><span class="n">V</span><span class="o">/</span><span class="n">K</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mask_ok</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">col_ok</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">stride0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">stride1</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">V</span><span class="o">/</span><span class="n">K</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">u</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="n">R</span><span class="p">[</span><span class="n">w1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">u</span><span class="o">*</span><span class="n">K1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">w2</span><span class="o">*</span><span class="n">K1</span><span class="o">*</span><span class="p">(</span><span class="n">V</span><span class="o">/</span><span class="n">K</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">R</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="matrix-accumulator">
+<h2>Matrix Accumulator<a class="headerlink" href="#matrix-accumulator" title="Link to this heading">#</a></h2>
+<p>For cooperative matrices with use <em>matrix_acc</em> we always have <span class="math notranslate nohighlight">\(K_1=1\)</span>.</p>
+</section>
+<section id="matrix-a">
+<h2>Matrix A<a class="headerlink" href="#matrix-a" title="Link to this heading">#</a></h2>
+<p>For cooperative matrices with use <em>matrix_a</em> we always have <span class="math notranslate nohighlight">\(K_1=1\)</span>.
+Moreover, low precision matrices are VNNI transformed if <span class="math notranslate nohighlight">\(N\)</span> is a multiple of <span class="math notranslate nohighlight">\(\omega\)</span>,
+where <span class="math notranslate nohighlight">\(\omega=\max(1, \max(1,4/\text{size}(\text{ty}))\)</span> is the number of operands per channel.
+We store <span class="math notranslate nohighlight">\(A^*\)</span> tensors internally
+as the <span class="math notranslate nohighlight">\(\omega\times I \times K_1\times \lceil J/\omega\rceil \times K_2\)</span> tensor <span class="math notranslate nohighlight">\(A^{**}\)</span>,
+The mapping from <span class="math notranslate nohighlight">\(A^*\)</span> to <span class="math notranslate nohighlight">\(A^{**}\)</span> is given by</p>
+<div class="math notranslate nohighlight">
+\[A^{**}_{c,i,k_1,j,k_2} := A^{*}_{i,k_1,c+j\omega,k_2}\]</div>
+<p>and the inverse mapping is given by</p>
+<div class="math notranslate nohighlight">
+\[A^{*}_{i,k_1,j,k_2} = A^{**}_{j\bmod\omega,i,k_1,\lfloor j/\omega\rfloor,k_2}.\]</div>
+<p>Moreover, all channels of an entry are packed. E.g. for half precision floats we have two channels
+and we pack <span class="math notranslate nohighlight">\(A^{**}_{0,i,k_1,j,k_2}\)</span> in the lower 16 bits of an i32 and <span class="math notranslate nohighlight">\(A^{**}_{1,i,k_1,j,k_2}\)</span>
+in the higher 16 bits of the i32.
+We store an i32 per work-item, so from the SIMT point of view one work-item owns all channels of an entry.</p>
+</section>
+<section id="matrix-b">
+<h2>Matrix B<a class="headerlink" href="#matrix-b" title="Link to this heading">#</a></h2>
+<p>Let <span class="math notranslate nohighlight">\(\omega_b = \max(1,2/\text{size}(\text{ty}))\)</span>.
+We choose <span class="math notranslate nohighlight">\(K_1 = \omega_b \text{ if } M/S &gt; 1 \text{ else } 1\)</span>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../api/ze/cxxapi.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">C++-API</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-layout">General layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#work-item-mapping">Work-item mapping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-properties">Mapping properties</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-pseudo-code-simt">Load pseudo-code (SIMT)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-accumulator">Matrix Accumulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-a">Matrix A</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-b">Matrix B</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
