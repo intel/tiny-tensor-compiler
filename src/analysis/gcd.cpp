@@ -118,7 +118,7 @@ void gcd_helper::operator()(arith_inst in) {
             return ga * gb;
         case IK::IK_div: {
             if (gb == 0) {
-                throw status::ir_division_by_zero;
+                throw compilation_error(in.loc(), status::ir_division_by_zero);
             }
             return ga % gb == 0 ? ga / gb : 1;
         }
