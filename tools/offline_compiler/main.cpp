@@ -9,12 +9,37 @@
 
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <iostream>
 
 using namespace tinytc;
 
+void write_asm(tinytc_spv_mod_t mod, char const *output_filename) {
+    if (output_filename) {
+        print_to_file(mod, output_filename);
+    } else {
+        auto spvasm = print_to_string(mod);
+        std::cout << spvasm.get();
+    }
+}
+
+void write_bin(tinytc_spv_mod_t mod, char const *output_filename) {
+    auto bin = spirv_assemble(mod);
+    auto raw_data = get_raw(bin.get());
+    if (output_filename) {
+        auto stream = std::ofstream(output_filename, std::ios::binary);
+        if (!stream.good()) {
+            throw status::file_io_error;
+        }
+        stream.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
+    } else {
+        std::cout.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
+    }
+}
+
 int main(int argc, char **argv) {
-    char const *filename = nullptr;
+    char const *input_filename = nullptr;
+    char const *output_filename = nullptr;
     auto info = shared_handle<tinytc_core_info_t>{};
     tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
@@ -39,10 +64,12 @@ int main(int argc, char **argv) {
                     }
                     return cmd::parser_status::success;
                 });
+        parser.set_short_opt('o', &output_filename,
+                             "Path to output file; leave empty to print to stdout");
         parser.set_short_opt('S', &emit_asm, "Compile only; do not assemble");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
-        parser.add_positional_arg("file-name", &filename,
+        parser.add_positional_arg("file-name", &input_filename,
                                   "Path to source code; leave empty to read from stdin");
         cmd::add_optflag_states(parser, flags);
         cmd::add_core_feature_flags(parser, core_features);
@@ -76,20 +103,17 @@ int main(int argc, char **argv) {
         cmd::set_optflags(ctx.get(), flags);
         set_core_features(info.get(), core_features);
         auto p = [&] {
-            if (!filename) {
+            if (!input_filename) {
                 return parse_stdin(ctx.get());
             }
-            return parse_file(filename, ctx.get());
+            return parse_file(input_filename, ctx.get());
         }();
 
+        auto mod = compile_to_spirv(p.get(), info.get());
         if (emit_asm) {
-            auto mod = compile_to_spirv(p.get(), info.get());
-            auto spvasm = print_to_string(mod.get());
-            std::cout << spvasm.get();
+            write_asm(mod.get(), output_filename);
         } else {
-            auto bin = compile_to_spirv_and_assemble(p.get(), info.get());
-            auto raw_data = get_raw(bin.get());
-            std::cout.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
+            write_bin(mod.get(), output_filename);
         }
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
