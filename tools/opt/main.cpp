@@ -17,7 +17,8 @@ using namespace tinytc;
 
 int main(int argc, char **argv) {
     auto pass_names = std::vector<char const *>{};
-    char const *filename = nullptr;
+    char const *input_filename = nullptr;
+    char const *output_filename = nullptr;
     auto info = shared_handle<tinytc_core_info_t>{};
     tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
@@ -30,6 +31,8 @@ int main(int argc, char **argv) {
 
         parser.set_short_opt('O', &opt_level, "Optimization level, default is -O2")
             .validator([](std::int32_t level) { return 0 <= level; });
+        parser.set_short_opt('o', &output_filename,
+                             "Path to output file; leave empty to print to stdout");
         parser
             .set_short_opt('d', &info,
                            "Device name (cf. intel_gpu_architecture enum), default is \"pvc\"")
@@ -44,7 +47,7 @@ int main(int argc, char **argv) {
         parser.set_short_opt('p', &pass_names, "Run pass");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
-        parser.add_positional_arg("file-name", &filename,
+        parser.add_positional_arg("file-name", &input_filename,
                                   "Path to source code; leave empty to read from stdin");
         cmd::add_optflag_states(parser, flags);
         cmd::add_core_feature_flags(parser, core_features);
@@ -86,10 +89,6 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    if (pass_names.empty() || std::strncmp(pass_names.back(), "dump", 4) != 0) {
-        pass_names.emplace_back("dump-ir");
-    }
-
     try {
         auto ctx = create_compiler_context();
         set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
@@ -99,14 +98,20 @@ int main(int argc, char **argv) {
         cmd::set_optflags(ctx.get(), flags);
         set_core_features(info.get(), core_features);
         auto p = [&] {
-            if (!filename) {
+            if (!input_filename) {
                 return parse_stdin(ctx.get());
             }
-            return parse_file(filename, ctx.get());
+            return parse_file(input_filename, ctx.get());
         }();
 
         for (auto const &pass_name : pass_names) {
             run_function_pass(pass_name, p.get(), info.get());
+        }
+        if (output_filename) {
+            print_to_file(p.get(), output_filename);
+        } else {
+            auto ir = print_to_string(p.get());
+            std::cout << ir.get();
         }
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
