@@ -64,7 +64,11 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
                                                          .stride_alignment = 8,
                                                          .width_alignment = 4};
         matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
-    } else if (is_arch(tinytc_intel_gpu_architecture_bmg)) {
+    } else if (is_arch(tinytc_intel_gpu_architecture_bmg) ||
+               is_arch(tinytc_intel_gpu_architecture_bmg_g31) ||
+               is_arch(tinytc_intel_gpu_architecture_lnl) ||
+               is_arch(tinytc_intel_gpu_architecture_ptl_h) ||
+               is_arch(tinytc_intel_gpu_architecture_ptl_u)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
 
@@ -81,7 +85,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
 auto core_info_intel::num_reg_small_grf() const -> std::int32_t { return 128; }
 
 auto core_info_intel::num_reg_large_grf() const -> std::int32_t {
-    if (is_arch(tinytc_intel_gpu_architecture_pvc) || is_arch(tinytc_intel_gpu_architecture_bmg)) {
+    if (static_cast<std::uint32_t>(tinytc_intel_gpu_architecture_pvc) <= ip_version_) {
         return 256;
     }
     return num_reg_small_grf();
@@ -184,6 +188,10 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             break;
         case tinytc_intel_gpu_architecture_pvc:
         case tinytc_intel_gpu_architecture_bmg:
+        case tinytc_intel_gpu_architecture_bmg_g31:
+        case tinytc_intel_gpu_architecture_lnl:
+        case tinytc_intel_gpu_architecture_ptl_h:
+        case tinytc_intel_gpu_architecture_ptl_u:
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
                                                       std::vector<std::int32_t>{16, 32})
                         .release();
@@ -232,6 +240,22 @@ tinytc_status_t tinytc_core_info_intel_create_from_name(tinytc_core_info_t *info
         case "bmg"_fnv1a:
             CHECK_STATUS(
                 tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_bmg));
+            break;
+        case "bmg_g31"_fnv1a:
+            CHECK_STATUS(tinytc_core_info_intel_create_from_arch(
+                info, tinytc_intel_gpu_architecture_bmg_g31));
+            break;
+        case "lnl"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_lnl));
+            break;
+        case "ptl_u"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_ptl_u));
+            break;
+        case "ptl_h"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_ptl_h));
             break;
         default:
             *info = nullptr;

@@ -218,9 +218,13 @@ Note: IP versions are extracted from
 * https://github.com/intel/compute-runtime/blob/4b5d5f235abf0ff67c9188f8096afd4da2e0574d/third_party/aot_config_headers/platforms.h
 * https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619"
 {
-    case %tgl => 0x03000000 "Tiger Lake"
-    case %pvc => 0x030f0000 "Ponte Vecchio"
-    case %bmg => 0x05004000 "Battlemage"
+    case %tgl     => 0x03000000 "Tiger Lake"
+    case %pvc     => 0x030f0000 "Ponte Vecchio"
+    case %bmg     => 0x05004000 "Battlemage G21"
+    case %bmg_g31 => 0x05008000 "Battlemage G31"
+    case %lnl     => 0x05010000 "Lunar Lake"
+    case %ptl_h   => 0x07800000 "Panther Lake H"
+    case %ptl_u   => 0x07804000 "Panther Lake U"
 }
 
 enum @bundle_format "Target binary format" {
