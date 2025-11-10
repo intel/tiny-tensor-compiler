@@ -30,7 +30,7 @@ typedef uint32_t tinytc_address_spaces_t;
 //! Type for combination of core feature flags
 typedef uint32_t tinytc_core_feature_flags_t;
 
-#define TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS 0xfff
+#define TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS 0x3FFF
 
 ////////////////////////////
 /////////// Types //////////
