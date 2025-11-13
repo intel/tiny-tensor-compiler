@@ -310,7 +310,8 @@ void gcd_helper::operator()(subview_inst in) {
 }
 
 void gcd_helper::set_from_attributes(tinytc_func &fn) {
-    auto known_memref_info = [&](memref_type *mr, tinytc_attr_t dict) -> memref_info {
+    auto known_memref_info = [&](memref_type *mr, tinytc_attr_t dict,
+                                 std::int64_t offset) -> memref_info {
         const std::int64_t alignment = [&]() -> std::int64_t {
             if (auto alignment_attr = get_attr(dict, "alignment"); alignment_attr) {
                 auto ia = dyn_cast<integer_attr>(alignment_attr);
@@ -320,6 +321,15 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
                 throw status::ir_expected_integer_attribute;
             }
             return default_alignment_;
+        }();
+        const std::int64_t offset_gcd = [&]() -> std::int64_t {
+            if (is_dynamic_value(offset)) {
+                // the minimum known alignment is the type size, hence offset_gcd=1
+                return 1;
+            }
+            const auto mr_number_size = size(mr->element_ty());
+            const auto offset_gcd_due_to_alignment = alignment / mr_number_size;
+            return std::gcd(offset, offset_gcd_due_to_alignment);
         }();
 
         auto shape_gcd = [&]() -> std::vector<std::int64_t> {
@@ -357,16 +367,19 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
             }
         }
 
-        auto mr_number_size = size(mr->element_ty());
-        return memref_info(alignment / mr_number_size, std::move(shape_gcd), std::move(stride_gcd));
+        return memref_info(offset_gcd, std::move(shape_gcd), std::move(stride_gcd));
     };
     for (std::size_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
         auto ty = fn.params()[arg_no].ty();
+        std::int64_t offset = 0;
         if (auto g = dyn_cast<group_type>(ty); g) {
             ty = g->element_ty();
+            // Groups may have a non-zero or dynamic offset into the memory
+            offset = g->offset();
         }
         if (auto mr = dyn_cast<memref_type>(ty); mr) {
-            gcd_.set_memref(fn.params()[arg_no], known_memref_info(mr, fn.param_attr(arg_no)));
+            gcd_.set_memref(fn.params()[arg_no],
+                            known_memref_info(mr, fn.param_attr(arg_no), offset));
         }
     }
 }

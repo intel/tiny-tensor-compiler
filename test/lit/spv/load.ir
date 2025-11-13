@@ -35,7 +35,7 @@ func @l1(%0: memref<f32x?x?>) {
 ; CHECK:                 %[[#]] = OpAtomicLoad %[[#F32]] %[[#]] %[[#I32_C1]] %[[#I32_C2]]
 }
 
-func @l2(%0: group<memref<f32x?,strided<?>>x42, offset: ?>) {
+func @l2(%0: group<memref<f32x?,strided<?>>x42, offset: 0>) {
     %1 = constant 0 : index
     %2 = load %0[%1] : memref<f32x?,strided<?>>
     %3 = load %2[%1] : f32
@@ -43,15 +43,34 @@ func @l2(%0: group<memref<f32x?,strided<?>>x42, offset: ?>) {
 ; CHECK-NEXT:         %[[#L2_GROUP:]] = OpFunctionParameter %[[#PTR_PTR_F32]]
 ; CHECK-NEXT:     %[[#L2_PTR_SHAPE:]] = OpFunctionParameter %[[#PTR_I64]]
 ; CHECK-NEXT:    %[[#L2_PTR_STRIDE:]] = OpFunctionParameter %[[#PTR_I64]]
-; CHECK-NEXT:  %[[#L2_GROUP_OFFSET:]] = OpFunctionParameter %[[#I64]]
-; CHECK:            %[[#L2_OFFSET1:]] = OpIAdd %[[#I64]] %[[#L2_GROUP_OFFSET]] %[[#I64_C0]]
-; CHECK-NEXT:            %[[#L2_MR:]] = OpInBoundsPtrAccessChain %[[#PTR_PTR_F32]] %[[#L2_GROUP]] %[[#L2_OFFSET1]]
+; CHECK:                 %[[#L2_MR:]] = OpInBoundsPtrAccessChain %[[#PTR_PTR_F32]] %[[#L2_GROUP]] %[[#I64_C0]]
 ; CHECK-NEXT:           %[[#L2_MR2:]] = OpLoad %[[#PTR_F32]] %[[#L2_MR]]
-; CHECK-NEXT:  %[[#L2_SUBPTR_SHAPE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_SHAPE]] %[[#L2_OFFSET1]]
+; CHECK-NEXT:  %[[#L2_SUBPTR_SHAPE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_SHAPE]] %[[#I64_C0]]
 ; CHECK-NEXT:                  %[[#]] = OpLoad %[[#I64]] %[[#L2_SUBPTR_SHAPE]]
-; CHECK-NEXT: %[[#L2_SUBPTR_STRIDE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_STRIDE]] %[[#L2_OFFSET1]]
+; CHECK-NEXT: %[[#L2_SUBPTR_STRIDE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_STRIDE]] %[[#I64_C0]]
 ; CHECK-NEXT:        %[[#L2_STRIDE:]] = OpLoad %[[#I64]] %[[#L2_SUBPTR_STRIDE]]
 ; CHECK-NEXT:       %[[#L2_OFFSET2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L2_STRIDE]]
 ; CHECK-NEXT:         %[[#L2_SUBMR:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L2_MR2]] %[[#L2_OFFSET2]]
 ; CHECK-NEXT:                  %[[#]] = OpLoad %[[#F32]] %[[#L2_SUBMR]]
+}
+
+func @l3(%0: group<memref<f32x?,strided<?>>x42, offset: ?>) {
+    %1 = constant 0 : index
+    %2 = load %0[%1] : memref<f32x?,strided<?>>
+    %3 = load %2[%1] : f32
+; CHECK:                       %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:         %[[#L3_GROUP:]] = OpFunctionParameter %[[#PTR_PTR_F32]]
+; CHECK-NEXT:     %[[#L3_PTR_SHAPE:]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:    %[[#L3_PTR_STRIDE:]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#L3_GROUP_OFFSET:]] = OpFunctionParameter %[[#I64]]
+; CHECK:                 %[[#L3_MR:]] = OpInBoundsPtrAccessChain %[[#PTR_PTR_F32]] %[[#L3_GROUP]] %[[#I64_C0]]
+; CHECK-NEXT:           %[[#L3_MR2:]] = OpLoad %[[#PTR_F32]] %[[#L3_MR]]
+; CHECK:                %[[#L3_MR3:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L3_MR2]] %[[#L3_GROUP_OFFSET]]
+; CHECK-NEXT:  %[[#L3_SUBPTR_SHAPE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L3_PTR_SHAPE]] %[[#I64_C0]]
+; CHECK-NEXT:                  %[[#]] = OpLoad %[[#I64]] %[[#L3_SUBPTR_SHAPE]]
+; CHECK-NEXT: %[[#L3_SUBPTR_STRIDE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L3_PTR_STRIDE]] %[[#I64_C0]]
+; CHECK-NEXT:        %[[#L3_STRIDE:]] = OpLoad %[[#I64]] %[[#L3_SUBPTR_STRIDE]]
+; CHECK-NEXT:       %[[#L3_OFFSET2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L3_STRIDE]]
+; CHECK-NEXT:         %[[#L3_SUBMR:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L3_MR3]] %[[#L3_OFFSET2]]
+; CHECK-NEXT:                  %[[#]] = OpLoad %[[#F32]] %[[#L3_SUBMR]]
 }
