@@ -37,13 +37,25 @@ func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_
 ; CHECK:       stride_gcd(%1) = [1,16]
 }
 
-func @load(%a: group<memref<i8x?>x?> {shape_gcd=[4]}) {
+func @load(%a: group<memref<i8x?>x?> {shape_gcd=[4]},
+           %b: group<memref<f32x?>x?, offset: ?>,
+           %c: group<memref<f32x?>x?, offset: 4>,
+           %d: group<memref<f32x?>x?, offset: 5>,
+           %e: group<memref<f32x?>x?, offset: 1024>) {
     %gid = group_id.x : index
     %0 = load %a[%gid] : memref<i8x?>
+    %1 = load %b[%gid] : memref<f32x?>
+    %2 = load %c[%gid] : memref<f32x?>
+    %3 = load %d[%gid] : memref<f32x?>
+    %4 = load %e[%gid] : memref<f32x?>
 ; CHECK-LABEL: GCD in @load
 ; CHECK:       offset_gcd(%0) = 128
 ; CHECK:       shape_gcd(%0) = [4]
 ; CHECK:       stride_gcd(%0) = [1]
+; CHECK:       offset_gcd(%1) = 1
+; CHECK:       offset_gcd(%2) = 4
+; CHECK:       offset_gcd(%3) = 1
+; CHECK:       offset_gcd(%4) = 32
 }
 
 func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {

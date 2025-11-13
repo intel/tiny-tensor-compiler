@@ -652,10 +652,15 @@ void inst_converter::operator()(load_inst in) {
             throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
         }
 
-        auto offset = mod_->add<OpIAdd>(spv_index_ty, dv->offset(), val(in.index_list()[0]));
+        auto offset = val(in.index_list()[0]);
         auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
                                                            offset, std::vector<spv_inst *>{});
-        declare(in.result(), mod_->add<OpLoad>(spv_result_ty, pointer));
+        spv_inst *result = mod_->add<OpLoad>(spv_result_ty, pointer);
+        if (dv->static_offset() != 0) {
+            result = mod_->add<OpInBoundsPtrAccessChain>(spv_result_ty, result, dv->offset(),
+                                                         std::vector<spv_inst *>{});
+        }
+        declare(in.result(), result);
         auto rdv = make_dope_vector(in.result());
 
         auto const make_dope_par = [&](std::int64_t static_s, spv_inst *s) -> spv_inst * {
