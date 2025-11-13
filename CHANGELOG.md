@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.0] - 2025-11-13
+
+* Add -o option for tinytc and tinytc-opt
+* (Experimental) add support for BMG G31, LNL, and PTL
+* Bugfix: group offset was applied incorrectly
+
 ## [0.4.0] - 2025-10-06
 
 ### Major changes
