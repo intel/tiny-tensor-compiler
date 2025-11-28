@@ -222,10 +222,11 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                     transpose::N, check_c, scope, semantics, alpha_ab_mn, C, pos0, pos1, loc);
             });
         } else if (beta_cst && beta_cst.is_identity()) {
-            make_stores([&bb, &check_c, &scope, &semantics, &C, &c_ty, &loc](
+            make_stores([&bb, &check_c, &scope, &semantics, &C, &coopmatrix_c_ty, &loc](
                             tinytc_value_t alpha_ab_mn, tinytc_value_t pos0, tinytc_value_t pos1) {
-                bb.create<cooperative_matrix_atomic_add_inst>(
-                    transpose::N, check_c, scope, semantics, alpha_ab_mn, C, pos0, pos1, c_ty, loc);
+                bb.create<cooperative_matrix_atomic_add_inst>(transpose::N, check_c, scope,
+                                                              semantics, alpha_ab_mn, C, pos0, pos1,
+                                                              coopmatrix_c_ty, loc);
             });
         } else {
             throw compilation_error(loc, status::ir_invalid_beta);
