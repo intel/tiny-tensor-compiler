@@ -1750,6 +1750,8 @@ Op.-No. Type                     Description
 2       integer-constant         mode index
 ======= ======================== ===========
 
+.. _subview instruction:
+
 Subview
 .......
 

@@ -52,6 +52,7 @@ set(DOC_FILES
     api/ze/cxxapi.rst
     api/ze/index.rst
     dev/coopmatrix_layout.rst
+    dev/adding_an_instruction.rst
     manual/build.rst
     manual/builder.rst
     manual/calling_convention.rst

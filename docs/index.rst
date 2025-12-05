@@ -46,6 +46,7 @@ Table of contents
    :caption: Developer guide
 
    dev/coopmatrix_layout
+   dev/adding_an_instruction
 
 Index
 -----
