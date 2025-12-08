@@ -17,6 +17,7 @@ auto get_opencl_extensions(std::size_t str_length, const char *str) -> opencl_ex
             re2c:yyfill:enable = 0;
             re2c:define:YYCTYPE = char;
             re2c:eof = 0;
+            re2c:tags = 1;
 
             whitespace            = [ \t\v\r]+;
 

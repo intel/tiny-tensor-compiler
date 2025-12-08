@@ -4,8 +4,7 @@
 #ifndef SLOT_TRACKER_20240418_HPP
 #define SLOT_TRACKER_20240418_HPP
 
-#include "node/function_node.hpp"
-#include "node/value_node.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -14,15 +13,15 @@ namespace tinytc {
 
 class slot_tracker {
   public:
-    void run_on_function(function_node const &fn);
+    void run_on_function(tinytc_func &fn);
 
-    auto get_slot(value_node const &v) -> std::int64_t;
+    auto get_slot(tinytc_value const &v) -> std::int64_t;
 
   private:
-    void set_slot(value_node const &v);
+    void set_slot(tinytc_value const &v);
 
     std::int64_t slot_ = 0;
-    std::unordered_map<value_node const *, std::int64_t> slot_map_;
+    std::unordered_map<const_tinytc_value_t, std::int64_t> slot_map_;
 };
 
 } // namespace tinytc

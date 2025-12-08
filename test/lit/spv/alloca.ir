@@ -36,7 +36,7 @@ func @alloca() {
     %6 = load %2[] : i16
     %7 = load %3[%c0] : i16
     %8 = size %1[1] : index
-    %9 = arith.not %8 : index
+    %9 = not %8 : index
 ; CHECK:                      %[[#]] = OpFunction {{.*}}
 ; CHECK:         %[[#STACK_PTR_I8:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C0]]
 ; CHECK-NEXT:                 %[[#]] = OpBitcast %[[#I8_PTR]] %[[#STACK_PTR_I8]]

@@ -203,7 +203,7 @@ Types
 
 .. code:: abnf
 
-    type                        = void-type / boolean-type / scalar-type / memref-type / group-type
+    type                        = void-type / boolean-type / number-type / memref-type / group-type
     void-type                   = "void"
 
 Boolean type
@@ -220,7 +220,7 @@ Scalar types
 
 .. code:: abnf
 
-    scalar-type                 = integer-type / floating-type / complex-type
+    number-type                 = integer-type / floating-type / complex-type
     integer-type                = "i8" / "i16" / "i32" / "i64" / "index"
     floating-type               = "bf16" / "f16" / "f32" / "f64"
     complex-type                = "c32" / "c64"
@@ -281,7 +281,7 @@ Memref type
 
 .. code:: abnf
 
-    memref-type                 = "memref<" scalar-type tensor-shape ["," memory-layout] ["," address-space] ">"
+    memref-type                 = "memref<" number-type tensor-shape ["," memory-layout] ["," address-space] ">"
     constant-or-dynamic         = integer-constant / "?"
     tensor-shape                = *("x" constant-or-dynamic)
     address-space               = "global" / "local"
@@ -436,12 +436,12 @@ Cooperative matrix type
 
 .. code:: abnf
 
-    coopmatrix-type             = "coopmatrix<" scalar-type 2*2("x" integer-constant) "," matrix-use ">"
+    coopmatrix-type             = "coopmatrix<" number-type 2*2("x" integer-constant) "," matrix-use ">"
     matrix-use                  = "matrix_a" / "matrix_b" / "matrix_acc"
 
 The coopmatrix represents a matrix distributed across a subgroup, where each work-item in a subgroup
 stores a part of the matrix.
-The scalar-type specifies the matrix element type, the first integer-constant the number of rows,
+The number-type specifies the matrix element type, the first integer-constant the number of rows,
 and the second integer-constant the number of columns.
 The matrix-use may affect the distribution of the matrix in the subgroup, and the name refers to the
 position of the matrix in a matrix multiplication.
@@ -531,7 +531,7 @@ Axpby
 .. code:: abnf
 
     transpose       =  ".t" / ".n"
-    instruction     =/ "axpby" transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "axpby" [".atomic"] [transpose] local-identifier "," local-identifier ","
                                local-identifier "," local-identifier
 
 Overview
@@ -562,9 +562,9 @@ Operands
 ======= =========== ============== 
 Op.-No. Type        Description
 ======= =========== ==============
-1       scalar-type :math:`\alpha` 
+1       number-type :math:`\alpha` 
 2       memref-type A
-3       scalar-type :math:`\beta`  
+3       number-type :math:`\beta`  
 4       memref-type B
 ======= =========== ==============
 
@@ -613,10 +613,10 @@ Operands
 ======= ================ ==================
 Op.-No. Type             Description
 ======= ================ ==================
-1       scalar-type      :math:`\alpha` 
+1       number-type      :math:`\alpha` 
 2       memref-type      A
 3       integer-constant n (summation mode)
-4       scalar-type      :math:`\beta`
+4       number-type      :math:`\beta`
 5       memref-type      B
 ======= ================ ==================
 
@@ -634,7 +634,7 @@ Foreach
 
 .. code:: abnf
 
-    instruction     =/ "foreach" "(" local-identifier-list ")" [":" integer-type] "="
+    instruction     =/ "foreach" "(" local-identifier-list ")" "="
                        "(" local-identifier-list ")" "," "(" local-identifier-list ")" region
 
 Overview
@@ -661,17 +661,90 @@ The loop range is defined as the cartesian product of the half-open intervals
     (\text{var}_1, \dots, \text{var}_N) \in [\text{from}_1; \text{to}_1) \times \dots \times
     [\text{from}_N; \text{to}_N)
 
-The integer type of the loop variable and the loop bounds can be optionally set after the colon.
-The default integer type is ``index``.
+The integer type of a "from" and "to" pair must match.
 
 The mapping of trip count to work-item is implementation-defined.
+
+Foreach tile
+............
+
+.. code:: abnf
+
+    instruction     =/ "foreach_tile" "(" local-identifier-list ")" "="
+                       "(" local-identifier-list ")" "," "(" local-identifier-list ")"
+                       "as" "(" local-identifier-list ")" "<=" "(" integer-list ")"
+                       region
+    integer-list    = integer-constant *("," integer-constant)
+
+Overview
+~~~~~~~~
+
+A foreach loop that partitions the loop range into tiles.
+The region of a foreach_tile is a *spmd region*.
+
+The first three local identifier lists define the loop range and the local identifiers that
+make the tile offset available within the loop body.
+All three lists must have the same length and have the following format:
+
+.. math::
+
+    (\text{var}_1, \dots, \text{var}_N) = (\text{from}_1, \dots, \text{from}_N),
+                                          (\text{to}_1, \dots, \text{to}_N),
+
+where :math:`N` is the common length of each of the three lists and
+the integer type of a "from" and "to" pair must match.
+After "as" comes an identifier list that makes the tile shape available in the loop body
+and the constant upper bound for the tile shape, following the format
+
+.. math::
+
+    (\text{size}_1, \dots, \text{size}_N) \leq (\text{tile_shape}_1, \dots, \text{tile_shape}_N).
+
+The number of tiles in mode :math:`i=1,\dots,N`
+is given by :math:`K_i = \lceil(\text{to}_i-\text{from}_i) / \text{tile_shape}_i\rceil`
+and the tile offset takes the following values:
+
+.. math::
+
+    \text{var}_i = \text{from}_i+k\cdot \text{tile_shape}_i, \quad k=0,\dots,K_i-1.
+
+The size variable is given by
+
+.. math::
+
+    \text{size}_i = \min(\text{tile_shape}_i, \text{to}_i - \text{var}_i).
+
+Therefore, the size is equal to the tile shape except for the loop remainder.
+
+Restrictions
+~~~~~~~~~~~~
+
+The first entry of the tile shape (:math:`\text{tile_shape}_1`) **must** be a multiple of the subgroup size.
+The tile offsets (:math:`\text{var}_i`) **must** be *dynamically uniform*.
+
+Example
+~~~~~~~
+
+.. code::
+
+    foreach_tile (%i,%j)=(%c0,%c0),(%c70,%c64) as (%ti,%tj)<=(32,32) {
+        %c32 = constant 32 : index
+        %is_remainder = less_than %ti, %c32 : bool
+        if %is_remainder {
+            %tile = cooperative_matrix_load.rows_checked %A[%i,%j] : coopmatrix<f32x32x32,matrix_acc>
+            cooperative_matrix_store.rows_checked %tile, %B[%i,%j]
+        } else {
+            %tile = cooperative_matrix_load %A[%i,%j] : coopmatrix<f32x32x32,matrix_acc>
+            cooperative_matrix_store %tile, %B[%i,%j]
+        }
+    }
 
 GEMM
 ....
 
 .. code:: abnf
 
-    instruction     =/ "gemm" transpose transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "gemm" [".atomic"] [transpose] [transpose] local-identifier "," local-identifier ","
                               local-identifier "," local-identifier "," local-identifier
 
 Overview
@@ -690,7 +763,7 @@ The functions :math:`\text{op}_1` and :math:`\text{op}_2` are defined as
     \text{op}_i(X) := \left\{
                       \begin{array}{rcl}
                         X^T & \text{ if } & \text{transpose}_i = \text{".t"},\\
-                        X   & \text{ if } & \text{transpose}_i = \text{".n"}.
+                        X   & \text{ else. }
                       \end{array}
                       \right.
 
@@ -704,10 +777,10 @@ Operands
 ======= =========== ============== 
 Op.-No. Type        Description
 ======= =========== ==============
-1       scalar-type :math:`\alpha` 
+1       number-type :math:`\alpha` 
 2       memref-type A
 3       memref-type B
-4       scalar-type :math:`\beta`
+4       number-type :math:`\beta`
 5       memref-type C
 ======= =========== ==============
 
@@ -727,7 +800,7 @@ GEMV
 
 .. code:: abnf
 
-    instruction     =/ "gemv" transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "gemv" [".atomic"] [transpose] local-identifier "," local-identifier ","
                               local-identifier "," local-identifier "," local-identifier
 
 Overview
@@ -749,10 +822,10 @@ Operands
 ======= =========== ============== 
 Op.-No. Type        Description
 ======= =========== ==============
-1       scalar-type :math:`\alpha` 
+1       number-type :math:`\alpha` 
 2       memref-type A
 3       memref-type b
-4       scalar-type :math:`\beta`
+4       number-type :math:`\beta`
 5       memref-type c
 ======= =========== ==============
 
@@ -792,10 +865,10 @@ Operands
 ======= =========== ============== 
 Op.-No. Type        Description
 ======= =========== ==============
-1       scalar-type :math:`\alpha` 
+1       number-type :math:`\alpha` 
 2       memref-type a
 3       memref-type b
-4       scalar-type :math:`\beta`
+4       number-type :math:`\beta`
 5       memref-type C
 ======= =========== ==============
 
@@ -816,8 +889,8 @@ Hadamard product
 
 .. code:: abnf
 
-    instruction     =/ "hadamard_product" [".atomic"] local-identifier "," local-identifier ","
-                                          local-identifier "," local-identifier "," local-identifier
+    instruction     =/ "hadamard" [".atomic"] local-identifier "," local-identifier ","
+                                  local-identifier "," local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
@@ -843,10 +916,10 @@ Operands
 ======= =========== ============== 
 Op.-No. Type        Description
 ======= =========== ==============
-1       scalar-type :math:`\alpha` 
+1       number-type :math:`\alpha` 
 2       memref-type a/A
 3       memref-type b/B
-4       scalar-type :math:`\beta`
+4       number-type :math:`\beta`
 5       memref-type c/C
 ======= =========== ==============
 
@@ -876,7 +949,7 @@ Sum
 
 .. code:: abnf
 
-    instruction     =/ "sum" transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "sum" [".atomic"] [transpose] local-identifier "," local-identifier ","
                              local-identifier "," local-identifier
 
 Overview
@@ -905,9 +978,9 @@ Operands
 ======= =========== ============== 
 Op.-No. Type        Description
 ======= =========== ==============
-1       scalar-type :math:`\alpha` 
+1       number-type :math:`\alpha` 
 2       memref-type A
-3       scalar-type :math:`\beta`
+3       number-type :math:`\beta`
 4       memref-type b
 ======= =========== ==============
 
@@ -922,6 +995,14 @@ Restrictions
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 
+Additional instructions
+.......................
+
+.. code:: abnf
+
+    instruction             =/ "lifetime_stop" local-identifier
+
+
 Mixed instructions
 ------------------
 
@@ -930,20 +1011,20 @@ Arithmetic (binary)
 
 .. code:: abnf
 
-    arith-binary-type       =  "arith.add" /
-                               "arith.sub" /
-                               "arith.mul" /
-                               "arith.div" /
-                               "arith.rem" /
-                               "arith.min" /
-                               "arith.max" /
-                               "arith.shl" /
-                               "arith.shr" /
-                               "arith.and" /
-                               "arith.or"  /
-                               "arith.xor"
+    arith-binary-type       =  "add" /
+                               "sub" /
+                               "mul" /
+                               "div" /
+                               "rem" /
+                               "max" /
+                               "min" /
+                               "shl" /
+                               "shr" /
+                               "and" /
+                               "or"  /
+                               "xor"
     value-instruction       =/ arith-binary-type local-identifier "," local-identifier
-                               ":" (boolean-type / scalar-type / coopmatrix-type)
+                               ":" (boolean-type / number-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
@@ -958,18 +1039,18 @@ The backslash "\\" is used to exclude types from the list of allowed types.
 === ============================= ======================================================
 Op  Allowed type                  Description
 === ============================= ======================================================
-add scalar-type                   Sum of operands
-sub scalar-type                   Difference of operands
-mul scalar-type                   Product of operands
-div scalar-type                   Quotient of operands
-rem scalar-type \\ complex-type   Remainder from the division of operands
+add number-type                   Sum of operands
+sub number-type                   Difference of operands
+mul number-type                   Product of operands
+div number-type                   Quotient of operands
+rem number-type \\ complex-type   Remainder from the division of operands
+max number-type \\ complex-type   Maximum of operands
+min number-type \\ complex-type   Minimum of operands
 shl integer-type                  Left shift first operand by second operand
 shr integer-type                  Arithmetic right shift first operand by second operand
 and boolean-type / integer-type   Bitwise and
 or  boolean-type / integer-type   Bitwise or
 xor boolean-type / integer-type   Bitwise xor
-min scalar-type \\ complex-type   Minimum of operands
-max scalar-type \\ complex-type   Maximum of operands
 === ============================= ======================================================
 
 Arithmetic (unary)
@@ -977,14 +1058,14 @@ Arithmetic (unary)
 
 .. code:: abnf
 
-    arith-unary-type        =  "arith.abs" /
-                               "arith.neg" /
-                               "arith.not" /
-                               "arith.conj" /
-                               "arith.im" /
-                               "arith.re"
+    arith-unary-type        =  "abs" /
+                               "neg" /
+                               "not" /
+                               "conj" /
+                               "im" /
+                               "re"
     value-instruction       =/ arith-unary-type local-identifier
-                               ":" (scalar-type / coopmatrix-type)
+                               ":" (number-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
@@ -1001,13 +1082,162 @@ The following table shows the operations' description and the types that are all
 ==== ============================= =============================
 Op   Allowed type                  Description
 ==== ============================= =============================
-abs  scalar-type                   Compute absolute value
-neg  scalar-type                   Negation
+abs  number-type                   Compute absolute value
+neg  number-type                   Negation
 not  boolean-type / integer-type   Bitwise not
 conj complex-type                  Complex conjugate
 im   complex-type                  Extract imaginary part
 re   complex-type                  Extract real part
 ==== ============================= =============================
+
+Associated
+..........
+
+.. code:: abnf
+
+    value-instruction =/ "associated" local-identifier ":" bool-type
+
+Overview
+~~~~~~~~
+
+Checks whether if a memref or group is associated.
+Returns true if the base address is non-null.
+
+
+Operands
+~~~~~~~~~
+
+======= ======================== ===========
+Op.-No. Type                     Description
+======= ======================== ===========
+1       memref-type / group-type tensor
+======= ======================== ===========
+
+Returns
+~~~~~~~
+
+True if the memref is associated and false otherwise, that is, if the base address is a
+null pointer.
+
+Atomic load
+...........
+
+.. code:: abnf
+
+    value-instruction =/ "atomic_load" [memory_scope] [memory_semantics]
+                                       local-identifier "[" [local-identifier-list] "]"
+                                       ":" scalar-type
+    scope             =  ".cross_device" /
+                         ".device" /
+                         ".work_group" /
+                         ".subgroup"
+    memory_semantics  =  ".relaxed" /
+                         ".acquire" /
+                         ".release" /
+                         ".acquire_release" /
+                         ".sequentially_consistent"
+
+Overview
+~~~~~~~~
+
+Load the element given by the index list from a memref atomically.
+The number of indices must match the order of the memref
+and a single index must be given for a group.
+
+The store is atomic and the default scope is "work_group" and the default memory semantics is "relaxed".
+
+Operands
+~~~~~~~~~
+
+======= ======================== ===========
+Op.-No. Type                     Description
+======= ======================== ===========
+1       memref-type / group-type tensor
+2...    index                    index list
+======= ======================== ===========
+
+Returns
+~~~~~~~
+
+A value of the memref's element type.
+
+Atomic store
+............
+
+.. code:: abnf
+
+    instruction     =/ "atomic_store" [memory_scope] [memory_semantics] local-identifier ","
+                                      local-identifier "[" [local-identifier-list] "]"
+
+Overview
+~~~~~~~~
+
+Store a scalar value (first operand) in a memref (second operand) at the position given by the index list.
+The number of indices must match the order of the memref.
+
+The store is atomic and the default scope is "work_group" and the default memory semantics is "relaxed".
+
+When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
+for the the real and imaginary separately.
+
+Operands
+~~~~~~~~
+
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       number-type      value
+2       memref-type      tensor
+3...    index            index list
+======= ================ ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{type}(value) = \text{element_type}(tensor)`
+
+Atomic update
+.............
+
+.. code:: abnf
+
+    atomic-update-op  =  "atomic_add" /
+                         "atomic_min" /
+                         "atomic_max"
+    value-instruction =/ atomic-update-scope [memory_scope] [memory_semantics] local-identifier ","
+                                             local-identifier "[" [local-identifier-list] "]"
+                                             ":" number-type
+
+Overview
+~~~~~~~~
+
+Store a scalar value (first operand) in a memref (second operand) at the position given by the index list.
+The number of indices must match the order of the memref, and the return type must match the memref's
+element type.
+
+The following steps are done atomically:
+The value at the memory location is fetched, the fetched value is updated with the fetched value,
+and the resulting value is stored at the memory location.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+When storing a complex value the update may be pseudo-atomic, meaning that an atomic update is used
+for the the real and imaginary separately.
+
+Operands
+~~~~~~~~
+
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       number-type      value
+2       memref-type      tensor
+3...    index            index list
+======= ================ ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{type}(value) = \text{element_type}(tensor)`
 
 Barrier
 .......
@@ -1042,15 +1272,11 @@ Builtin (mixed)
 
 .. code:: abnf
 
-    mixed-builtin-type      =  "builtin.group_id.x"       /
-                               "builtin.group_id.y"       /
-                               "builtin.group_id.z"       /
-                               "builtin.num_groups.x"     /
-                               "builtin.num_groups.y"     /
-                               "builtin.num_groups.z"     /
-                               "builtin.num_subgroups.x"  /
-                               "builtin.num_subgroups.y"  /
-                               "builtin.subgroup_size"
+    mixed-builtin-type      =  "group_id" comp3      /
+                               "num_groups" comp3    /
+                               "num_subgroups" comp3 /
+                               "subgroup_size"
+    comp3                   = ".x" / ".y" / ".z"
     value-instruction       =/ mixed-builtin-type ":" integer-type
 
 Overview
@@ -1065,32 +1291,33 @@ Each mode starts with zero and is limited by the corresponding num_groups mode. 
 
     \forall d \in \{x,y,z\} : 0 \leq \text{group_id}_d < \text{num_groups}_d
 
-The number of subgroups is two dimensional and is related to the work-group size as following:
+The number of subgroups is related to the 2-dimensional work-group size as following:
 
 .. math::
 
     \begin{aligned}
     \text{num_subgroups}_x &= \frac{\text{work_group_size[0]}}{\text{subgroup_size}} \\
-    \text{num_subgroups}_y &= \text{work_group_size[1]}
+    \text{num_subgroups}_y &= \text{work_group_size[1]} \\
+    \text{num_subgroups}_z &= 1
     \end{aligned}
 
 The following table shows the builtins' description and the types that are returned.
 
-=================== ===== ====================== ====================================================
-Builtin             Type  OpenCL analogue        Description
-=================== ===== ====================== ====================================================
-group_id.(x/y/z)    index get_group_id           Returns the x, y, or z mode of the group id
-num_groups.(x/y/z)  index get_num_groups         Returns number of groups in the x, y, or z mode
-num_subgroups.(x/y) i32   N/A                    Returns the number of subgroups in the x or y mode 
-subgroup_size       i32   get_max_sub_group_size Returns the subgroup size
-=================== ===== ====================== ====================================================
+============= ===== ====================== ======================================================
+Builtin       Type  OpenCL analogue        Description
+============= ===== ====================== ======================================================
+group_id      index get_group_id           Returns the x, y, or z mode of the group id
+num_groups    index get_num_groups         Returns number of groups in the x, y, or z mode
+num_subgroups i32   N/A                    Returns the number of subgroups in the x, y, or z mode 
+subgroup_size i32   get_max_sub_group_size Returns the subgroup size
+============= ===== ====================== ======================================================
 
 Cast
 ....
 
 .. code:: abnf
 
-    value-instruction       =/ "cast" local-identifier ":" scalar-type
+    value-instruction       =/ "cast" local-identifier ":" number-type
     value-instruction       =/ "cast" local-identifier ":" coopmatrix-type
 
 Overview
@@ -1127,13 +1354,13 @@ Comparison
 
 .. code:: abnf
 
-    cmp-type                =  "cmp.eq" /
-                               "cmp.ne" /
-                               "cmp.gt" /
-                               "cmp.ge" /
-                               "cmp.lt" /
-                               "cmp.le"
-    value-instruction       =/ cmp-type local-identifier "," local-identifier ":" "bool"
+    comparison-type         =  "equal" /
+                               "not_equal" /
+                               "greater_than" /
+                               "greater_than_equal" /
+                               "less_than" /
+                               "less_than_equal"
+    value-instruction       =/ comparison-type local-identifier "," local-identifier ":" "bool"
 
 Overview
 ~~~~~~~~
@@ -1144,23 +1371,23 @@ Both operands must have the same scalar type and the returned value has boolean 
 The following table shows the comparisons' description and the types that are allowed for the comparison.
 The backslash "\\" is used to exclude types from the list of allowed types.
 
-==== =========================== =====================
-Cond Allowed type Description
-==== =========================== =====================
-eq   scalar-type                 Equal
-ne   scalar-type                 Not equal
-gt   scalar-type \\ complex-type Greater than
-ge   scalar-type \\ complex-type Greater than or equal
-lt   scalar-type \\ complex-type Less than
-le   scalar-type \\ complex-type Less than or equal
-==== =========================== =====================
+=================== =========================== =====================
+Cond                Allowed type                Description
+=================== =========================== =====================
+equal               number-type                 Equal
+not_equal           number-type                 Not equal
+greater_than        number-type \\ complex-type Greater than
+greather_than_equal number-type \\ complex-type Greater than or equal
+less_than           number-type \\ complex-type Less than
+less_than_equal     number-type \\ complex-type Less than or equal
+=================== =========================== =====================
 
 Constant
 ........
 
 .. code:: abnf
 
-    value-instruction       =/ "constant" constant ":" (boolean-type / scalar-type / coopmatrix-type)
+    value-instruction       =/ "constant" constant ":" (boolean-type / number-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
@@ -1246,14 +1473,14 @@ For
 
 .. code:: abnf
 
-    multi-value-instruction = "for" local-identifier [":" integer-type] "="
+    multi-value-instruction = "for" local-identifier "="
                                     local-identifier "," local-identifier ["," local-identifier]
                               ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ] region
-                              [dictionary-attribute]
+                              ["attributes" dictionary-attribute]
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
     return-type-list        = return-type *("," return-type)
-    return-type             = boolean-type / scalar-type / coopmatrix-type
+    return-type             = boolean-type / number-type / coopmatrix-type
 
 
 Overview
@@ -1269,16 +1496,16 @@ The trip count is stored in the first local identifier and is accessible within 
 The loop's range [from; to) is given by the first and the second local identifier after the equals sign,
 and a step size may be given with the third local identifier after the equals sign.
 The step size defaults to 1 if omitted.
-The integer type of the loop variable and the loop bounds is given after the colon and
-the default integer type is ``index``.
+The integer type of "from", "to", and "step" must be identical, and the integer type of the loop variable
+follows the loop range's type.
 
 Values that are given in the init-value-list may be carried from one iteration to the next.
 The local identifier gives the name of the loop-carried value as it is accessible in the loop body.
 The local identifier given on the right-hand side of the init-value expression determines
-the initial value of the loop-carried value, and its type must coincide with the scalar-type-list.
+the initial value of the loop-carried value, and its type must coincide with the number-type-list.
 When loop-carried values are present, the loop's last instruction must be a yield instruction that
 updates the loop-carried values for the next iteration.
-The number and types of the yielded values must correspond the scalar-type-list.
+The number and types of the yielded values must correspond the number-type-list.
 
 Returns
 ~~~~~~~
@@ -1294,8 +1521,8 @@ Example:
     %to = constant 6 : i32
     %f0 = constant 0 : i64
     %f1 = constant 1 : i64
-    %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
-        %fn = arith.add %fn_2, %fn_1 : i64
+    %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
+        %fn = add %fn_2, %fn_1 : i64
         yield (%fn_1, %fn)
     }
     ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
@@ -1421,7 +1648,7 @@ Load
 
     value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]"
                                           ":" scalar-or-memref-type
-    scalar-or-memref-type       =  scalar-type / memref-type
+    scalar-or-memref-type       =  number-type / memref-type
 
 Overview
 ~~~~~~~~
@@ -1456,11 +1683,19 @@ Math (unary)
 
 .. code:: abnf
 
-    math-unary-type         =  "math.exp" /
-                               "math.exp2" /
-                               "math.native_exp" /
-                               "math.native_exp2"
-    value-instruction       =/ math-unary-type local-identifier ":" scalar-type
+    math-unary-type         =  "cos" /
+                               "sin" /
+                               "exp" /
+                               "exp2" /
+                               "log" /
+                               "log2" /
+                               "native_cos" /
+                               "native_sin"
+                               "native_exp" /
+                               "native_exp2"
+                               "native_log" /
+                               "native_log2"
+    value-instruction       =/ math-unary-type local-identifier ":" number-type
 
 Overview
 ~~~~~~~~
@@ -1477,10 +1712,14 @@ cos         floating-type                 Compute cosine function
 sin         floating-type                 Compute sine function
 exp         floating-type / complex-type  Compute base-e exponential function
 exp2        floating-type / complex-type  Compute base-2 exponential function
+log         floating-type                 Compute base-e logarithm function
+log2        floating-type                 Compute base-2 logarithm function
 native_cos  floating-type                 Compute cosine function with implementation-defined error
 native_sin  floating-type                 Compute sine function with implementation-defined error
 native_exp  floating-type / complex-type  Compute base-e exponential function with implementation-defined error
 native_exp2 floating-type / complex-type  Compute base-2 exponential function with implementation-defined error
+native_log  floating-type                 Compute base-e logarithm function with implementation-defined error
+native_log2 floating-type                 Compute base-2 logarithm function with implementation-defined error
 =========== ============================= =====================================================================
 
 .. _size instruction:
@@ -1510,6 +1749,8 @@ Op.-No. Type                     Description
 1       memref-type / group-type tensor
 2       integer-constant         mode index
 ======= ======================== ===========
+
+.. _subview instruction:
 
 Subview
 .......
@@ -1588,23 +1829,14 @@ Store
 
 .. code:: abnf
 
-    instruction     =/ "store" [store-flag] local-identifier ","
+    instruction     =/ "store" local-identifier ","
                                local-identifier "[" [local-identifier-list] "]"
-    store-flag      = ".atomic" / ".atomic_add" / ".atomic_max" / ".atomic_min"
 
 Overview
 ~~~~~~~~
 
 Store a scalar value (first operand) in a memref (second operand) at the position given by the index list.
 The number of indices must match the order of the memref.
-
-The store is atomic when the atomic flag is set with relaxed memory ordering.
-When the atomic_add/max/min flag is set, the following steps are done atomically:
-The value at the memory location is fetched, the scalar value is added to the fetched value,
-and the resulting value is stored at the memory location.
-
-When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
-for the the real and imaginary separately.
 
 *Note:* Store should only be used in SPMD regions as otherwise the same memory location is written
 from all work-items.
@@ -1615,7 +1847,7 @@ Operands
 ======= ================ ===========
 Op.-No. Type             Description
 ======= ================ ===========
-1       scalar-type      value
+1       number-type      value
 2       memref-type      tensor
 3...    index            index list
 ======= ================ ===========
@@ -1643,15 +1875,8 @@ Operands
 ======= ============================================ ===========
 Op.-No. Type                                         Description
 ======= ============================================ ===========
-1...    boolean-type / scalar-type / coopmatrix-type value
+1...    boolean-type / number-type / coopmatrix-type value
 ======= ============================================ ===========
-
-Additional instructions
-.......................
-
-.. code:: abnf
-
-    instruction             =/ "lifetime_stop" local-identifier
 
 SPMD instructions
 -----------------
@@ -1661,10 +1886,9 @@ Builtin (SPMD)
 
 .. code:: abnf
 
-    spmd-builtin-type       =  "builtin.subgroup_id.x"      /
-                               "builtin.subgroup_id.y"      /
-                               "builtin.subgroup_linear_id" /
-                               "builtin.subgroup_local_id"
+    spmd-builtin-type       =  "subgroup_id" comp3 /
+                               "subgroup_linear_id"     /
+                               "subgroup_local_id"
     value-instruction       =/ spmd-builtin-type ":" integer-type
 
 Overview
@@ -1672,30 +1896,33 @@ Overview
 
 Returns a builtin value.
 
-The subgroup id is two dimensional; the mode is selected with the .x and .y suffix.
+The mode of the subgroup id is selected with the .x, .y, and .z suffix.
 Each mode starts with zero and is limited by the corresponding num_subgroups mode. That is,
 
 .. math::
 
-    \forall d \in \{x,y\} : 0 \leq \text{subgroup_id}_d < \text{num_subgroups}_d
+    \forall d \in \{x,y,z\} : 0 \leq \text{subgroup_id}_d < \text{num_subgroups}_d
 
-The subgroup linear id combines the x and y modes of the subgroup id as following:
+The subgroup linear id combines the x, y, and z modes of the subgroup id as following (note that
+that :math:`\text{subgroup_id}_z = 0` due to :math:`\text{num_subgroups}_z = 1`):
 
 .. math::
 
-    \text{subgroup_linear_id} = \text{subgroup_id}_x + \text{subgroup_id}_y\cdot \text{num_subgroups}_x
+    \text{subgroup_linear_id} = \text{subgroup_id}_x +
+                                \text{subgroup_id}_y\cdot \text{num_subgroups}_x
+
 
 The subgroup local id is the invocation id within the subgroup and ranges from 0 to subgroup_size-1.
 
 The following table shows the builtins' description and the types that are returned.
 
-=================== ===== ====================== ====================================================
-Builtin             Type  OpenCL analogue        Description
-=================== ===== ====================== ====================================================
-subgroup_id.(x/y)   i32   N/A                    Returns the x or y mode of the subgroup id
-subgroup_linear_id  i32   get_sub_group_id       Returns linear subgroup id
-subgroup_local_id   i32   get_sub_group_local_id Returns the local invocation id in the subgroup
-=================== ===== ====================== ====================================================
+================== ===== ====================== ====================================================
+Builtin            Type  OpenCL analogue        Description
+================== ===== ====================== ====================================================
+subgroup_id        i32   N/A                    Returns the x, y, or z mode of the subgroup id
+subgroup_linear_id i32   get_sub_group_id       Returns linear subgroup id
+subgroup_local_id  i32   get_sub_group_local_id Returns the local invocation id in the subgroup
+================== ===== ====================== ====================================================
 
 Cooperative matrix apply
 ........................
@@ -1741,13 +1968,98 @@ Example:
     }
     ; The entries of %1 are given by %1[i,j] = exp(%0[i,j]) if i <= j else 0
 
+Cooperative matrix atomic load
+..............................
+
+.. code:: abnf
+
+    value-instruction =/ "cooperative_matrix_atomic_load" [transpose] [checked-flag]
+                                                          [memory_scope] [memory_semantics]
+                         local-identifier "[" local-identifier "," local-identifier "]"
+                         ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Atomic matrix load. Atomic is meant component-wise, there is no atomicity w.r.t. to the whole matrix.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+Except for atomicity, the instruction is idential to the :ref:`cooperative matrix load` instruction.
+
+Cooperative matrix atomic store
+...............................
+
+.. code:: abnf
+
+    instruction     =/ "cooperative_matrix_atomic_store" [transpose] [checked-flag]
+                                                         [memory_scope] [memory_semantics]
+                       local-identifier "," local-identifier
+                       "[" local-identifier "," local-identifier "]"
+
+Overview
+~~~~~~~~
+
+Atomic matrix store. Atomic is meant component-wise, there is no atomicity w.r.t. to the whole matrix.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+Except for atomicity, the instruction is idential to the :ref:`cooperative matrix store` instruction.
+
+Cooperative matrix atomic update
+................................
+
+.. code:: abnf
+
+    cooperative-matrix-atomic-update-op = "cooperative_matrix_atomic_add" /
+                                          "cooperative_matrix_atomic_max" /
+                                          "cooperative_matrix_atomic_min"
+    value-instruction =/ cooperative-matrix-atomic-update-op [transpose] [checked-flag]
+                                                             [memory_scope] [memory_semantics]
+                         local-identifier "," local-identifier
+                         "[" local-identifier "," local-identifier "]"
+                         ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Atomic matrix update. Atomic is meant component-wise, there is no atomicity w.r.t. to the whole matrix.
+The default scope is "work_group" and the default memory semantics is "relaxed".
+
+See :ref:`cooperative matrix store` instruction for further description.
+
+Cooperative matrix construct
+............................
+
+.. code:: abnf
+
+    value-instruction       =/ "cooperative_matrix_construct" local-identifier ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Returns a coopmatrix whose entries are initialized to the given *dynamically uniform* number.
+The type of the number must match the component type of the coopmatrix type.
+
+Operands
+~~~~~~~~~
+
+======= ================ ===========================
+Op.-No. Type             Description
+======= ================ ===========================
+1       number-type      Number
+======= ================ ===========================
+
+Restrictions
+~~~~~~~~~~~~
+
+The number **must** be *dynamically uniform*.
+
 Cooperative matrix extract
 ..........................
 
 .. code:: abnf
 
     value-instruction       =/ "cooperative_matrix_extract"
-                                local-identifier "[" integer-constant "]" ":" scalar-type
+                                local-identifier "[" integer-constant "]" ":" number-type
 
 Overview
 ~~~~~~~~
@@ -1792,17 +2104,19 @@ Operands
 ======= ================ ===========================
 Op.-No. Type             Description
 ======= ================ ===========================
-1       scalar-type      Inserted scalar
+1       number-type      Inserted scalar
 2       coopmatrix-type  Cooperative matrix
 3       integer-constant Index into work-item vector
 ======= ================ ===========================
+
+.. _cooperative matrix load:
 
 Cooperative matrix load
 .......................
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_load" transpose [checked-flag]
+    value-instruction           =/ "cooperative_matrix_load" [transpose] [checked-flag]
                                    local-identifier "[" local-identifier "," local-identifier "]"
                                    ":" coopmatrix-type
     checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
@@ -1829,16 +2143,16 @@ When the transpose modifier ".t" is given, we have
 When the checked flag is set, the following out-of-bound checks are added
 (with memref shape :math:`s_1\times s_2`):
 
-=============== ===================================================================
+=============== =====================================================================
 Flag            Description
-=============== ===================================================================
+=============== =====================================================================
 .n.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < s_1 \text{ else } 0`
 .t.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < s_2 \text{ else } 0`
 .n.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < s_2 \text{ else } 0`
 .t.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < s_1 \text{ else } 0`
 .n.both_checked .n.rows_checked.n and .n.cols_checked
 .t.both_checked .t.rows_checked.t and .t.cols_checked
-=============== ===================================================================
+=============== =====================================================================
 
 Operands
 ~~~~~~~~
@@ -1951,13 +2265,11 @@ Cooperative matrix reduce
 
 .. code:: abnf
 
-    coopmatrix-reduce-type  =  "cooperative_matrix_reduce.add.row" /
-                               "cooperative_matrix_reduce.add.column" /
-                               "cooperative_matrix_reduce.max.row" /
-                               "cooperative_matrix_reduce.max.column" /
-                               "cooperative_matrix_reduce.min.row" /
-                               "cooperative_matrix_reduce.min.column"
-    value-instruction       =/ coopmatrix-reduce-type local-identifier ":" coopmatrix-type
+    coopmatrix-reduce-op    =  "cooperative_matrix_reduce_add" /
+                               "cooperative_matrix_reduce_max" /
+                               "cooperative_matrix_reduce_min" /
+    value-instruction       =/ coopmatrix-reduce-op reduce-mode local-identifier ":" coopmatrix-type
+    reduce-mode             =  ".row" / ".column"
 
 Overview
 ~~~~~~~~
@@ -2005,7 +2317,7 @@ Operands
 ======= =============== ===========
 Op.-No. Type            Description
 ======= =============== ===========
-1       scalar-type     scalar
+1       number-type     scalar
 2       coopmatrix-type matrix
 ======= =============== ===========
 
@@ -2015,13 +2327,16 @@ Restrictions
 * :math:`\text{type}(scalar) = \text{component_type}(matrix)`
 * :math:`\text{type}(result) = \text{type}(matrix)`
 
+.. _cooperative matrix store:
+
 Cooperative matrix store
 ........................
 
 .. code:: abnf
 
-    instruction     =/ "cooperative_matrix_store" [checked-flag] [store-flag] local-identifier ","
-                       local-identifier "[" local-identifier "," local-identifier "]"
+    instruction     =/ "cooperative_matrix_store" [transpose] [checked-flag]
+                       local-identifier "," local-identifier
+                       "[" local-identifier "," local-identifier "]"
 
 Overview
 ~~~~~~~~
@@ -2036,22 +2351,25 @@ position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are 
     \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij},
 
 where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
+When the transpose modifier ".t" is given, we have
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): M[(x + j) S_1 + (y + i) S_2] := A_{ij}
+
 When the checked flag is set, the following out-of-bound checks are added
 (with memref shape :math:`s_1\times s_2`):
 
-============= =======================================================================================================
+=============== ==============================================
 Flag            Description
-============= =======================================================================================================
-.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
-.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
-.both_checked .rows_checked + .cols_checked
-============= =======================================================================================================
-
-The store is atomic when the atomic flag is set with relaxed memory ordering.
-When the atomic_add flag is set, the coopmatrix is added to the memref atomically.
-
-When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
-for the the real and imaginary separately.
+=============== ==============================================
+.n.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
+.t.rows_checked Only execute store if :math:`0 \leq y+i < s_2`
+.n.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
+.t.cols_checked Only execute store if :math:`0 \leq x+j < s_1`
+.n.both_checked .n.rows_checked + .n.cols_checked
+.t.both_checked .t.rows_checked + .t.cols_checked
+=============== ==============================================
 
 Operands
 ~~~~~~~~
@@ -2076,7 +2394,7 @@ Subgroup broadcast
 
 .. code:: abnf
 
-    value-instruction       =/ "subgroup_broadcast" local-identifier "," local-identifier ":" scalar-type
+    value-instruction       =/ "subgroup_broadcast" local-identifier "," local-identifier ":" number-type
 
 Overview
 ~~~~~~~~
@@ -2091,7 +2409,7 @@ Operands
 ======= =============== ==================================================================================================
 Op.-No. Type            Description
 ======= =============== ==================================================================================================
-1       scalar-type     Value that is to be distributed to all work-items of the sub-group
+1       number-type     Value that is to be distributed to all work-items of the sub-group
 2       i32             Subgroup local index that identifies the work-item whose value is returned to all other work-items
 ======= =============== ==================================================================================================
 
@@ -2105,16 +2423,16 @@ Subgroup operation
 
 .. code:: abnf
 
-    subgroup-operation-type = "subgroup_operation.add.exclusive_scan" /
-                              "subgroup_operation.add.inclusive_scan" /
-                              "subgroup_operation.add.reduce" /
-                              "subgroup_operation.max.exclusive_scan" /
-                              "subgroup_operation.max.inclusive_scan" /
-                              "subgroup_operation.max.reduce" /
-                              "subgroup_operation.min.exclusive_scan" /
-                              "subgroup_operation.min.inclusive_scan" /
-                              "subgroup_operation.min.reduce"
-    value-instruction       =/ subgroup-operation-type local-identifier ":" scalar-type
+    subgroup-operation-type = "subgroup_exclusive_scan_add" /
+                              "subgroup_exclusive_scan_max" /
+                              "subgroup_exclusive_scan_min" /
+                              "subgroup_inclusive_scan_add" /
+                              "subgroup_inclusive_scan_max" /
+                              "subgroup_inclusive_scan_min" /
+                              "subgroup_reduce_add" /
+                              "subgroup_reduce_max" /
+                              "subgroup_reduce_min"
+    value-instruction       =/ subgroup-operation-type local-identifier ":" number-type
 
 Overview
 ~~~~~~~~
@@ -2162,36 +2480,3 @@ integer-type  Largest integer representable by integer type
 floating-type :math:`+\infty`
 complex type  Forbidden
 ============= =============================================
-
-
-Sample code
-===========
-
-The following sample implements the kernel
-
-.. math::
-
-    D := \alpha A B^T C + D \text{ with }
-        A \in \mathbb{R}^{16\times 8},
-        B \in \mathbb{R}^{8\times 8},
-        C \in \mathbb{R}^{8\times 16},
-        D \in \mathbb{R}^{16\times 16}
-
-where B and C are constant matrices and A and D are matrix batches.
-
-.. code::
-
-    func @fused_kernel(%alpha: f32,
-                         %A: group<memref<f32x16x8>x?>,
-                         %B: memref<f32x8x8>,
-                         %C: memref<f32x8x16>,
-                         %D: memref<f32x16x16x?>) {
-      %0 = group_id : index
-      %1 = load %A[%0]        : memref<f32x16x8>
-      %2 = subview %D[:,:,%0] : memref<f32x16x16>
-      %tmp0 = alloca : memref<f32x16x8>
-      %zero = constant 0.0 : f32
-      %one = constant 1.0 : f32
-      gemm.n.t %one, %1, %B, %zero, %tmp0
-      gemm.n.n %alpha, %tmp0, %C, %one, %2
-    }

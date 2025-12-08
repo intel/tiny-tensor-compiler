@@ -5,13 +5,13 @@
 #define ALIAS_20240912_HPP
 
 #include "analysis/aa_results.hpp"
-#include "node/function_node.hpp"
+#include "tinytc/types.h"
 
 namespace tinytc {
 
 class alias_analysis {
   public:
-    auto run_on_function(function_node &fn) -> aa_results;
+    auto run_on_function(tinytc_func &fn) -> aa_results;
 };
 
 } // namespace tinytc

@@ -18,9 +18,9 @@ func @f1(%0: memref<f32x32x16x?x4x42>) {
   %2 = size %1[0] : index
   %3 = size %1[1] : index
   %4 = size %1[2] : index
-  %5 = arith.not %2 : index
-  %6 = arith.not %3 : index
-  %7 = arith.not %4 : index
+  %5 = not %2 : index
+  %6 = not %3 : index
+  %7 = not %4 : index
 ; CHECK:                %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:      %[[#P_MR:]] = OpFunctionParameter %[[#F32_PTR]]
 ; CHECK-NEXT:  %[[#P_SHAPE2:]] = OpFunctionParameter %[[#I64]]

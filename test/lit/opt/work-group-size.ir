@@ -15,7 +15,7 @@ func @f32_blas() {
     %lb = constant 0 : index
     %ub = constant 4 : index
     for %i=%lb,%ub {
-        axpby.n %one, %0, %zero, %1
+        axpby %one, %0, %zero, %1
     }
 }
 
@@ -29,6 +29,6 @@ func @f64_blas() {
     %lb = constant 0 : index
     %ub = constant 4 : index
     for %i=%lb,%ub {
-        gemm.n.n %one, %0, %1, %zero, %2
+        gemm %one, %0, %1, %zero, %2
     }
 }

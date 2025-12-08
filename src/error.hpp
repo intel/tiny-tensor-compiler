@@ -5,7 +5,7 @@
 #define ERROR_20240410_HPP
 
 #include "compiler_context.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
@@ -37,8 +37,9 @@ class compilation_error : public std::exception {
     inline auto ref_values() const noexcept -> array_view<const_tinytc_value_t> {
         return array_view<const_tinytc_value_t>(ref_values_.data(), num_ref_values_);
     }
+    inline auto num_ref_values() const noexcept -> std::size_t { return num_ref_values_; }
     //! Get explanatory string
-    inline char const *what() const noexcept override { return error_string(code_); }
+    inline char const *what() const noexcept override { return to_string(code_); }
     //! Get additional information
     inline auto extra_info() const -> std::string const & { return extra_info_; }
 

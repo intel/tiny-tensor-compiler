@@ -2,18 +2,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_ir.hpp"
-#include "support/casting.hpp"
-#include "support/fnv1a.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
-#include "support/visit.hpp"
-#include "tinytc/tinytc.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
+#include "node/visit.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/fnv1a.hpp"
+#include "util/ilist_base.hpp"
+#include "util/iterator.hpp"
+#include "util/overloaded.hpp"
 
 #include <complex>
 #include <cstddef>
 #include <cstdint>
-#include <ranges>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -43,7 +47,7 @@ void dump_ir_pass::operator()(dictionary_attr const &a) {
             return false;
         }
     };
-    auto const dump_name = [&](attr a) {
+    auto const dump_name = [&](tinytc_attr_t a) {
         if (auto s = dyn_cast<string_attr>(a); s) {
             if (is_keyword(s->str())) {
                 *os_ << s->str();
@@ -69,14 +73,14 @@ void dump_ir_pass::operator()(integer_attr const &a) { *os_ << a.value(); }
 void dump_ir_pass::operator()(string_attr const &a) { *os_ << "\"" << a.str() << "\""; }
 
 /* Data type nodes */
-void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
-void dump_ir_pass::operator()(boolean_data_type const &) { *os_ << "bool"; }
-void dump_ir_pass::operator()(coopmatrix_data_type const &ct) {
+void dump_ir_pass::operator()(void_type const &) { *os_ << "void"; }
+void dump_ir_pass::operator()(boolean_type const &) { *os_ << "bool"; }
+void dump_ir_pass::operator()(coopmatrix_type const &ct) {
     *os_ << "coopmatrix<";
-    visit(*this, *ct.ty());
+    visit(*this, *ct.component_ty());
     *os_ << "x" << ct.rows() << "x" << ct.cols() << "," << to_string(ct.use()) << ">";
 }
-void dump_ir_pass::operator()(group_data_type const &g) {
+void dump_ir_pass::operator()(group_type const &g) {
     auto const val = [&](std::int64_t v) -> std::ostream & {
         if (is_dynamic_value(v)) {
             return *os_ << "?";
@@ -84,7 +88,7 @@ void dump_ir_pass::operator()(group_data_type const &g) {
         return *os_ << v;
     };
     *os_ << "group<";
-    visit(*this, *g.ty());
+    visit(*this, *g.element_ty());
     *os_ << "x";
     val(g.size());
     if (g.offset() != 0) {
@@ -93,14 +97,15 @@ void dump_ir_pass::operator()(group_data_type const &g) {
     }
     *os_ << ">";
 }
-void dump_ir_pass::operator()(memref_data_type const &d) {
+void dump_ir_pass::operator()(memref_type const &d) {
     auto const val = [&](std::int64_t v) -> std::ostream & {
         if (is_dynamic_value(v)) {
             return *os_ << "?";
         }
         return *os_ << v;
     };
-    *os_ << "memref<" << to_string(d.element_ty());
+    *os_ << "memref<";
+    visit(*this, *d.element_ty());
     for (auto const &s : d.shape()) {
         *os_ << "x";
         val(s);
@@ -115,10 +120,10 @@ void dump_ir_pass::operator()(memref_data_type const &d) {
     }
     *os_ << ">";
 }
-void dump_ir_pass::operator()(scalar_data_type const &s) { *os_ << to_string(s.ty()); }
+void dump_ir_pass::operator()(number_type const &t) { *os_ << to_string(t.type_id()); }
 
 /* Value nodes */
-void dump_ir_pass::dump_val(value_node const &v) {
+void dump_ir_pass::dump_val(tinytc_value const &v) {
     *os_ << "%" << v.name();
     auto const slot = tracker_.get_slot(v);
     if (slot >= 0) {
@@ -127,10 +132,7 @@ void dump_ir_pass::dump_val(value_node const &v) {
 }
 
 /* Inst nodes */
-void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
-    if (g.atomic()) {
-        *os_ << ".atomic";
-    }
+void dump_ir_pass::dump_blas_a2(blas_a2_inst g) {
     *os_ << ' ';
     dump_val(g.alpha());
     *os_ << ", ";
@@ -141,10 +143,7 @@ void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
     dump_val(g.B());
 }
 
-void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
-    if (g.atomic()) {
-        *os_ << ".atomic";
-    }
+void dump_ir_pass::dump_blas_a3(blas_a3_inst g) {
     *os_ << ' ';
     dump_val(g.alpha());
     *os_ << ", ";
@@ -157,37 +156,136 @@ void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
     dump_val(g.C());
 }
 
-void dump_ir_pass::operator()(alloca_inst const &a) {
-    dump_val(a.result(0));
+void dump_ir_pass::dump_memory_read(memory_read_inst l) {
+    dump_val(l.operand());
+    *os_ << "[";
+    do_with_infix(l.index_list().begin(), l.index_list().end(),
+                  [this](auto const &i) { dump_val(i); });
+    *os_ << "] : ";
+    visit(*this, *l.result().ty());
+}
+
+void dump_ir_pass::dump_memory_write(memory_write_inst s) {
+    dump_val(s.val());
+    *os_ << ", ";
+    dump_val(s.operand());
+    *os_ << "[";
+    do_with_infix(s.index_list().begin(), s.index_list().end(),
+                  [this](auto const &i) { dump_val(i); });
+    *os_ << "]";
+}
+
+void dump_ir_pass::dump_cooperative_matrix_memory_read(cooperative_matrix_memory_read_inst l) {
+    dump_val(l.operand());
+    *os_ << "[";
+    dump_val(l.pos0());
+    *os_ << ",";
+    dump_val(l.pos1());
+    *os_ << "] : ";
+    visit(*this, *l.result().ty());
+}
+
+void dump_ir_pass::dump_cooperative_matrix_memory_write(cooperative_matrix_memory_write_inst s) {
+    dump_val(s.val());
+    *os_ << ", ";
+    dump_val(s.operand());
+    *os_ << "[";
+    dump_val(s.pos0());
+    *os_ << ",";
+    dump_val(s.pos1());
+    *os_ << "]";
+}
+
+void dump_ir_pass::dump_transpose_checked(transpose t, checked_flag c) {
+    if (t != transpose::N) {
+        *os_ << "." << to_string(t);
+    }
+    if (c != checked_flag::none) {
+        *os_ << "." << to_string(c) << "_checked";
+    }
+}
+
+void dump_ir_pass::operator()(alloca_inst a) {
+    dump_val(a.result());
     *os_ << " = alloca : ";
-    visit(*this, *a.result()->ty());
+    visit(*this, *a.result().ty());
+    if (a.stack_ptr() >= 0) {
+        *os_ << " ; stack_ptr: " << a.stack_ptr();
+    }
 }
 
-void dump_ir_pass::operator()(axpby_inst const &a) {
+void dump_ir_pass::operator()(axpby_inst a) {
     *os_ << "axpby";
-    *os_ << "." << to_string(a.tA());
-    dump_blas_a2(static_cast<blas_a2_inst const &>(a));
+    if (a.atomic()) {
+        *os_ << ".atomic";
+    }
+    if (a.tA() != transpose::N) {
+        *os_ << "." << to_string(a.tA());
+    }
+    dump_blas_a2(static_cast<blas_a2_inst>(a));
 }
 
-void dump_ir_pass::operator()(arith_inst const &a) {
-    dump_val(a.result(0));
-    *os_ << " = arith." << to_string(a.operation()) << " ";
+void dump_ir_pass::operator()(arith_inst a) {
+    dump_val(a.result());
+    *os_ << " = " << to_string(a.get().type_id()) << " ";
     dump_val(a.a());
     *os_ << ", ";
     dump_val(a.b());
     *os_ << " : ";
-    visit(*this, *a.result(0).ty());
+    visit(*this, *a.result().ty());
 }
 
-void dump_ir_pass::operator()(arith_unary_inst const &a) {
-    dump_val(a.result(0));
-    *os_ << " = arith." << to_string(a.operation()) << " ";
+void dump_ir_pass::operator()(arith_unary_inst a) {
+    dump_val(a.result());
+    *os_ << " = " << to_string(a.get().type_id()) << " ";
     dump_val(a.a());
     *os_ << " : ";
-    visit(*this, *a.result(0).ty());
+    visit(*this, *a.result().ty());
 }
 
-void dump_ir_pass::operator()(barrier_inst const &b) {
+void dump_ir_pass::operator()(associated_inst a) {
+    dump_val(a.result());
+    *os_ << " = ";
+    dump_val(a.operand());
+    *os_ << " : ";
+    visit(*this, *a.result().ty());
+}
+
+void dump_ir_pass::dump_scope_sem(memory_scope scope, memory_semantics semantics) {
+    if (scope != memory_scope::work_group) {
+        *os_ << "." << to_string(scope);
+    }
+    if (semantics != memory_semantics::relaxed) {
+        *os_ << "." << to_string(semantics);
+    }
+}
+
+void dump_ir_pass::operator()(atomic_load_inst l) {
+    dump_val(l.result());
+    *os_ << " = atomic_load";
+    dump_scope_sem(l.scope(), l.semantics());
+    *os_ << " ";
+    dump_memory_read(l);
+}
+
+void dump_ir_pass::operator()(atomic_store_inst s) {
+    *os_ << "atomic_store";
+    dump_scope_sem(s.scope(), s.semantics());
+    *os_ << " ";
+    dump_memory_write(s);
+}
+
+void dump_ir_pass::operator()(atomic_update_inst s) {
+    dump_val(s.result());
+    *os_ << " = " << to_string(s.get().type_id());
+    dump_scope_sem(s.scope(), s.semantics());
+    *os_ << " ";
+    dump_memory_write(s);
+    *os_ << " : ";
+    visit(*this, *s.result().ty());
+}
+
+void dump_ir_pass::operator()(barrier_inst b) {
     *os_ << "barrier";
     if (b.has_fence(address_space::global)) {
         *os_ << ".global";
@@ -197,32 +295,26 @@ void dump_ir_pass::operator()(barrier_inst const &b) {
     }
 }
 
-void dump_ir_pass::operator()(builtin_inst const &in) {
-    dump_val(in.result(0));
-    *os_ << " = builtin." << to_string(in.builtin_type()) << " : ";
-    visit(*this, *in.result(0).ty());
-}
-
-void dump_ir_pass::operator()(cast_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cast_inst c) {
+    dump_val(c.result());
     *os_ << " = cast ";
     dump_val(c.a());
     *os_ << " : ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(compare_inst const &a) {
-    dump_val(a.result(0));
-    *os_ << " = cmp." << to_string(a.cond()) << " ";
+void dump_ir_pass::operator()(compare_inst a) {
+    dump_val(a.result());
+    *os_ << " = " << to_string(a.get().type_id()) << " ";
     dump_val(a.a());
     *os_ << ", ";
     dump_val(a.b());
     *os_ << " : ";
-    visit(*this, *a.result(0).ty());
+    visit(*this, *a.result().ty());
 }
 
-void dump_ir_pass::operator()(constant_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(constant_inst c) {
+    dump_val(c.result());
     *os_ << " = constant ";
     std::visit(overloaded{
                    [&](bool b) { *os_ << (b ? "true" : "false"); },
@@ -246,11 +338,11 @@ void dump_ir_pass::operator()(constant_inst const &c) {
                },
                c.value());
     *os_ << " : ";
-    visit(*this, *c.result()->ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_apply_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cooperative_matrix_apply_inst c) {
+    dump_val(c.result());
     *os_ << " = cooperative_matrix_apply (";
     dump_val(c.row());
     *os_ << ",";
@@ -260,47 +352,74 @@ void dump_ir_pass::operator()(cooperative_matrix_apply_inst const &c) {
     *os_ << ") in ";
     dump_val(c.a());
     *os_ << " -> ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
     dump_region(c.body());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_extract_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cooperative_matrix_atomic_load_inst c) {
+    dump_val(c.result());
+    *os_ << " = cooperative_matrix_atomic_load";
+    dump_transpose_checked(c.t(), c.checked());
+    dump_scope_sem(c.scope(), c.semantics());
+    *os_ << " ";
+    dump_cooperative_matrix_memory_read(c);
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_atomic_store_inst s) {
+    *os_ << "cooperative_matrix_atomic_store";
+    dump_transpose_checked(s.t(), s.checked());
+    dump_scope_sem(s.scope(), s.semantics());
+    *os_ << " ";
+    dump_cooperative_matrix_memory_write(s);
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_atomic_update_inst s) {
+    dump_val(s.result());
+    *os_ << " = " << to_string(s.get().type_id());
+    dump_transpose_checked(s.t(), s.checked());
+    dump_scope_sem(s.scope(), s.semantics());
+    *os_ << " ";
+    dump_cooperative_matrix_memory_write(s);
+    *os_ << " : ";
+    visit(*this, *s.result().ty());
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_construct_inst c) {
+    dump_val(c.result());
+    *os_ << " = cooperative_matrix_construct ";
+    dump_val(c.number());
+    *os_ << " : ";
+    visit(*this, *c.result().ty());
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_extract_inst c) {
+    dump_val(c.result());
     *os_ << " = cooperative_matrix_extract ";
     dump_val(c.mat());
     *os_ << "[" << c.index() << "] : ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_insert_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cooperative_matrix_insert_inst c) {
+    dump_val(c.result());
     *os_ << " = cooperative_matrix_insert ";
     dump_val(c.val());
     *os_ << ", ";
     dump_val(c.mat());
     *os_ << "[" << c.index() << "] : ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cooperative_matrix_load_inst c) {
+    dump_val(c.result());
     *os_ << " = cooperative_matrix_load";
-    *os_ << "." << to_string(c.t());
-    if (c.checked() != checked_flag::none) {
-        *os_ << "." << to_string(c.checked());
-    }
+    dump_transpose_checked(c.t(), c.checked());
     *os_ << " ";
-    dump_val(c.operand());
-    *os_ << "[";
-    dump_val(c.pos0());
-    *os_ << ",";
-    dump_val(c.pos1());
-    *os_ << "] : ";
-    visit(*this, *c.result(0).ty());
+    dump_cooperative_matrix_memory_read(c);
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst c) {
+    dump_val(c.result());
     *os_ << " = cooperative_matrix_mul_add ";
     dump_val(c.a());
     *os_ << ", ";
@@ -308,10 +427,10 @@ void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
     *os_ << ", ";
     dump_val(c.c());
     *os_ << " : ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst const &c) {
+void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst c) {
     *os_ << "cooperative_matrix_prefetch ";
     *os_ << c.cache_level();
     *os_ << ", ";
@@ -326,45 +445,33 @@ void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst const &c) {
     *os_ << c.cols();
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_reduce_inst const &c) {
-    dump_val(c.result(0));
-    *os_ << " = cooperative_matrix_reduce.";
-    *os_ << to_string(c.arith()) << "." << to_string(c.mode()) << " ";
+void dump_ir_pass::operator()(cooperative_matrix_reduce_inst c) {
+    dump_val(c.result());
+    *os_ << " = ";
+    *os_ << to_string(c.get().type_id()) << "." << to_string(c.mode()) << " ";
     dump_val(c.a());
     *os_ << " : ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_scale_inst const &c) {
-    dump_val(c.result(0));
+void dump_ir_pass::operator()(cooperative_matrix_scale_inst c) {
+    dump_val(c.result());
     *os_ << " = cooperative_matrix_scale ";
     dump_val(c.a());
     *os_ << ", ";
     dump_val(c.b());
     *os_ << " : ";
-    visit(*this, *c.result(0).ty());
+    visit(*this, *c.result().ty());
 }
 
-void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
+void dump_ir_pass::operator()(cooperative_matrix_store_inst c) {
     *os_ << "cooperative_matrix_store";
-    if (c.checked() != checked_flag::none) {
-        *os_ << "." << to_string(c.checked());
-    }
-    if (c.flag() != store_flag::regular) {
-        *os_ << '.' << to_string(c.flag());
-    }
+    dump_transpose_checked(c.t(), c.checked());
     *os_ << " ";
-    dump_val(c.val());
-    *os_ << ", ";
-    dump_val(c.operand());
-    *os_ << "[";
-    dump_val(c.pos0());
-    *os_ << ",";
-    dump_val(c.pos1());
-    *os_ << "]";
+    dump_cooperative_matrix_memory_write(c);
 }
 
-void dump_ir_pass::operator()(cumsum_inst const &in) {
+void dump_ir_pass::operator()(cumsum_inst in) {
     *os_ << "cumsum";
     if (in.atomic()) {
         *os_ << ".atomic";
@@ -379,8 +486,8 @@ void dump_ir_pass::operator()(cumsum_inst const &in) {
     dump_val(in.B());
 }
 
-void dump_ir_pass::operator()(expand_inst const &e) {
-    dump_val(e.result(0));
+void dump_ir_pass::operator()(expand_inst e) {
+    dump_val(e.result());
     *os_ << " = expand ";
     dump_val(e.operand());
     *os_ << "[" << e.expanded_mode() << "->";
@@ -397,61 +504,70 @@ void dump_ir_pass::operator()(expand_inst const &e) {
         }
     }
     *os_ << "] : ";
-    visit(*this, *e.result(0).ty());
+    visit(*this, *e.result().ty());
 }
 
-void dump_ir_pass::operator()(fuse_inst const &f) {
-    dump_val(f.result(0));
+void dump_ir_pass::operator()(fuse_inst f) {
+    dump_val(f.result());
     *os_ << " = fuse ";
     dump_val(f.operand());
     *os_ << "[" << f.from() << "," << f.to() << "]";
     *os_ << " : ";
-    visit(*this, *f.result(0).ty());
+    visit(*this, *f.result().ty());
 }
 
-void dump_ir_pass::operator()(load_inst const &e) {
-    dump_val(e.result(0));
+void dump_ir_pass::operator()(load_inst l) {
+    dump_val(l.result());
     *os_ << " = load ";
-    dump_val(e.operand());
-    *os_ << "[";
-    do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { dump_val(i); });
-    *os_ << "] : ";
-    visit(*this, *e.result(0).ty());
+    dump_memory_read(l);
 }
 
-void dump_ir_pass::operator()(lifetime_stop_inst const &l) {
+void dump_ir_pass::operator()(lifetime_stop_inst l) {
     *os_ << "lifetime_stop ";
     dump_val(l.object());
 }
 
-void dump_ir_pass::operator()(gemm_inst const &g) {
+void dump_ir_pass::operator()(gemm_inst g) {
     *os_ << "gemm";
-    *os_ << "." << to_string(g.tA());
-    *os_ << "." << to_string(g.tB());
-    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
+    if (g.atomic()) {
+        *os_ << ".atomic";
+    }
+    if (g.tA() != transpose::N || g.tB() != transpose::N) {
+        *os_ << "." << to_string(g.tA());
+    }
+    if (g.tB() != transpose::N) {
+        *os_ << "." << to_string(g.tB());
+    }
+    dump_blas_a3(static_cast<blas_a3_inst>(g));
 }
 
-void dump_ir_pass::operator()(gemv_inst const &g) {
+void dump_ir_pass::operator()(gemv_inst g) {
     *os_ << "gemv";
-    *os_ << "." << to_string(g.tA());
-    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
+    if (g.atomic()) {
+        *os_ << ".atomic";
+    }
+    if (g.tA() != transpose::N) {
+        *os_ << "." << to_string(g.tA());
+    }
+    dump_blas_a3(static_cast<blas_a3_inst>(g));
 }
 
-void dump_ir_pass::operator()(ger_inst const &g) {
+void dump_ir_pass::operator()(ger_inst g) {
     *os_ << "ger";
-    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
+    if (g.atomic()) {
+        *os_ << ".atomic";
+    }
+    dump_blas_a3(static_cast<blas_a3_inst>(g));
 }
 
-void dump_ir_pass::operator()(for_inst const &in) {
-    if (in.num_results() > 0) {
-        do_with_infix(in.result_begin(), in.result_end(), [this](auto const &i) { dump_val(i); });
+void dump_ir_pass::operator()(for_inst in) {
+    auto results = in.results();
+    if (results.size() > 0) {
+        do_with_infix(results.begin(), results.end(), [this](auto const &i) { dump_val(i); });
         *os_ << " = ";
     }
     *os_ << "for ";
     dump_val(in.loop_var());
-    *os_ << ":";
-    visit(*this, *in.loop_var().ty());
     *os_ << "=";
     dump_val(in.from());
     *os_ << ",";
@@ -460,36 +576,35 @@ void dump_ir_pass::operator()(for_inst const &in) {
         *os_ << ",";
         dump_val(in.step());
     }
-    if (in.num_results() > 0) {
+    if (results.size() > 0) {
+        auto iter_init = in.iter_init();
         *os_ << " init(";
-        for (std::int64_t i = 0; i < in.num_results(); ++i) {
+        for (std::int64_t i = 0; i < results.size(); ++i) {
             if (i != 0) {
                 *os_ << ",";
             }
             dump_val(in.iter_arg(i));
             *os_ << "=";
-            dump_val(in.iter_init(i));
+            dump_val(iter_init[i]);
         }
         *os_ << ") -> (";
-        do_with_infix(in.result_begin(), in.result_end(),
+        do_with_infix(results.begin(), results.end(),
                       [this](auto const &i) { visit(*this, *i.ty()); });
         *os_ << ")";
     }
     *os_ << " ";
     dump_region(in.body());
-    if (in.attr()) {
-        *os_ << " ";
-        visit(*this, *in.attr());
+    if (in.get().attr()) {
+        *os_ << " attributes";
+        visit(*this, *in.get().attr());
     }
 }
 
-void dump_ir_pass::operator()(foreach_inst const &in) {
+void dump_ir_pass::operator()(foreach_inst in) {
     *os_ << "foreach (";
     do_with_infix(in.loop_vars().begin(), in.loop_vars().end(),
                   [this](auto const &i) { dump_val(i); });
-    *os_ << "):";
-    visit(*this, *in.loop_vars().begin()->ty());
-    *os_ << "=(";
+    *os_ << ")=(";
     do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
     *os_ << "),(";
     do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
@@ -497,23 +612,44 @@ void dump_ir_pass::operator()(foreach_inst const &in) {
     dump_region(in.body());
 }
 
-void dump_ir_pass::operator()(hadamard_inst const &g) {
-    *os_ << "hadamard";
-    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
+void dump_ir_pass::operator()(foreach_tile_inst in) {
+    *os_ << "foreach_tile (";
+    auto loop_vars = in.loop_vars();
+    do_with_infix(loop_vars.begin(), loop_vars.end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ")=(";
+    do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
+    *os_ << "),(";
+    do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ") as (";
+    auto sizes = in.sizes();
+    do_with_infix(sizes.begin(), sizes.end(), [this](auto const &i) { dump_val(i); });
+    *os_ << ")<=(";
+    do_with_infix(in.tile_shape().begin(), in.tile_shape().end(),
+                  [this](auto const &i) { *os_ << i; });
+    *os_ << ") ";
+    dump_region(in.body());
 }
 
-void dump_ir_pass::operator()(if_inst const &in) {
+void dump_ir_pass::operator()(hadamard_inst g) {
+    *os_ << "hadamard";
+    if (g.atomic()) {
+        *os_ << ".atomic";
+    }
+    dump_blas_a3(static_cast<blas_a3_inst>(g));
+}
 
-    if (in.num_results() > 0) {
-        do_with_infix(in.result_begin(), in.result_end(), [this](auto const &i) { dump_val(i); });
+void dump_ir_pass::operator()(if_inst in) {
+    auto results = in.results();
+    if (results.size() > 0) {
+        do_with_infix(results.begin(), results.end(), [this](auto const &i) { dump_val(i); });
         *os_ << " = ";
     }
     *os_ << "if ";
     dump_val(in.condition());
     *os_ << " ";
-    if (in.num_results() > 0) {
+    if (results.size() > 0) {
         *os_ << "-> (";
-        do_with_infix(in.result_begin(), in.result_end(),
+        do_with_infix(results.begin(), results.end(),
                       [this](auto const &i) { visit(*this, *i.ty()); });
         *os_ << ") ";
     }
@@ -524,48 +660,48 @@ void dump_ir_pass::operator()(if_inst const &in) {
     }
 }
 
-void dump_ir_pass::operator()(math_unary_inst const &in) {
-    dump_val(in.result(0));
-    *os_ << " = math." << to_string(in.operation()) << " ";
+void dump_ir_pass::operator()(math_unary_inst in) {
+    dump_val(in.result());
+    *os_ << " = " << to_string(in.get().type_id()) << " ";
     dump_val(in.a());
     *os_ << " : ";
-    visit(*this, *in.result(0).ty());
+    visit(*this, *in.result().ty());
 }
 
-void dump_ir_pass::operator()(parallel_inst const &p) {
+void dump_ir_pass::operator()(parallel_inst p) {
     *os_ << "parallel ";
     dump_region(p.body());
 }
 
-void dump_ir_pass::operator()(size_inst const &s) {
-    dump_val(s.result(0));
+void dump_ir_pass::operator()(size_inst s) {
+    dump_val(s.result());
     *os_ << " = size ";
     dump_val(s.operand());
     *os_ << "[" << s.mode() << "]";
     *os_ << " : ";
-    visit(*this, *s.result(0).ty());
+    visit(*this, *s.result().ty());
 }
 
-void dump_ir_pass::operator()(subgroup_broadcast_inst const &in) {
-    dump_val(in.result(0));
+void dump_ir_pass::operator()(subgroup_broadcast_inst in) {
+    dump_val(in.result());
     *os_ << " = subgroup_broadcast ";
     dump_val(in.a());
     *os_ << ", ";
     dump_val(in.idx());
     *os_ << " : ";
-    visit(*this, *in.result(0).ty());
+    visit(*this, *in.result().ty());
 }
 
-void dump_ir_pass::operator()(subgroup_operation_inst const &in) {
-    dump_val(in.result(0));
-    *os_ << " = subgroup." << to_string(in.arith()) << "." << to_string(in.operation()) << " ";
+void dump_ir_pass::operator()(subgroup_operation_inst in) {
+    dump_val(in.result());
+    *os_ << " = " << to_string(in.get().type_id()) << " ";
     dump_val(in.a());
     *os_ << " : ";
-    visit(*this, *in.result(0).ty());
+    visit(*this, *in.result().ty());
 }
 
-void dump_ir_pass::operator()(subview_inst const &s) {
-    dump_val(s.result(0));
+void dump_ir_pass::operator()(subview_inst s) {
+    dump_val(s.result());
     *os_ << " = subview ";
     dump_val(s.operand());
     *os_ << "[";
@@ -592,44 +728,76 @@ void dump_ir_pass::operator()(subview_inst const &s) {
         }
     }
     *os_ << "] : ";
-    visit(*this, *s.result(0).ty());
+    visit(*this, *s.result().ty());
 }
 
-void dump_ir_pass::operator()(store_inst const &e) {
-    *os_ << "store";
-    if (e.flag() != store_flag::regular) {
-        *os_ << '.' << to_string(e.flag());
-    }
-    *os_ << ' ';
-    dump_val(e.val());
-    *os_ << ", ";
-    dump_val(e.operand());
-    *os_ << "[";
-    do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { dump_val(i); });
-    *os_ << "]";
+void dump_ir_pass::operator()(store_inst s) {
+    *os_ << "store ";
+    dump_memory_write(s);
 }
 
-void dump_ir_pass::operator()(sum_inst const &a) {
+void dump_ir_pass::operator()(sum_inst a) {
     *os_ << "sum";
-    *os_ << "." << to_string(a.tA());
-    dump_blas_a2(static_cast<blas_a2_inst const &>(a));
+    if (a.atomic()) {
+        *os_ << ".atomic";
+    }
+    if (a.tA() != transpose::N) {
+        *os_ << "." << to_string(a.tA());
+    }
+    dump_blas_a2(static_cast<blas_a2_inst>(a));
 }
 
-void dump_ir_pass::operator()(yield_inst const &y) {
+void dump_ir_pass::operator()(yield_inst y) {
     *os_ << "yield (";
-    if (y.num_operands() > 0) {
-        do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { dump_val(i); }, ", ");
+    auto vals = y.yielded_vals();
+    if (vals.size() > 0) {
+        do_with_infix(vals.begin(), vals.end(), [this](auto const &i) { dump_val(i); }, ", ");
     }
     *os_ << ")";
 }
 
-void dump_ir_pass::dump_region(region_node const &reg) {
+void dump_ir_pass::operator()(group_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = group_id." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(num_groups_inst in) {
+    dump_val(in.result());
+    *os_ << " = num_groups." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(num_subgroups_inst in) {
+    dump_val(in.result());
+    *os_ << " = num_subgroups." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_size_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_size : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_id." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_linear_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_linear_id : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_local_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_local_id : ";
+    visit(*this, *in.result().ty());
+}
+
+void dump_ir_pass::dump_region(tinytc_region &reg) {
     if (lvl_ < lvl_limit_) {
         *os_ << "{" << std::endl;
         ++lvl_;
         auto ind = indent();
-        for (auto const &i : reg) {
+        for (auto &i : reg) {
             *os_ << ind;
             visit(*this, i);
             *os_ << std::endl;
@@ -641,7 +809,7 @@ void dump_ir_pass::dump_region(region_node const &reg) {
     }
 }
 
-void dump_ir_pass::run_on_function(function_node const &fn) {
+void dump_ir_pass::run_on_function(tinytc_func &fn) {
     init_slot_tracker(fn);
 
     *os_ << "func @" << fn.name() << "(";
@@ -669,10 +837,10 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
     *os_ << std::endl;
 }
 
-void dump_ir_pass::run_on_region(region_node const &reg) { dump_region(reg); }
-void dump_ir_pass::run_on_instruction(inst_node const &in) { visit(*this, in); }
+void dump_ir_pass::run_on_region(tinytc_region &reg) { dump_region(reg); }
+void dump_ir_pass::run_on_instruction(tinytc_inst &in) { visit(*this, in); }
 
-void dump_ir_pass::init_slot_tracker(function_node const &fn) {
+void dump_ir_pass::init_slot_tracker(tinytc_func &fn) {
     tracker_ = slot_tracker{};
     tracker_.run_on_function(fn);
 }

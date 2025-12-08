@@ -39,11 +39,11 @@ does not need the object anymore, or it increased the reference count by one.
        C handles are wrapped in the :ref:`tinytc::shared_handle` class.
        The wrapper implements copy constructor, move constructor, copy operator, and move operator,
        correctly handling the reference count.
-       Objects of *type* are created using the make\_\ *type* functions.
+       Objects of *type* are created using the create\_\ *type* functions.
 
        **Important:** The default constructor of a :ref:`tinytc::shared_handle` or any of its
        derivatives always gives an invalid object, wrapping a nullptr.
-       Always use the make\_\ *type* function unless you know what you are doing.
+       Always use the create\_\ *type* function unless you know what you are doing.
 
 Unique objects
 --------------
@@ -68,7 +68,7 @@ In C++, the copy constructor is deleted and unique objects must be moved when a 
 
        C handles are wrapped in the :ref:`tinytc::unique_handle` class.
        The wrapper deletes the copy constructor and copy operator, and implements the move constructor and move operator.
-       Objects of *type* are created using the make\_\ *type* functions.
+       Objects of *type* are created using the create\_\ *type* functions.
 
 Managed ojects
 --------------
@@ -89,7 +89,8 @@ Care must be taken that the parent object is not deleted while the managed objec
 
        The object is obtained with
 
-       * tinytc::get\_\ *type*
+       * tinytc::get\_\ *type* or
+       * tinytc::get< *type* >
 
 Error
 =====
@@ -101,7 +102,7 @@ The C-API returns error codes, the C++-API throws exceptions.
     .. tab:: C
 
        Cf. :ref:`tinytc_status_t` for a list of error codes.
-       Level Zero and OpenCL codes are translated to :ref:`tinytc_status_t`.
+       Level Zero and OpenCL codes are mapped to tinytc_status_compute_runtime_error.
 
     .. tab:: C++
 
@@ -113,7 +114,7 @@ The C-API returns error codes, the C++-API throws exceptions.
           try {
               ...
           } catch (tinytc::status const& st) {
-              std::cerr << static_cast<int>(st) << ": " << tinytc::error_string(st) << std::endl;
+              std::cerr << static_cast<int>(st) << ": " << tinytc::to_string(st) << std::endl;
           } catch (std::exception const& e) {
               std::cerr << e.what() << std::endl;
           }
@@ -127,7 +128,7 @@ Parser
 
 Programs written in the :ref:`tensor language <tensor language>`
 are parsed from a file, stdin, or a string.
-The :ref:`tinytc_compiler_context_t` (:ref:`tinytc::compiler_context`) object controls optimization level, optimization flags,
+The :ref:`tinytc_compiler_context_t` object controls optimization level, optimization flags,
 and error logging. (The default compiler context does not print or log errors.)
 When an error reporter is installed via :ref:`tinytc_compiler_context_set_error_reporter`,
 then errors are printed along with source code locations and source context.
@@ -178,13 +179,13 @@ For example:
        .. code:: C++
 
           try {
-              auto ctx = tinytc::make_compiler_context();
-              ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
-                                        void *) { std::cerr << what << std::endl; },
-                                     nullptr);
-              auto program = tinytc::parse_file("test/lit/opt/check-ir/type_mismatch0.ir", ctx);
-          } catch (tinytc::status const& st) {
-              std::cerr << "Error: " << tinytc::error_string(st) << std::endl;
+              auto ctx = tinytc::create_compiler_context();
+              set_error_reporter([](ctx.get(), char const *what, const tinytc_location_t *,
+                                    void *) { std::cerr << what << std::endl; },
+                                 nullptr);
+              auto program = tinytc::parse_file("test/lit/opt/check-ir/type_mismatch0.ir", ctx.get());
+          } catch (tinytc::status const &st) {
+              std::cerr << "Error: " << tinytc::to_string(st) << std::endl;
           } catch (std::exception const &e) {
               std::cerr << e.what() << std::endl;
           }
@@ -192,15 +193,15 @@ For example:
 Compiler
 ========
 
-Program objects (:ref:`tinytc_prog_t`, :ref:`tinytc::prog`) are online-compiled
+Program objects (:ref:`tinytc_prog_t`) are online-compiled
 using the :ref:`tinytc_prog_compile_to_spirv_and_assemble` (:ref:`tinytc::compile_to_spirv_and_assemble`) function.
 The program object is hereby modified as compiler passes are necessary.
 A binary object is returned that contains the SPIR-V binary.
 
 Some compiler passes specialize the code based on properties of the GPU device.
-Therefore, a :ref:`tinytc_core_info_t` (:ref:`tinytc::core_info`) object is required.
+Therefore, a :ref:`tinytc_core_info_t` object is required.
 It is recommend to query the core info from the runtime using any of the tinytc\_\ *runtime*\ _core_info_create
-functions (make_core_info in C++), but one may also look up the core info from a table,
+functions (create_core_info in C++), but one may also look up the core info from a table,
 as done in the example code below.
 
 .. tabs::
@@ -228,8 +229,8 @@ as done in the example code below.
        .. code:: C++
 
           try {
-              auto info = tinytc::make_core_info_intel_from_arch(tinytc::intel_gpu_architecture::pvc);
-              auto source = tinytc::compile_to_spirv_and_assemble(program, info);
+              auto info = tinytc::create_core_info_intel_from_arch(tinytc::intel_gpu_architecture::pvc);
+              auto bin = tinytc::compile_to_spirv_and_assemble(program.get(), info.get());
           } catch (tinytc::status const& st) {
               ...
           }
@@ -292,7 +293,7 @@ run-time.
        .. code:: C++
 
           if (tinytc::get_support_level(device) >= tinytc::support_level::basic) {
-              auto info = tinytc::make_core_info(device);
+              auto info = tinytc::create_core_info(device);
               // ...
           }
 
@@ -336,7 +337,7 @@ Example for "func @foo(%a: i32, ...) { ... }" (without error handling code):
           cl_kernel kernel;
           cl_int err;
           int a = 42;
-          tinytc_cl_kernel_bundle_create_with_binary(&bundle, context, device, bin);
+          tinytc_cl_kernel_bundle_create_with_binary(&bundle, context, device, bin.get());
           kernel = clCreateKernel(bundle, "foo", &err);
           clSetKernelArg(kernel, 0, sizeof(a), &a);
           // ...
@@ -352,8 +353,8 @@ Example for "func @foo(%a: i32, ...) { ... }" (without error handling code):
 
        .. code:: C++
 
-          auto bundle = tinytc::make_kernel_bundle(context, device, bin);
-          auto kernel = tinytc::make_kernel(bundle, "foo");
+          auto bundle = tinytc::create_kernel_bundle(context, device, bin);
+          auto kernel = tinytc::create_kernel(bundle, "foo");
           auto exe_range = tinytc::get_execution_range(kernel, howmany);
           queue.submit([&](sycl::handler &h) {
               h.set_args(42, ...);
@@ -410,9 +411,9 @@ The general usage of a recipe is as following:
 
        .. code:: C++
 
-          auto handler = tinytc::make_recipe_handler(queue,
-              tinytc::make_<recipe_name>(info, <recipe_parameters>, ctx), ctx);
-          <recipe_name>::set_args(handler, <recipe_args>);
+          auto rec = tinytc::create_<recipe_name>(info.get(), <recipe_parameters>);
+          auto handler = tinytc::create_recipe_handler(queue, rec.get());
+          set_<recipe_name>_args(handler, <recipe_args>);
           handler.submit(queue);
 
 Memory objects are either buffers (e.g. cl_mem in OpenCL) or Unified Shared Memory pointers

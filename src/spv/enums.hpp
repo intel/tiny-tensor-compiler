@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_20250605_HPP
-#define GENERATED_ENUMS_20250605_HPP
+#ifndef GENERATED_ENUMS_20250630_HPP
+#define GENERATED_ENUMS_20250630_HPP
 
 #include <cstdint>
 
@@ -1543,4 +1543,4 @@ enum class TensorOperands {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_20250605_HPP
+#endif // GENERATED_ENUMS_20250630_HPP

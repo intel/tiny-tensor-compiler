@@ -20,7 +20,7 @@
 
 func @coopmatrix_a_load_n(%A: memref<i8x64x48>, %x: index, %y: index) subgroup_size(16) {
     parallel {
-        %0 = cooperative_matrix_load.n %A[%x,%y], align 64 : coopmatrix<i8x16x32,matrix_a>
+        %0 = cooperative_matrix_load %A[%x,%y], align 64 : coopmatrix<i8x16x32,matrix_a>
     }
 ; CHECK:                        %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:             %[[#T1_MR:]] = OpFunctionParameter %[[#I8_PTR]]
@@ -35,7 +35,7 @@ func @coopmatrix_a_load_n(%A: memref<i8x64x48>, %x: index, %y: index) subgroup_s
 
 func @coopmatrix_a_load_n_checked(%A: memref<i8x64x48>, %x: index, %y: index) subgroup_size(16) {
     parallel {
-        %0 = cooperative_matrix_load.n.both_checked %A[%x,%y], align 64 : coopmatrix<i8x16x32,matrix_a>
+        %0 = cooperative_matrix_load.both_checked %A[%x,%y], align 64 : coopmatrix<i8x16x32,matrix_a>
     }
 ; CHECK:             %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT: %[[#T2_PTR:]] = OpFunctionParameter %[[#I8_PTR]]

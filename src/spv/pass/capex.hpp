@@ -5,9 +5,12 @@
 #define CAPEX_20241113_HPP
 
 #include "spv/defs.hpp"
+#include "spv/enums.hpp"
+#include "spv/instructions.hpp"
 #include "tinytc/types.h"
 
 #include <array>
+#include <utility>
 
 namespace tinytc {
 enum class spirv_feature;
@@ -63,7 +66,7 @@ class capex {
     void check_int_atomic(spv_inst *ty);
 
     uniquifier *unique_;
-    std::array<bool, TINYTC_NUMBER_OF_SPIRV_FEATURES> required_features_ = {};
+    std::array<bool, TINYTC_ENUM_NUM_SPIRV_FEATURE> required_features_ = {};
 };
 
 } // namespace tinytc::spv

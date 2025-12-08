@@ -25,7 +25,7 @@ function(cpack_setup)
         "/__pycache__/"
     )
 
-    set(GENERATED_FILES ${GENERATED_FILES})
+    set(GENERATED_FILE_LISTS_DIR "${PROJECT_BINARY_DIR}/generated_file_lists")
 
     configure_file("${PROJECT_SOURCE_DIR}/cmake/CPackGeneratedFiles.cmake.in" "CPackGeneratedFiles.cmake" @ONLY)
     set(CPACK_INSTALL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/CPackGeneratedFiles.cmake")
@@ -38,6 +38,9 @@ function(cpack_setup)
     )
     if(BUILD_OPENCL)
         add_dependencies(dist tinytc_cl-objects)
+    endif()
+    if(BUILD_MOCHI)
+        add_dependencies(dist mochi)
     endif()
 endfunction()
 

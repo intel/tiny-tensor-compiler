@@ -4,7 +4,7 @@
 #ifndef DUMP_DEF_USE_20241002_HPP
 #define DUMP_DEF_USE_20241002_HPP
 
-#include "node/function_node.hpp"
+#include "tinytc/types.h"
 
 #include <iosfwd>
 
@@ -14,7 +14,7 @@ class dump_def_use_pass {
   public:
     dump_def_use_pass(std::ostream &os);
 
-    void run_on_function(function_node const &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
     std::ostream *os_;

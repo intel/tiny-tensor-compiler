@@ -1,0 +1,30 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#include "node/inst_view.hpp"
+
+#include <concepts>
+#include <type_traits>
+#include <utility>
+
+namespace tinytc {
+
+template <std::signed_integral T> void safe_increase(std::int32_t &value, T by) {
+    if (by < 0 || by > std::numeric_limits<std::int32_t>::max() - value) {
+        throw status::out_of_range;
+    }
+    value += by;
+}
+
+template <std::unsigned_integral T> void safe_increase(std::int32_t &value, T by) {
+    using T_s = std::make_signed_t<T>;
+    if (by > static_cast<T>(std::numeric_limits<T_s>::max()) ||
+        static_cast<T_s>(by) > std::numeric_limits<std::int32_t>::max() - value) {
+        throw status::out_of_range;
+    }
+    value += by;
+}
+
+// もち inst_cpp "tinytc/instructions.anko"
+
+} // namespace tinytc

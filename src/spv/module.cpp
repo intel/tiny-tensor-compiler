@@ -7,9 +7,9 @@
 #include "spv/defs.hpp"
 #include "spv/module.hpp"
 #include "spv/pass/dump_asm.hpp"
-#include "support/ilist_base.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.hpp"
+#include "util/ilist_base.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -26,7 +26,8 @@ void ilist_callbacks<spv::spv_inst>::node_removed(spv::spv_inst *node) { delete 
 
 using namespace tinytc;
 
-tinytc_spv_mod::tinytc_spv_mod(compiler_context ctx, tinytc_core_feature_flags_t core_features,
+tinytc_spv_mod::tinytc_spv_mod(shared_handle<tinytc_compiler_context_t> ctx,
+                               tinytc_core_feature_flags_t core_features,
                                std::int32_t major_version, std::int32_t minor_version)
     : ctx_{std::move(ctx)}, core_features_(core_features), major_version_{major_version},
       minor_version_{minor_version} {}

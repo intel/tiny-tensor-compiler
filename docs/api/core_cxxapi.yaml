@@ -2,29 +2,31 @@
 # SPDX-License-Identifier: BSD-3-Clause
 Core C++-API:
   Common:
-    enum:
-      - tinytc::status
-      - tinytc::support_level
     function:
-      - tinytc::error_string
       - tinytc::CHECK_STATUS
       - tinytc::CHECK_STATUS_LOC
     class:
       - tinytc::array_view_base
       - tinytc::array_view
       - tinytc::mutable_array_view
-      - tinytc::handle
       - tinytc::shared_handle
       - tinytc::unique_handle
-    typedef:
-      - tinytc::error_reporter_t
+    struct:
+      - tinytc::auto_mem_type
+      - tinytc::auto_mem_type< T, std::enable_if_t< is_usm_pointer_type< T > > >
+      - tinytc::mem
+    variable:
+      - tinytc::auto_mem_type_v
+      - tinytc::is_supported_scalar_type
+      - tinytc::is_usm_pointer_type
   Binary:
-    enum:
-      - tinytc::bundle_format
     function:
-      - tinytc::make_binary
-    class:
-      - tinytc::binary
+      - tinytc::create_binary
+      - tinytc::get_compiler_context(const_tinytc_binary_t)
+      - tinytc::get_core_features(const_tinytc_binary_t)
+      - tinytc::get_raw
+    struct:
+      - tinytc::raw_binary
   Compiler:
     function:
       - tinytc::run_function_pass
@@ -34,22 +36,25 @@ Core C++-API:
       - tinytc::spirv_assemble
   Compiler Context:
     function:
-      - tinytc::make_compiler_context
-    class:
-      - tinytc::compiler_context
+      - tinytc::add_source
+      - tinytc::create_compiler_context
+      - tinytc::set_error_reporter
+      - tinytc::set_optimization_flag
+      - tinytc::set_optimization_level
+      - tinytc::report_error
   Device Info:
-    enum:
-      - tinytc::core_feature_flag
-      - tinytc::intel_gpu_architecture
-      - tinytc::spirv_feature
     function:
-      - tinytc::make_core_info_generic
-      - tinytc::make_core_info_intel
-      - tinytc::make_core_info_intel_from_arch
-      - tinytc::make_core_info_intel_from_name
-      - tinytc::to_string(spirv_feature)
-    class:
-      - tinytc::core_info
+      - tinytc::create_core_info_generic
+      - tinytc::create_core_info_intel
+      - tinytc::create_core_info_intel_from_arch
+      - tinytc::create_core_info_intel_from_name
+      - tinytc::get_core_features(const_tinytc_core_info_t)
+      - tinytc::get_subgroup_sizes
+      - tinytc::get_register_space
+      - tinytc::have_spirv_feature
+      - tinytc::set_core_features
+      - tinytc::set_default_alignment
+      - tinytc::set_spirv_feature
   FP math:
     function:
       - tinytc::ieee754_extend
@@ -69,26 +74,14 @@ Core C++-API:
       - tinytc::parse_file
       - tinytc::parse_stdin
       - tinytc::parse_string
-  Recipe:
-    enum:
-      - tinytc::mem_type
+  Program:
     function:
-      - tinytc::make_small_gemm_batched
-      - tinytc::make_tall_and_skinny
-      - tinytc::make_tall_and_skinny_specialized
-    class:
-      - tinytc::recipe
-      - tinytc::recipe_handler
-      - tinytc::small_gemm_batched
-      - tinytc::tall_and_skinny
-    struct:
-      - tinytc::auto_mem_type
-      - tinytc::auto_mem_type< T, std::enable_if_t< is_usm_pointer_type< T > > >
-      - tinytc::mem
-    variable:
-      - tinytc::auto_mem_type_v
-      - tinytc::is_supported_scalar_type
-      - tinytc::is_usm_pointer_type
+      - tinytc::dump(tinytc_prog_t)
+      - tinytc::get_compiler_context(const_tinytc_prog_t)
+      - tinytc::print_to_file(tinytc_prog_t, char const*)
+      - tinytc::print_to_string(tinytc_prog_t) 
   SPIR-V module:
-    class:
-      - tinytc::spv_mod
+    function:
+      - tinytc::dump(const_tinytc_spv_mod_t)
+      - tinytc::print_to_file(const_tinytc_spv_mod_t, char const*)
+      - tinytc::print_to_string(const_tinytc_spv_mod_t)

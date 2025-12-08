@@ -10,14 +10,18 @@
 ; CHECK: %[[#FLOG2:]] = OpConstant %[[#F32]]
 
 func @tfloat(%a: f32) {
-    %0 = math.exp %a : f32
-    %1 = math.native_exp %a : f32
-    %2 = math.exp2 %a : f32
-    %3 = math.native_exp2 %a : f32
-    %4 = math.cos %a : f32
-    %5 = math.native_cos %a : f32
-    %6 = math.sin %a : f32
-    %7 = math.native_sin %a : f32
+    %0 = exp %a : f32
+    %1 = native_exp %a : f32
+    %2 = exp2 %a : f32
+    %3 = native_exp2 %a : f32
+    %4 = cos %a : f32
+    %5 = native_cos %a : f32
+    %6 = sin %a : f32
+    %7 = native_sin %a : f32
+    %8 = log %a : f32
+    %9 = native_log %a : f32
+    %10 = log2 %a : f32
+    %11 = native_log2 %a : f32
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] exp %[[#]]
 ; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_exp %[[#]]
@@ -27,11 +31,15 @@ func @tfloat(%a: f32) {
 ; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_cos %[[#]]
 ; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] sin %[[#]]
 ; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_sin %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] log %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_log %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] log2 %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_log2 %[[#]]
 }
 
 func @tcomplex(%a: c32) {
-    %0 = math.exp %a : c32
-    %1 = math.exp2 %a : c32
+    %0 = exp %a : c32
+    %1 = exp2 %a : c32
 ; CHECK-LABEL:       %[[#]] = OpFunction {{.*}}
 ; CHECK:          %[[#A2:]] = OpFunctionParameter %[[#C32]]
 ; CHECK:        %[[#A2_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0

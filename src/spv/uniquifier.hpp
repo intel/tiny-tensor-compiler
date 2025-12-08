@@ -6,11 +6,10 @@
 
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
-#include "support/fnv1a.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
+#include "util/fnv1a.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
@@ -21,9 +20,7 @@
 
 namespace tinytc {
 enum class address_space;
-enum class scalar_type;
 enum class vector_size;
-class memref_data_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -51,12 +48,10 @@ class uniquifier {
     // types
     auto array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst *;
     auto bool_ty() -> spv_inst *;
-    auto bool2_ty() -> spv_inst *;
+    auto float_ty(std::int32_t width) -> spv_inst *;
     auto function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst *;
-    auto index3_ty() -> spv_inst *;
+    auto int_ty(std::int32_t width) -> spv_inst *;
     auto pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t alignment) -> spv_inst *;
-    auto pointer_ty(memref_data_type const *mt) -> spv_inst *;
-    auto scalar_ty(scalar_type sty) -> spv_inst *;
     auto vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst *;
     auto vec_ty(spv_inst *component_ty, vector_size length) -> spv_inst *;
     auto void_ty() -> spv_inst *;
@@ -95,7 +90,7 @@ class uniquifier {
     std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,
                        pointer_key_hash>
         pointer_tys_;
-    std::array<spv_inst *, TINYTC_NUMBER_OF_SCALAR_TYPES> scalar_tys_;
+    std::unordered_map<std::int32_t, spv_inst *> int_tys_, float_tys_;
     std::unordered_map<std::pair<spv_inst *, std::int32_t>, spv_inst *, array_key_hash> vec_tys_;
     spv_inst *void_ty_ = nullptr;
 };

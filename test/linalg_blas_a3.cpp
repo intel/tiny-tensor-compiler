@@ -78,41 +78,36 @@ auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout c
 }
 
 auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
-                       tensor_layout const &layoutC, scalar_type alpha_ty, scalar_type A_ty,
-                       scalar_type B_ty, scalar_type beta_ty, scalar_type C_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op) -> prog {
-    auto ctx = make_compiler_context();
+                       tensor_layout const &layoutC, tinytc_type_t alpha_ty, tinytc_type_t A_ty,
+                       tinytc_type_t B_ty, tinytc_type_t beta_ty, tinytc_type_t C_ty,
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
+    -> shared_handle<tinytc_prog_t> {
+    auto ctx = get_compiler_context(alpha_ty);
+    auto p = create_prog(ctx.get());
 
-    auto const alphat = get_scalar(ctx, alpha_ty);
-    auto const at = get_scalar(ctx, A_ty);
-    auto const bt = get_scalar(ctx, B_ty);
-    auto const betat = get_scalar(ctx, beta_ty);
-    auto const ct = get_scalar(ctx, C_ty);
+    auto At = get<memref_type>(A_ty, layoutA.static_shape(), layoutA.static_stride(),
+                               address_space::global);
+    auto Bt = get<memref_type>(B_ty, layoutB.static_shape(), layoutB.static_stride(),
+                               address_space::global);
+    auto Ct = get<memref_type>(C_ty, layoutC.static_shape(), layoutC.static_stride(),
+                               address_space::global);
 
-    auto p = make_prog(ctx);
-
-    auto At =
-        get_memref(at, layoutA.static_shape(), layoutA.static_stride(), address_space::global);
-    auto Bt =
-        get_memref(bt, layoutB.static_shape(), layoutB.static_stride(), address_space::global);
-    auto Ct =
-        get_memref(ct, layoutC.static_shape(), layoutC.static_stride(), address_space::global);
-
-    auto f = make_func(name, {alphat, At, Bt, betat, Ct}, get_void(ctx));
-    auto fn_body = f.get_body();
-    auto params = std::array<value, 5u>{};
-    fn_body.get_parameters(params);
-    params[0].set_name("alpha");
-    params[1].set_name("A");
-    params[2].set_name("B");
-    params[3].set_name("beta");
-    params[4].set_name("C");
+    auto void_ty = get<void_type>(ctx.get());
+    auto f = create_func(name, {alpha_ty, At, Bt, beta_ty, Ct}, void_ty);
+    auto fn_body = get_body(f.get());
+    auto params = std::array<tinytc_value_t, 5u>{};
+    get_parameters(fn_body, params);
+    set_name(params[0], "alpha");
+    set_name(params[1], "A");
+    set_name(params[2], "B");
+    set_name(params[3], "beta");
+    set_name(params[4], "C");
 
     auto bb = region_builder{fn_body};
 
     make_op(bb, params);
 
-    p.add_function(std::move(f));
+    add_function(p.get(), std::move(f));
 
     return p;
 }

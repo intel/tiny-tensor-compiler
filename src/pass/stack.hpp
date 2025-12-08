@@ -4,13 +4,13 @@
 #ifndef STACK_20230413_HPP
 #define STACK_20230413_HPP
 
-#include "node/function_node.hpp"
+#include "tinytc/types.h"
 
 namespace tinytc {
 
 class set_stack_ptr_pass {
   public:
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 };
 
 } // namespace tinytc

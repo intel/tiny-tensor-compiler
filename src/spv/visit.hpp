@@ -4,19 +4,16 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20250605_HPP
-#define GENERATED_VISIT_20250605_HPP
+#ifndef GENERATED_VISIT_20250630_HPP
+#define GENERATED_VISIT_20250630_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
 #include "instructions.hpp"
+#include "util/overloaded.hpp"
 
 namespace tinytc::spv {
 
-template <class... Ts> struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
     switch (inst.opcode()) {
     case Op::Nop:
@@ -4579,4 +4576,4 @@ template <typename Derived, bool IsConst = true> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20250605_HPP
+#endif // GENERATED_VISIT_20250630_HPP

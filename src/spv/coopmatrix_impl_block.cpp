@@ -7,19 +7,21 @@
 #include "converter_aux.hpp"
 #include "coopmatrix_layout.hpp"
 #include "device_info.hpp"
-#include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
-#include "node/value_node.hpp"
+#include "node/inst_view.hpp"
+#include "node/type.hpp"
+#include "node/visit.hpp"
+#include "number.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/instructions.hpp"
 #include "spv/matrix_walker.hpp"
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
-#include "support/util.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/math.hpp"
+#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -29,14 +31,17 @@
 
 namespace tinytc::spv {
 
-auto max_block_io_vec_size(scalar_type sty) -> std::int64_t {
-    return sty == scalar_type::i8 || sty == scalar_type::i16 ? 16 : 8;
+auto max_block_io_vec_size(tinytc_type_t ty) -> std::int64_t {
+    return visit(overloaded{[](i8_type &) { return 16; }, [](i16_type &) { return 16; },
+                            [](tinytc_type &) { return 8; }},
+
+                 *ty);
 }
 
-auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
+auto coopmatrix_impl_block::load(cooperative_matrix_load_inst in, dope_vector const &odv,
                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     const auto ot = get_memref_type(in.operand());
-    const auto rt = get_coopmatrix_type(in.result(0));
+    const auto rt = get_coopmatrix_type(in.result());
     const auto layout = get_layout(cfg(), rt);
     const auto sty = layout.sty;
 
@@ -47,7 +52,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
-    const bool sty_ok = sty != scalar_type::c64; // We do not have 16 byte/lane block loads
+    const bool sty_ok = !isa<c64_type>(*sty); // We do not have 16 byte/lane block loads
     if (!layout_ok || !transpose_ok || !alignment_ok || !checked_ok || !sty_ok) {
         return coopmatrix_impl::load(in, odv, operand, pos0, pos1);
     }
@@ -76,8 +81,8 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     }();
 
     const auto matrix_ty = spv_ty(layout);
-    const auto interface_ty = spv_interface_ty(layout);
-    auto io_ty = unique().scalar_ty(io_sty);
+    const auto interface_ty = get_spv_ty_non_coopmatrix(unique(), layout.sty);
+    auto io_ty = get_spv_ty_non_coopmatrix(unique(), io_sty);
     const auto io_vec_size = blocks_per_load * cols_per_load;
     spv_inst *io_vec_ty = io_vec_size > 1 ? unique().vec_ty(io_ty, io_vec_size) : io_ty;
     const auto pointer_ty = [&] {
@@ -98,7 +103,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         return mod.add<OpSubgroupBlockReadINTEL>(io_vec_ty, pointer);
     };
     const auto ld_chk = [&](tinytc_spv_mod &) {
-        return make_conditional_execution(unique(), interface_ty, walker.col_ok(), ld,
+        return make_conditional_execution(unique(), io_vec_ty, walker.col_ok(), ld,
                                           unique().null_constant(io_vec_ty), in.loc());
     };
     auto const ld_block = [&](tinytc_spv_mod &mod) {
@@ -142,7 +147,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     return result;
 }
 
-void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
+void coopmatrix_impl_block::store(cooperative_matrix_store_inst in, dope_vector const &odv,
                                   spv_inst *val, spv_inst *operand, spv_inst *pos0,
                                   spv_inst *pos1) {
     constexpr std::int32_t required_alignment = 16;
@@ -152,12 +157,12 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
     auto sty = vt->component_ty();
 
     const bool layout_ok = layout.rows >= cfg().subgroup_size;
-    const bool flag_ok = in.flag() == store_flag::regular;
+    const bool transpose_ok = in.t() == transpose::N;
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
-    const bool sty_ok = sty != scalar_type::c64; // We do not have 16 byte/lane block writes
-    if (!layout_ok || !flag_ok || !alignment_ok || !checked_ok || !sty_ok) {
+    const bool sty_ok = !isa<c64_type>(*sty); // We do not have 16 byte/lane block writes
+    if (!layout_ok || !transpose_ok || !alignment_ok || !checked_ok || !sty_ok) {
         coopmatrix_impl::store(in, odv, val, operand, pos0, pos1);
         return;
     }
@@ -187,7 +192,7 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
         return cols_per_store;
     }();
 
-    auto io_ty = unique().scalar_ty(io_sty);
+    auto io_ty = get_spv_ty_non_coopmatrix(unique(), io_sty);
     auto const io_vec_size = blocks_per_store * cols_per_store;
     spv_inst *io_vec_ty = io_vec_size > 1 ? unique().vec_ty(io_ty, io_vec_size) : io_ty;
     const auto pointer_ty = [&] {
@@ -250,25 +255,24 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
     }
 }
 
-auto coopmatrix_impl_block::get_io_sty(scalar_type sty) -> scalar_type {
-    switch (sty) {
-    case scalar_type::bf16:
-    case scalar_type::f16:
-        return scalar_type::i16;
-    case scalar_type::f32:
-        return scalar_type::i32;
-    case scalar_type::f64:
-    case scalar_type::c32:
-        return scalar_type::i64;
-    default:
-        break;
-    }
-    return sty;
+auto coopmatrix_impl_block::get_io_sty(tinytc_type_t ty) -> tinytc_type_t {
+    return visit(
+        overloaded{[](bf16_type &ty) -> tinytc_type_t { return i16_type::get(ty.context()); },
+                   [](f16_type &ty) -> tinytc_type_t { return i16_type::get(ty.context()); },
+                   [](f32_type &ty) -> tinytc_type_t { return i32_type::get(ty.context()); },
+                   [](f64_type &ty) -> tinytc_type_t { return i64_type::get(ty.context()); },
+                   [](c32_type &ty) -> tinytc_type_t { return i64_type::get(ty.context()); },
+                   [](tinytc_type &ty) -> tinytc_type_t { return &ty; }},
+
+        *ty);
 }
 
-auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, value_node const &operand,
-                                       value_node const &pos0) -> bool {
+auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, tinytc_value const &operand,
+                                       tinytc_value const &pos0) -> bool {
     auto const mt = get_memref_type(operand);
+    if (mt->stride(0) != 1) {
+        return false;
+    }
     const auto sty_size = size(mt->element_ty());
     if (sty_size >= static_cast<std::size_t>(alignment)) {
         return true;
@@ -276,8 +280,7 @@ auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, value_node const 
     if (auto mi = gcd().get_memref_if(operand); mi) {
         const bool base_ok = (mi->offset_gcd() * sty_size) % alignment == 0;
         const bool pos0_ok = (gcd().get(pos0) * sty_size) % alignment == 0;
-        const bool stride_ok =
-            mt->stride(0) == 1 && (mi->stride_gcd()[1] * sty_size) % alignment == 0;
+        const bool stride_ok = (mi->stride_gcd()[1] * sty_size) % alignment == 0;
 
         return base_ok && pos0_ok && stride_ok;
     }

@@ -1,0 +1,771 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef BUILDER_H_20250625
+#define BUILDER_H_20250625
+
+#include "tinytc/export.h"
+#include "tinytc/types.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+////////////////////////////
+///////// Attribute ////////
+////////////////////////////
+
+/**
+ * @brief Get array attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param array_size [in] number of elements in array, must be 0 if array == nullptr
+ * @param array [in][range(0, array_size)] attribute array
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_array_attr_get(tinytc_attr_t *attr,
+                                                    tinytc_compiler_context_t ctx,
+                                                    size_t array_size, const tinytc_attr_t *array);
+
+/**
+ * @brief Get boolean attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param value [in] value of attribute
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_boolean_attr_get(tinytc_attr_t *attr,
+                                                      tinytc_compiler_context_t ctx,
+                                                      tinytc_bool_t value);
+
+/**
+ * @brief Get dictionary attribute
+ *
+ * Each name must only appear once.
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param items_size [in] number of elements in items array, must be 0 if items == nullptr
+ * @param items [in][range(0, items_size)] array of items
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_get(tinytc_attr_t *attr,
+                                                         tinytc_compiler_context_t ctx,
+                                                         size_t items_size,
+                                                         tinytc_named_attr_t *items);
+
+/**
+ * @brief Get dictionary attribute with pre-sorted items
+ *
+ * The list of items must be sorted by name and each name must only appear once.
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param items_size [in] number of elements in items array, must be 0 if items == nullptr
+ * @param items [in][range(0, items_size)] array of items
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_dictionary_attr_get_with_sorted(tinytc_attr_t *attr, tinytc_compiler_context_t ctx,
+                                       size_t items_size, const tinytc_named_attr_t *items);
+
+/**
+ * @brief Sort items array by name
+ *
+ * @param items_size [in] number of elements in items array, must be 0 if items == nullptr
+ * @param items [in][range(0, items_size)] array of items
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_sort(size_t items_size,
+                                                          tinytc_named_attr_t *items);
+
+/**
+ * @brief Get integer attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param value [in] value of attribute
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_integer_attr_get(tinytc_attr_t *attr,
+                                                      tinytc_compiler_context_t ctx, int64_t value);
+
+/**
+ * @brief Get string attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param str_length [in] number of characters (not including a null terminator)
+ * @param str [in] string; not necessarily null-terminated
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_string_attr_get(tinytc_attr_t *attr,
+                                                     tinytc_compiler_context_t ctx,
+                                                     size_t str_length, char const *str);
+
+////////////////////////////
+///////// Data type ////////
+////////////////////////////
+
+// もち api_builder_h "tinytc/types.anko"
+
+/**
+ * @brief Get context object from type object
+ *
+ * The reference count of the context remains unchanged.
+ *
+ * @param ty [in] type object
+ * @param ctx [out] pointer to context object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_type_get_compiler_context(const_tinytc_type_t ty,
+                                                               tinytc_compiler_context_t *ctx);
+
+////////////////////////////
+/////////// Value //////////
+////////////////////////////
+
+/**
+ * @brief Set name of value
+ *
+ * @param vl [inout] value object
+ * @param name [in] name; null-terminated string
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char const *name);
+
+/**
+ * @brief Set name of value with explicit number of characters
+ *
+ * @param vl [inout] value object
+ * @param name_length [in] number of characters
+ * @param name [in] name; not necessarily null-terminated
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_set_name_n(tinytc_value_t vl, size_t name_length,
+                                                      char const *name);
+
+/**
+ * @brief Get name of value
+ *
+ * The returned pointer may be invalidated if the value or any node in the abstract syntax
+ * tree referencing the value is modified.
+ *
+ * @param vl [in] value object
+ * @param name [out] pointer to C string
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, char const **name);
+
+/**
+ * @brief Get type of value
+ *
+ * @param vl [in] value object
+ * @param ty [out] pointer to data type
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl, tinytc_type_t *ty);
+
+////////////////////////////
+/////// Instructions ///////
+////////////////////////////
+
+// もち api_builder_h "tinytc/instructions.anko"
+
+/**
+ * @brief Create boolean constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value [in] constant value
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr,
+                                                                  tinytc_bool_t value,
+                                                                  tinytc_type_t ty,
+                                                                  const tinytc_location_t *loc);
+
+/**
+ * @brief Create complex constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value_re [in] constant value (real part)
+ * @param value_im [in] constant value (imaginary part)
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr,
+                                                                  double value_re, double value_im,
+                                                                  tinytc_type_t ty,
+                                                                  const tinytc_location_t *loc);
+
+/**
+ * @brief Create floating constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value [in] constant value
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double value,
+                                                                tinytc_type_t ty,
+                                                                const tinytc_location_t *loc);
+
+/**
+ * @brief Create integer constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value [in] constant value
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t value,
+                                                              tinytc_type_t ty,
+                                                              const tinytc_location_t *loc);
+
+/**
+ * @brief Creates the multiplicative identity constant (i.e. "1") for the given data type
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr,
+                                                              tinytc_type_t ty,
+                                                              const tinytc_location_t *loc);
+
+/**
+ * @brief Creates the additive identity constant (i.e. "0") for the given data type
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr,
+                                                               tinytc_type_t ty,
+                                                               const tinytc_location_t *loc);
+
+/**
+ * @brief Get parent region of instruction
+ *
+ * @param instr [in] inst object
+ * @param parent [out] parent region
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_parent_region(tinytc_inst_t instr,
+                                                            tinytc_region_t *parent);
+
+/**
+ * @brief Get child regions of instruction
+ *
+ * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
+ * the number of results
+ *
+ * @param instr [in] inst object
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greater than the number of
+ * results, the value is updated with the correct number of results
+ * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
+ * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, size_t *result_list_size,
+                                                      tinytc_region_t *result_list);
+
+/**
+ * @brief Get values produced by instruction
+ *
+ * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
+ * the number of results
+ *
+ * @param instr [in] inst object
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greater than the number of
+ * results, the value is updated with the correct number of results
+ * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
+ * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, size_t *result_list_size,
+                                                     tinytc_value_t *result_list);
+
+/**
+ * @brief Set instruction attributes
+ *
+ * @param instr [inout] inst object
+ * @param a [in] attribute object (dictionary attribute)
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_set_attr(tinytc_inst_t instr, tinytc_attr_t a);
+
+////////////////////////////
+////////// Region //////////
+////////////////////////////
+
+/**
+ * @brief Append instruction to region
+ *
+ * The region takes ownership of the instruction.
+ * An instruction must not be added to multiple regions.
+ *
+ * @param reg [inout] region object
+ * @param instr [in,pass_ownership] instruction
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_append(tinytc_region_t reg, tinytc_inst_t instr);
+
+/**
+ * @brief Returns iterator pointing to begin of the region
+ *
+ * @param reg [in] region
+ * @param iterator [out] inst iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_begin(tinytc_region_t reg,
+                                                  tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Returns iterator pointing to the end of the region
+ *
+ * The end iterator must not be dereferenced.
+ *
+ * @param reg [in] region]
+ * @param iterator [out] inst iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_end(tinytc_region_t reg,
+                                                tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Erase instruction at the position of the iterator
+ *
+ * The iterator is updated to point to the instruction coming after the iterator or the end iterator
+ *
+ * @param reg [inout] region object
+ * @param iterator [inout] iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_erase(tinytc_region_t reg,
+                                                  tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Insert instruction at the position before the iterator
+ *
+ * The iterator is updated to point to the instruction that was just inserted.
+ *
+ * The region takes ownership of the instruction.
+ * An instruction must not be inserted into multiple regions.
+ *
+ * @param reg [inout] region object
+ * @param iterator [inout]
+ * @param instr [in,pass_ownership]
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_insert(tinytc_region_t reg,
+                                                   tinytc_inst_iterator_t *iterator,
+                                                   tinytc_inst_t instr);
+
+/**
+ * @brief Move iterator to the next instruction
+ *
+ * @param iterator [inout] iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_next_inst(tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Move iterator to the previous instruction
+ *
+ * @param iterator [inout] iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prev_inst(tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Get region parameters
+ *
+ * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
+ * the number of results
+ *
+ * @param reg [in] region object
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greather than the number of
+ * results, the value is updated with the correct number of results
+ * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
+ * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
+                                                           size_t *result_list_size,
+                                                           tinytc_value_t *result_list);
+
+////////////////////////////
+/////////// Func ///////////
+////////////////////////////
+
+/**
+ * @brief Create function
+ *
+ * Function takes ownership of region.
+ *
+ * @param fun [out] pointer to the func object created
+ * @param name_length [in] length of function_name
+ * @param name [in] function name
+ * @param num_params [in] number of parameters
+ * @param param_type_list [in][range(0,num_params)] parameter data types; can be nullptr if
+ * num_params is 0
+ * @param ty [in] result type (must be void for host-callable function)
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length,
+                                                 char const *name, size_t num_params,
+                                                 const tinytc_type_t *param_type_list,
+                                                 tinytc_type_t ty, const tinytc_location_t *loc);
+
+/**
+ * @brief Set function attributes
+ *
+ * @param fun [inout] function object
+ * @param a [in] attribute dictionary
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_set_attr(tinytc_func_t fun, tinytc_attr_t a);
+
+/**
+ * @brief Set parameter attributes
+ *
+ * @param fun [in] function object
+ * @param param_no [in] paramater number (0 to num_parameters-1)
+ * @param a [in] attribute dictionary
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, size_t param_no,
+                                                             tinytc_attr_t a);
+
+/**
+ * @brief Get function body
+ *
+ * @param fun [in] function object
+ * @param body [out] pointer to body region
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_get_body(tinytc_func_t fun, tinytc_region_t *body);
+
+////////////////////////////
+/////////// Prog ///////////
+////////////////////////////
+
+/**
+ * @brief Create program
+ *
+ * @param prg [out] pointer to the prog object created
+ * @param ctx [in] compiler context object
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_create(tinytc_prog_t *prg, tinytc_compiler_context_t ctx,
+                                                 const tinytc_location_t *loc);
+
+/**
+ * @brief Append function to program
+ *
+ * The program takes ownership of the function.
+ * A function must not be added to multiple programs nor must the user destroy the function after
+ * adding it to the program.
+ *
+ * @param prg [inout] program object
+ * @param fun [in,pass_ownership] function object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun);
+
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+/**
+ * @brief Returns a small batched GEMM recipe
+ *
+ * The program contains a kernel for @f$\beta=0@f$ called "gemm_beta0" and a kernel for
+ * @f$\beta\neq 0@f$ called "gemm". All matrix shapes and strides are known at compile-time.
+ *
+ * The signature of the generated kernels gemm and gemm_beta0 is (if A and B are not transposed)
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x{M}x{K}x?,strided<1,{ldA},{strideA}>>,
+ *              %B: memref<{ty.B}x{K}x{N}x?,strided<1,{ldB},{strideB}>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x{M}x{N}x?,strided<1,{ldC},{strideC}>>)
+ * @endcode
+ *
+ * meaning that its kernels need arguments in the following order:
+ *
+ * @code
+ * alpha, A_ptr, howmany, B_ptr, howmany, beta, C_ptr, howmany
+ * @endcode
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param number_ty [in] Number types of alpha, A, B, beta, C
+ * @param tA [in] Transpose A
+ * @param tB [in] Transpose B
+ * @param M [in] Number of rows of A, C
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param ldA [in] Leading dimension of A
+ * @param strideA [in] Number of elements between A-matrices
+ * @param ldB [in] Leading dimension of B
+ * @param strideB [in] Number of elements between B-matrices
+ * @param ldC [in] Leading dimension of C
+ * @param strideC [in] Number of elements between C-matrices
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty,
+    tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
+    int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC);
+
+/**
+ * @brief Set kernel arguments for small GEMM batched recipe
+ *
+ * @param handler [inout] Recipe handler object
+ * @param howmany [in] Group size
+ * @param alpha_size [in] Size of alpha argument
+ * @param alpha_value [in] Pointer to data used for alpha; data is copied
+ * @param A_type [in] Type of memory object used for A-matrix
+ * @param A_value [in] Memory object used for A-matrix
+ * @param B_type [in] Type of memory object used for B-matrix
+ * @param B_value [in] Memory object used for B-matrix
+ * @param beta_size [in] Size of beta argument
+ * @param beta_value [in] Pointer to data used for beta; data is copied
+ * @param C_type [in] Type of memory object used for C-matrix
+ * @param C_value [in] Memory object used for C-matrix
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
+    tinytc_recipe_handler_t handler, int64_t howmany, size_t alpha_size, const void *alpha_value,
+    tinytc_mem_type_t A_type, const void *A_value, tinytc_mem_type_t B_type, const void *B_value,
+    size_t beta_size, const void *beta_value, tinytc_mem_type_t C_type, const void *C_value);
+
+/**
+ * @brief Returns a tall and skinny recipe
+ *
+ * The program contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0
+ * called "gemm". M (= number of rows of A, C) and strides are dynamic.
+ *
+ * The signature of the generated kernels gemm and gemm_beta0 is
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x?x{K},strided<1,?>>,
+ *              %B: memref<{ty.B}x{K}x{N},strided<1,?>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x?x{N},strided<1,?>>)
+ * @endcode
+ *
+ * meaning that its kernels need arguments in the following order:
+ *
+ * @code
+ * alpha, A_ptr, M, ldA, B_ptr, ldB, beta, C_ptr, M, ldC
+ * @endcode
+ *
+ * where ldA, ldB, ldC is the size of stride[1] of A, B, C, respectively.
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param number_ty [in] Number type of alpha, A, B, beta, C
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
+ * the parameter auto-selected
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
+                                                                   const_tinytc_core_info_t info,
+                                                                   tinytc_type_t number_ty,
+                                                                   int64_t N, int64_t K,
+                                                                   int32_t M_block_size);
+
+/**
+ * @brief Returns a tall and skinny recipe with additional specialization constants
+ *
+ * Similar to tinytc_recipe_tall_and_skinny_create but with the additional specialization
+ * constants M, ldA, ldB, and ldC.
+ * The specialization constants may be either set to a fixed value or to TINYTC_DYNAMIC.
+ * Note that if a specialization constant is set to a fixed value then the parameter with the
+ * same name in tinytc_recipe_tall_and_skinny_set_args is ignored.
+ *
+ * Furthermore, the memory alignment may be passed with alignA, alignB, and alignC or set to 0 to
+ * use the default memory alignment (= size of scalar type).
+ *
+ * The generated kernels have the following signature:
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x{M}x{K},strided<1,{ldA}>>,
+ *              %B: memref<{ty.B}x{K}x{N},strided<1,{ldB}>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x{M}x{N},strided<1,{ldC}>>)
+ * @endcode
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param number_ty [in] Number type of alpha, A, B, beta, C
+ * @param M [in] Number of rows of A, C; can be TINYTC_DYNAMIC
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param ldA [in] Leading dimension of A; can be TINYTC_DYNAMIC
+ * @param ldB [in] Leading dimension of B; can be TINYTC_DYNAMIC
+ * @param ldC [in] Leading dimension of C; can be TINYTC_DYNAMIC
+ * @param alignA [in] Memory alignment of A; can be 0
+ * @param alignB [in] Memory alignment of B; can be 0
+ * @param alignC [in] Memory alignment of C; can be 0
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
+ * the parameter auto-selected
+ *
+ * @return
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty, int64_t M,
+    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
+    int32_t alignC, int32_t M_block_size);
+
+/**
+ * @brief Suggest an M block size for tall and skinny recipe
+ *
+ * @param info [in] core info object
+ * @param M_block_size [out] pointer to block size
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(
+    const_tinytc_core_info_t info, int32_t *M_block_size);
+
+/**
+ * @brief Set kernel arguments for tall and skinny GEMM recipe
+ *
+ * @param handler [inout] Recipe handler object
+ * @param M [in] Size of M-mode
+ * @param alpha_size [in] Size of alpha argument
+ * @param alpha_value [in] Pointer to data used for alpha; data is copied
+ * @param A_type [in] Type of memory object used for A-matrix
+ * @param A_value [in] Memory object used for A-matrix
+ * @param ldA [in] Leading dimension of A
+ * @param B_type [in] Type of memory object used for B-matrix
+ * @param B_value [in] Memory object used for B-matrix
+ * @param ldB [in] Leading dimension of B
+ * @param beta_size [in] Size of beta argument
+ * @param beta_value [in] Pointer to data used for beta; data is copied
+ * @param C_type [in] Type of memory object used for C-matrix
+ * @param C_value [in] Memory object used for C-matrix
+ * @param ldC [in] Leading dimension of C
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
+    tinytc_recipe_handler_t handler, int64_t M, size_t alpha_size, const void *alpha_value,
+    tinytc_mem_type_t A_type, const void *A_value, int64_t ldA, tinytc_mem_type_t B_type,
+    const void *B_value, int64_t ldB, size_t beta_size, const void *beta_value,
+    tinytc_mem_type_t C_type, const void *C_value, int64_t ldC);
+
+/**
+ * @brief Get prog object
+ *
+ * The reference count of the prog remains unchanged.
+ * The user must call tinytc_prog_retain if the prog shall be used after the recipe was released.
+ *
+ * @param recipe [in] recipe object
+ * @param prg [out] pointer to prog object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recipe,
+                                                     tinytc_prog_t *prg);
+
+/**
+ * @brief Get binary
+ *
+ * The reference count of the binary remains unchanged.
+ * The user must call tinytc_binary_retain if the binary shall be used after the recipe was
+ * released.
+ *
+ * @param recipe [in] recipe object
+ * @param bin [out] pointer to binary
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe,
+                                                       tinytc_binary_t *bin);
+
+/**
+ * @brief Get recipe object
+ *
+ * The reference count of the recipe remains unchanged.
+ * The user must call tinytc_recipe_retain if the recipe shall be used after the recipe handler was
+ * released.
+ *
+ * @param handler [in] recipe handler object
+ * @param recipe [out] pointer to recipe object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_recipe_handler_get_recipe(const_tinytc_recipe_handler_t handler, tinytc_recipe_t *recipe);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // BUILDER_H_20250625

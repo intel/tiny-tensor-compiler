@@ -26,6 +26,8 @@ i64           long          cl_long
 index         long          cl_long
 f32           float         cl_float
 f64           double        cl_double
+c32           float2        cl_float[2]
+c64           double2       cl_double[2]
 ============= ============= ====================
 
 For example,

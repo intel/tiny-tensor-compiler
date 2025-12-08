@@ -4,7 +4,6 @@
 #ifndef DUMP_GCD_20241203_HPP
 #define DUMP_GCD_20241203_HPP
 
-#include "node/function_node.hpp"
 #include "tinytc/types.h"
 
 #include <iosfwd>
@@ -15,7 +14,7 @@ class dump_gcd_pass {
   public:
     dump_gcd_pass(std::ostream &os, ::tinytc_core_info const *info);
 
-    void run_on_function(function_node const &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
     std::ostream *os_;

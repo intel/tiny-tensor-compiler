@@ -1,0 +1,11 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: not %tinytc-opt -pconstant-propagation -pdump-gcd < %s 2>&1 | filecheck %s
+
+func @div_zero(%x: i32, %y: i32) {
+    %0 = constant 0 : i32
+    %1 = mul %x, %0 : i32
+    %2 = div %y, %1 : i32
+; CHECK: Division by zero detected
+}

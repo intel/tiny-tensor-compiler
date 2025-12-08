@@ -4,7 +4,7 @@
 #ifndef GEMM_TOOLS_20241022_HPP
 #define GEMM_TOOLS_20241022_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 
 #include <array>
 #include <cstdint>

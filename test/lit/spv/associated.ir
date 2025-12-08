@@ -1,0 +1,25 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK:            %[[#F32:]] = OpTypeFloat 32
+; CHECK:      %[[#MR_PTR_TY:]] = OpTypePointer CrossWorkgroup %[[#F32]]
+; CHECK:        %[[#MR_NULL:]] = OpConstantNull %[[#MR_PTR_TY]]
+; CHECK:           %[[#BOOL:]] = OpTypeBool
+; CHECK:      %[[#GR_PTR_TY:]] = OpTypePointer CrossWorkgroup %[[#MR_PTR_TY]]
+; CHECK:        %[[#GR_NULL:]] = OpConstantNull %[[#GR_PTR_TY]]
+
+func @associated_memref(%A: memref<f32x?>) {
+    %0 = associated %A : bool
+; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
+; CHECK:               %[[#MR_PTR:]] = OpFunctionParameter %[[#MR_PTR_TY]]
+; CHECK:                      %[[#]] = OpPtrNotEqual %[[#BOOL]] %[[#MR_PTR]] %[[#MR_NULL]]
+}
+
+func @associated_group(%A: group<memref<f32x?>x?>) {
+    %0 = associated %A : bool
+; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
+; CHECK:               %[[#GR_PTR:]] = OpFunctionParameter %[[#GR_PTR_TY]]
+; CHECK:                      %[[#]] = OpPtrNotEqual %[[#BOOL]] %[[#GR_PTR]] %[[#GR_NULL]]
+}

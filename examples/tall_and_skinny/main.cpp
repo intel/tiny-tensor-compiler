@@ -5,6 +5,7 @@
 
 #include <argparser.hpp>
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 #include <tinytc/tinytc_sycl.hpp>
 
@@ -26,27 +27,13 @@ struct args {
     bool dump = false;
     bool specialize_M = false;
     bool specialize_ld = false;
-    scalar_type ty = scalar_type::f32;
+    examples::test_type ty = examples::test_type::f32;
     bool update = false;
     bool verify = false;
     std::int32_t alignment = 0;
     std::int32_t M_block_size = 0;
     std::vector<examples::test_case> tc;
 };
-
-template <typename F> double bench(F f, int nrepeat = 10) {
-    f();
-    double min_exec_time_ns = std::numeric_limits<double>::max();
-    for (int i = 0; i < nrepeat; ++i) {
-        auto start = std::chrono::high_resolution_clock::now();
-        f();
-        auto end = std::chrono::high_resolution_clock::now();
-        double exec_time_ns =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        min_exec_time_ns = std::min(min_exec_time_ns, exec_time_ns);
-    }
-    return min_exec_time_ns;
-}
 
 template <typename T> void test(queue q, args &a) {
     std::int64_t na_max = 0;
@@ -102,8 +89,8 @@ template <typename T> void test(queue q, args &a) {
 
         auto beta = a.update ? T{1} : T{0};
         try {
-            auto info = make_core_info(q.get_device());
-            info.set_core_features(tinytc_core_feature_flag_large_register_file);
+            auto info = create_core_info(q.get_device());
+            set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
 
             std::int64_t M = a.specialize_M ? c.m : dynamic;
             std::int64_t ldA = dynamic, ldB = dynamic, ldC = dynamic;
@@ -112,31 +99,31 @@ template <typename T> void test(queue q, args &a) {
                 ldB = c.k;
                 ldC = c.m;
             }
-            auto ctx = make_compiler_context();
-            ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
-                                      void *) { std::cerr << what << std::endl; },
-                                   nullptr);
-            auto r = make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC,
-                                                      a.alignment, a.alignment, a.alignment,
-                                                      a.M_block_size, ctx);
+            auto ctx = create_compiler_context();
+            set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
+                std::cerr << what << std::endl;
+            });
+            auto r = create_tall_and_skinny_specialized(info.get(), to_type<T>(ctx.get()), M, c.n,
+                                                        c.k, ldA, ldB, ldC, a.alignment,
+                                                        a.alignment, a.alignment, a.M_block_size);
             if (a.dump) {
-                r.get_prog().dump();
+                dump(get_prog(r.get()).get());
             }
-            auto tas = make_recipe_handler(q, r);
+            auto tas = create_recipe_handler(q, r.get());
 
-            tall_and_skinny::set_args(tas, c.m, T{1}, mem(A, mem_type::usm_pointer), c.m,
-                                      mem(B, mem_type::usm_pointer), c.k, beta,
-                                      mem(C, mem_type::usm_pointer), c.m);
-            tas.submit(q).wait();
+            set_tall_and_skinny_args(tas.get(), c.m, T{1}, mem(A, mem_type::usm_pointer), c.m,
+                                     mem(B, mem_type::usm_pointer), c.k, beta,
+                                     mem(C, mem_type::usm_pointer), c.m);
+            submit(tas.get(), q).wait();
             if (a.verify) {
                 check(c.m, c.n, c.k);
             }
-            double min_exec_time_ns = bench([&]() { tas.submit(q).wait(); });
+            double min_exec_time_ns = examples::bench([&]() { submit(tas.get(), q).wait(); });
 
             const auto ops_per_mnk = [&] {
                 switch (a.ty) {
-                case scalar_type::c32:
-                case scalar_type::c64:
+                case examples::test_type::c32:
+                case examples::test_type::c64:
                     return 8;
                 default:
                     return 2;
@@ -151,7 +138,7 @@ template <typename T> void test(queue q, args &a) {
                       << a.update << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops
                       << std::endl;
         } catch (status const &st) {
-            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::error_string(st)
+            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::to_string(st)
                       << std::endl;
         } catch (std::exception const &e) {
             std::cerr << "Error: " << e.what() << std::endl;
@@ -171,7 +158,7 @@ int main(int argc, char **argv) {
     try {
         parser.set_short_opt('a', &a.alignment, "Override memory alignment");
         parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
-        parser.set_short_opt('f', &a.ty, "Data type (f32, f64, c32, c64)")
+        parser.set_short_opt('f', &a.ty, "Data type (bf16, f16, f32, f64, c32, c64)")
             .converter(examples::convert_data_type);
         parser.set_short_opt('h', &help, "Show help");
         parser.set_short_opt('u', &a.update,
@@ -202,28 +189,7 @@ int main(int argc, char **argv) {
 
     std::cout << "precision,m,n,k,update,time,bandwidth,gflops" << std::endl;
     try {
-        switch (a.ty) {
-        case scalar_type::bf16:
-            test<tinytc::bfloat16>(std::move(q), a);
-            break;
-        case scalar_type::f16:
-            test<tinytc::half>(std::move(q), a);
-            break;
-        case scalar_type::f32:
-            test<float>(std::move(q), a);
-            break;
-        case scalar_type::f64:
-            test<double>(std::move(q), a);
-            break;
-        case scalar_type::c32:
-            test<std::complex<float>>(std::move(q), a);
-            break;
-        case scalar_type::c64:
-            test<std::complex<double>>(std::move(q), a);
-            break;
-        default:
-            return -1;
-        }
+        dispatch(a.ty, [&]<typename T>() { test<T>(q, a); });
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;

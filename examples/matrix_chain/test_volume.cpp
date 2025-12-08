@@ -18,13 +18,13 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
                             std::size_t alignment, queue q, bool dump)
     : B3_(num_basis(N, dim)), B2_(num_basis(N - 1, dim)), P_(P), howmany_(howmany),
       B3_aligned_(aligned<T>(B3_, alignment)), B2_aligned_(aligned<T>(B2_, alignment)),
-      q_(std::move(q)), dev_info_(make_core_info(q_.get_device())),
+      q_(std::move(q)), dev_info_(create_core_info(q_.get_device())),
       Q_ref_(B3_, P_, B3_aligned_, howmany_, q_), Q_opt_(B3_, P_, B3_aligned_, howmany_, q_),
       I_(B3_, P_, B3_aligned_, howmany_, q_), tmp_(B3_, P_, B2_aligned_, howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)), ctx_(make_compiler_context()),
       opt_bundle_(make_optimized_kernel(dump)),
-      opt_kernel_(make_kernel(opt_bundle_, "volume_kernel")) {
+      opt_kernel_(create_kernel(opt_bundle_, "volume_kernel")) {
     Q_ref_.random();
     Q_opt_.random();
     I_.random();
@@ -36,32 +36,34 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
         k.random();
     }
 
-    g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                                    B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
-                                    B2_aligned_, B2_aligned_ * P_, ctx_)));
-    g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                                    B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
-                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_, ctx_)));
+    g_.emplace_back(create_recipe_handler(
+        q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
+                                      transpose::N, B2_aligned_, P_, P_, B3_aligned_,
+                                      B3_aligned_ * P_, P_, P_ * P_, B2_aligned_, B2_aligned_ * P_)
+                .get()));
+    g_.emplace_back(create_recipe_handler(
+        q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
+                                      transpose::N, B3_aligned_, P_, B2_, B3_aligned_, 0,
+                                      B2_aligned_, B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)
+                .get()));
 }
 
-template <typename T> auto test_volume<T>::make_compiler_context() -> compiler_context {
-    auto ctx = ::tinytc::make_compiler_context();
-    ctx.set_error_reporter(
-        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
-        nullptr);
+template <typename T>
+auto test_volume<T>::make_compiler_context() -> shared_handle<tinytc_compiler_context_t> {
+    auto ctx = ::tinytc::create_compiler_context();
+    set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
     return ctx;
 }
 
 template <typename T>
-auto test_volume<T>::make_optimized_kernel(bool dump)
+auto test_volume<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
-    constexpr auto real_t = to_scalar_type_v<T>;
     // Optimized kernel
-    auto opt_kernel = [&](compiler_context const &ctx) {
-        auto element_ty = get_scalar(ctx, real_t);
-        std::array<data_type, 2 * dim + 2> param_types;
+    auto opt_kernel = [&](tinytc_compiler_context_t ctx) {
+        auto element_ty = to_type<T>(ctx);
+        std::array<tinytc_type_t, 2 * dim + 2> param_types;
         for (std::size_t i = 0; i < dim; ++i) {
             param_types[i] = A_[i].type(element_ty);
         }
@@ -71,26 +73,27 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         param_types[2 * dim + 0] = Q_opt_.type(element_ty);
         param_types[2 * dim + 1] = I_.type(element_ty);
 
-        auto f = make_func("volume_kernel", param_types, get_void(ctx));
-        auto fn_body = f.get_body();
+        auto void_ty = get<void_type>(ctx);
+        auto f = create_func("volume_kernel", param_types, void_ty);
+        auto fn_body = get_body(f.get());
 
-        std::array<value, 2 * dim + 2> params;
-        fn_body.get_parameters(params);
+        std::array<tinytc_value_t, 2 * dim + 2> params;
+        get_parameters(fn_body, params);
 
-        auto A = [&params](std::size_t i) -> value & { return params[i]; };
-        auto K = [&params](std::size_t i) -> value & { return params[dim + i]; };
+        auto A = [&params](std::size_t i) -> tinytc_value_t & { return params[i]; };
+        auto K = [&params](std::size_t i) -> tinytc_value_t & { return params[dim + i]; };
         auto Q = params[2 * dim + 0];
         auto I = params[2 * dim + 1];
 
         for (std::size_t i = 0; i < dim; ++i) {
-            A(i).set_name((std::ostringstream{} << 'A' << i).str());
-            K(i).set_name((std::ostringstream{} << 'K' << i).str());
+            set_name(A(i), (std::ostringstream{} << 'A' << i).str());
+            set_name(K(i), (std::ostringstream{} << 'K' << i).str());
         }
-        Q.set_name("Q");
-        I.set_name("I");
+        set_name(Q, "Q");
+        set_name(I, "I");
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.add(make_builtin(builtin::group_id_x, get_scalar(ctx, scalar_type::index)));
+        auto gid = bb.create<group_id_inst>(comp3::x, get<index_type>(ctx));
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes2 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 2u> {
@@ -99,63 +102,82 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};
         };
-        auto const offsets3 = array_view<value>(gid);
+        auto const default_stride = array_view<std::int64_t>{};
+        auto const offsets3 = array_view<tinytc_value_t>(gid);
         auto const sizeK2 = std::array<std::int64_t, 2u>{B3_aligned_, B2_};
-        auto tmp = bb.add(
-            make_alloca(get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local)));
+        auto tmp = bb.create<alloca_inst>(get<memref_type>(element_ty, std::array{B2_aligned_, P_},
+                                                           default_stride, address_space::local));
 
-        auto a0t = get_memref(element_ty, static_sizes2(A_[0]));
-        auto a1t = get_memref(element_ty, static_sizes2(A_[1]));
-        auto a2t = get_memref(element_ty, static_sizes2(A_[2]));
-        auto k0t = get_memref(element_ty, sizeK2);
-        auto k1t = get_memref(element_ty, sizeK2);
-        auto k2t = get_memref(element_ty, sizeK2);
-        auto qvt = get_memref(element_ty, {B3_aligned_, P_});
-        auto ivt = get_memref(element_ty, {B2_aligned_, P_}, {1, dynamic});
-        auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
-        auto a0 =
-            bb.add(make_subview(A(0), static_offsets3, static_sizes3(A_[0]), offsets3, {}, a0t));
-        auto a1 =
-            bb.add(make_subview(A(1), static_offsets3, static_sizes3(A_[1]), offsets3, {}, a1t));
-        auto a2 =
-            bb.add(make_subview(A(2), static_offsets3, static_sizes3(A_[2]), offsets3, {}, a2t));
-        auto k0 = bb.add(make_subview(K(0), static_offsets2, sizeK2, {}, {}, k0t));
-        auto k1 = bb.add(make_subview(K(1), static_offsets2, sizeK2, {}, {}, k1t));
-        auto k2 = bb.add(make_subview(K(2), static_offsets2, sizeK2, {}, {}, k2t));
-        auto qv = bb.add(make_subview(Q, static_offsets3, {B3_aligned_, P_, 0}, offsets3, {}, qvt));
-        auto iv = bb.add(make_subview(I, static_offsets3, {B2_aligned_, P_, 0}, offsets3, {}, ivt));
-        auto tmpv = bb.add(make_subview(tmp, static_offsets2, {B2_, P_}, {}, {}, tmpvt));
-        auto const c0 = bb.add(make_constant_zero(element_ty));
-        auto const c1 = bb.add(make_constant_one(element_ty));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a0, c0, tmp));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k0, tmpv, c1, qv));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a1, c0, tmp));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k1, tmpv, c1, qv));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a2, c0, tmp));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k2, tmpv, c1, qv));
+        auto a0t = get<memref_type>(element_ty, static_sizes2(A_[0]), default_stride,
+                                    address_space::global);
+        auto a1t = get<memref_type>(element_ty, static_sizes2(A_[1]), default_stride,
+                                    address_space::global);
+        auto a2t = get<memref_type>(element_ty, static_sizes2(A_[2]), default_stride,
+                                    address_space::global);
+        auto k0t = get<memref_type>(element_ty, sizeK2, default_stride, address_space::global);
+        auto k1t = get<memref_type>(element_ty, sizeK2, default_stride, address_space::global);
+        auto k2t = get<memref_type>(element_ty, sizeK2, default_stride, address_space::global);
+        auto qvt = get<memref_type>(element_ty, std::array{B3_aligned_, P_}, default_stride,
+                                    address_space::global);
+        auto ivt = get<memref_type>(element_ty, std::array{B2_aligned_, P_},
+                                    std::array{std::int64_t{1}, dynamic}, address_space::global);
+        auto tmpvt =
+            get<memref_type>(element_ty, std::array{B2_, P_}, default_stride, address_space::local);
+        auto a0 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[0]), A(0), offsets3,
+                                          array_view<tinytc_value_t>{}, a0t);
+        auto a1 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[1]), A(1), offsets3,
+                                          array_view<tinytc_value_t>{}, a1t);
+        auto a2 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[2]), A(2), offsets3,
+                                          array_view<tinytc_value_t>{}, a2t);
+        auto k0 =
+            bb.create<subview_inst>(static_offsets2, sizeK2, K(0), array_view<tinytc_value_t>{},
+                                    array_view<tinytc_value_t>{}, k0t);
+        auto k1 =
+            bb.create<subview_inst>(static_offsets2, sizeK2, K(1), array_view<tinytc_value_t>{},
+                                    array_view<tinytc_value_t>{}, k1t);
+        auto k2 =
+            bb.create<subview_inst>(static_offsets2, sizeK2, K(2), array_view<tinytc_value_t>{},
+                                    array_view<tinytc_value_t>{}, k2t);
+        auto qv =
+            bb.create<subview_inst>(static_offsets3, array_view{B3_aligned_, P_, std::int64_t{0}},
+                                    Q, offsets3, array_view<tinytc_value_t>{}, qvt);
+        auto iv =
+            bb.create<subview_inst>(static_offsets3, array_view{B2_aligned_, P_, std::int64_t{0}},
+                                    I, offsets3, array_view<tinytc_value_t>{}, ivt);
+        auto tmpv = bb.create<subview_inst>(static_offsets2, array_view{B2_, P_}, tmp,
+                                            array_view<tinytc_value_t>{},
+                                            array_view<tinytc_value_t>{}, tmpvt);
+        auto const c0 = bb.constant_zero(element_ty);
+        auto const c1 = bb.constant_one(element_ty);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a0, c0, tmp);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, k0, tmpv, c1, qv);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a1, c0, tmp);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, k1, tmpv, c1, qv);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a2, c0, tmp);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, k2, tmpv, c1, qv);
 
         return f;
     };
-    auto p = make_prog(ctx_);
-    p.add_function(opt_kernel(ctx_));
-    if (dump) {
-        p.dump();
+    auto p = create_prog(ctx_.get());
+    add_function(p.get(), opt_kernel(ctx_.get()));
+    if (dump_code) {
+        dump(p.get());
     }
-    return make_kernel_bundle(q_.get_context(), q_.get_device(),
-                              compile_to_spirv_and_assemble(p, dev_info_));
+    auto bin = compile_to_spirv_and_assemble(p.get(), dev_info_.get());
+    return create_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
 }
 
 template <typename T> std::vector<event> test_volume<T>::reference() {
     auto e = std::vector<event>{};
     for (std::size_t d = 0; d < dim; ++d) {
-        small_gemm_batched::set_args(g_[0], howmany_, T(1.0), I_.get(), A_[d].get(), T(0.0),
-                                     tmp_.get());
-        e.emplace_back(g_[0].submit(q_, e));
+        set_small_gemm_batched_args(g_[0].get(), howmany_, T(1.0), I_.get(), A_[d].get(), T(0.0),
+                                    tmp_.get());
+        e.emplace_back(submit(g_[0].get(), q_, e));
         e.front() = e.back();
         e.pop_back();
-        small_gemm_batched::set_args(g_[1], howmany_, T(1.0), K_[d].get(), tmp_.get(), T(1.0),
-                                     Q_ref_.get());
-        e.emplace_back(g_[1].submit(q_, e));
+        set_small_gemm_batched_args(g_[1].get(), howmany_, T(1.0), K_[d].get(), tmp_.get(), T(1.0),
+                                    Q_ref_.get());
+        e.emplace_back(submit(g_[1].get(), q_, e));
     }
     return e;
 }

@@ -3,8 +3,9 @@
 
 #include "pass/dump_cfg.hpp"
 #include "analysis/cfg.hpp"
+#include "node/func.hpp"
 #include "pass/dump_ir.hpp"
-#include "support/util.hpp"
+#include "util/iterator.hpp"
 
 #include <cstdint>
 #include <ostream>
@@ -16,7 +17,7 @@ namespace tinytc {
 
 dump_cfg_pass::dump_cfg_pass(std::ostream &os) : os_(&os) {}
 
-void dump_cfg_pass::run_on_function(function_node &fn) {
+void dump_cfg_pass::run_on_function(tinytc_func &fn) {
     auto dump_ir = dump_ir_pass(*os_, 0);
 
     *os_ << "digraph " << fn.name() << " {" << std::endl;

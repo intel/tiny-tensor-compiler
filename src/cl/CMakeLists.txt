@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedFiles)
 include(GNUInstallDirs)
 include(InstallLib)
 
@@ -9,7 +10,6 @@ find_package(OpenCL REQUIRED)
 
 set(SOURCES
     device_info.cpp
-    error.cpp
     kernel.cpp
     recipe_handler.cpp
 )
@@ -26,13 +26,7 @@ target_include_directories(tinytc_cl-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
 )
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/device_info_helper.cpp)
-    message(STATUS "Pre-generated device info helper available -- skipping re2c dependency")
-    target_sources(tinytc_cl-objects PRIVATE device_info_helper.cpp)
-else()
-    find_package(re2c REQUIRED)
-    add_re2c_to_target(TARGET tinytc_cl-objects SOURCES device_info_helper.re FLAGS "--tags")
-endif()
+add_re2c_or_pregenerated_to_target(TARGET tinytc_cl-objects SOURCES device_info_helper.re)
 
 add_library(tinytc_cl $<TARGET_OBJECTS:tinytc_cl-objects>)
 add_library(tinytc::tinytc_cl ALIAS tinytc_cl)
@@ -59,5 +53,4 @@ install(FILES
 # cpack
 
 include(GeneratedFiles)
-get_generated_files(GENERATED_FILES_TINYTC_CL tinytc_cl-objects)
-set(GENERATED_FILES_TINYTC_CL ${GENERATED_FILES_TINYTC_CL} PARENT_SCOPE)
+write_generated_files(tinytc_cl-objects)

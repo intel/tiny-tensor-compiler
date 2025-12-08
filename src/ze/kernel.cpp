@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../compiler_options.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.h"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/types.h"
 
@@ -76,7 +75,6 @@ tinytc_status_t tinytc_ze_kernel_bundle_create_with_binary(ze_module_handle_t *b
 
     tinytc_compiler_context_t ctx = nullptr;
     TINYTC_CHECK_STATUS(tinytc_binary_get_compiler_context(bin, &ctx));
-    auto ctx_ = compiler_context{ctx}; // Clean-up ctx when ctx_ goes out of scope
 
     if (core_features & static_cast<std::uint32_t>(tinytc_core_feature_flag_large_register_file)) {
         module_desc.pBuildFlags = large_register_file_compiler_option_ze;
@@ -91,7 +89,7 @@ tinytc_status_t tinytc_ze_kernel_bundle_create_with_binary(ze_module_handle_t *b
         zeModuleBuildLogGetString(build_log, &log_size, log.data());
 
         tinytc_location_t loc = {};
-        tinytc_compiler_context_report_error(ctx_.get(), &loc, log.c_str());
+        tinytc_compiler_context_report_error(ctx, &loc, log.c_str());
         zeModuleBuildLogDestroy(build_log);
         TINYTC_ZE_CHECK_STATUS(status);
     } else {
@@ -121,10 +119,10 @@ tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
     auto props = ze_kernel_properties_t{};
     props.stype = ZE_STRUCTURE_TYPE_KERNEL_PROPERTIES;
     props.pNext = nullptr;
-    auto status = zeKernelGetProperties(kernel, &props);
+    TINYTC_ZE_CHECK_STATUS(zeKernelGetProperties(kernel, &props));
     *x = props.requiredGroupSizeX;
     *y = props.requiredGroupSizeY;
     *z = props.requiredGroupSizeZ;
-    return tinytc_ze_convert_status(status);
+    return tinytc_status_success;
 }
 }

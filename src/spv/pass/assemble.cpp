@@ -6,18 +6,19 @@
 #include "spv/inst_assembler.hpp"
 #include "spv/module.hpp"
 #include "spv/visit.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
 
 #include <cstdint>
 #include <vector>
 
 namespace tinytc::spv {
 
-auto assembler::run_on_module(tinytc_spv_mod const &mod) -> binary {
+auto assembler::run_on_module(tinytc_spv_mod const &mod) -> shared_handle<tinytc_binary_t> {
     auto data = std::vector<std::uint8_t>{};
     auto stream = word_stream<std::int32_t>{data};
 
@@ -43,7 +44,7 @@ auto assembler::run_on_module(tinytc_spv_mod const &mod) -> binary {
     tinytc_binary_t bin;
     CHECK_STATUS(tinytc_binary_create(&bin, mod.context(), tinytc_bundle_format_spirv, data.size(),
                                       data.data(), mod.core_features()));
-    return binary{bin};
+    return shared_handle{bin};
 }
 
 } // namespace tinytc::spv

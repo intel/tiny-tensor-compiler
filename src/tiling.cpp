@@ -5,9 +5,11 @@
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
 #include "matrix_ext_info.hpp"
-#include "scalar_type.hpp"
-#include "support/fnv1a.hpp"
-#include "tinytc/tinytc.hpp"
+#include "node/type.hpp"
+#include "number.hpp"
+#include "tinytc/core.hpp"
+#include "tinytc/types.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -23,8 +25,8 @@ auto blas_shape::operator==(blas_shape const &other) const -> bool {
 }
 auto blas_shape::operator!=(blas_shape const &other) const -> bool { return !(*this == other); }
 
-auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
-                           ::tinytc_core_info const &info) -> std::int32_t {
+auto suggest_subgroup_size(array_view<blas_shape> const &shapes, ::tinytc_core_info const &info)
+    -> std::int32_t {
     auto const &available_subgroup_sizes = info.subgroup_sizes();
     if (available_subgroup_sizes.size() == 0) {
         throw std::out_of_range("Subgroup size vector must have at least one entry");
@@ -32,7 +34,8 @@ auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
 
     for (auto &shape : shapes) {
         auto const &mext = info.matrix();
-        if (shape.is_gemm && mext.have_precision(shape.op1_ty, shape.op2_ty, shape.dst_ty)) {
+        if (shape.is_gemm && mext.have_precision(shape.op1_ty->type_id(), shape.op2_ty->type_id(),
+                                                 shape.dst_ty->type_id())) {
             return mext.required_subgroup_size();
         }
     }
@@ -83,8 +86,8 @@ auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
     return sensible_subgroup_sizes.back();
 }
 
-auto suggest_local_tiling(array_view<blas_shape> const &shapes,
-                          core_config const &core_cfg) -> local_tiling {
+auto suggest_local_tiling(array_view<blas_shape> const &shapes, core_config const &core_cfg)
+    -> local_tiling {
     if (shapes.empty()) {
         return {1, 1};
     }
@@ -114,8 +117,8 @@ auto suggest_local_tiling(array_view<blas_shape> const &shapes,
 }
 
 auto suggest_local_tiling(std::size_t A_size, std::size_t B_size, std::size_t C_size,
-                          std::array<std::int64_t, 2u> const &shape,
-                          core_config const &core_cfg) -> local_tiling {
+                          std::array<std::int64_t, 2u> const &shape, core_config const &core_cfg)
+    -> local_tiling {
     auto [rows, cols] = max_register_block_gemm(A_size, B_size, C_size, core_cfg.subgroup_size,
                                                 core_cfg.register_space);
     auto const num_tile_limit = [](std::int64_t mode, std::int32_t block_size) {
@@ -165,6 +168,6 @@ auto suggest_subgroup_size_and_tiling(array_view<blas_shape> const &shapes,
 } // namespace tinytc
 
 std::size_t std::hash<tinytc::blas_shape>::operator()(tinytc::blas_shape const &x) const {
-    return fnv1a_combine(x.op1_ty, x.op2_ty, x.dst_ty, x.is_gemm, x.shape[0], x.shape[1]);
+    return tinytc::fnv1a_combine(x.op1_ty, x.op2_ty, x.dst_ty, x.is_gemm, x.shape[0], x.shape[1]);
 }
 

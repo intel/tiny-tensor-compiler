@@ -14,7 +14,7 @@ func @expand(%a: memref<i8x64>, %b: memref<i8x?x?> {shape_gcd=[16,3], stride_gcd
     %c4 = constant 4 : index
     %0 = expand %a[0->8x8] : memref<i8x8x8>
     %1 = size %b[0] : index
-    %2 = arith.div %1, %c4 : index
+    %2 = div %1, %c4 : index
     %3 = expand %b[0->4x%2] : memref<i8x4x?x?,strided<1,4,?>>
 ; CHECK-LABEL: GCD in @expand
 ; CHECK:       offset_gcd(%0) = 128
@@ -37,13 +37,25 @@ func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_
 ; CHECK:       stride_gcd(%1) = [1,16]
 }
 
-func @load(%a: group<memref<i8x?>x?> {shape_gcd=[4]}) {
-    %gid = builtin.group_id.x : index
+func @load(%a: group<memref<i8x?>x?> {shape_gcd=[4]},
+           %b: group<memref<f32x?>x?, offset: ?>,
+           %c: group<memref<f32x?>x?, offset: 4>,
+           %d: group<memref<f32x?>x?, offset: 5>,
+           %e: group<memref<f32x?>x?, offset: 1024>) {
+    %gid = group_id.x : index
     %0 = load %a[%gid] : memref<i8x?>
+    %1 = load %b[%gid] : memref<f32x?>
+    %2 = load %c[%gid] : memref<f32x?>
+    %3 = load %d[%gid] : memref<f32x?>
+    %4 = load %e[%gid] : memref<f32x?>
 ; CHECK-LABEL: GCD in @load
 ; CHECK:       offset_gcd(%0) = 128
 ; CHECK:       shape_gcd(%0) = [4]
 ; CHECK:       stride_gcd(%0) = [1]
+; CHECK:       offset_gcd(%1) = 1
+; CHECK:       offset_gcd(%2) = 4
+; CHECK:       offset_gcd(%3) = 1
+; CHECK:       offset_gcd(%4) = 32
 }
 
 func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {
@@ -55,10 +67,10 @@ func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {
     %2 = subview %a[4:8,5:8] : memref<i16x8x8>
     %3 = subview %a[%x,0] : memref<i16x8>
     %4 = subview %a[0,%x] : memref<i16x8>
-    %5 = arith.mul %c16, %x : index
-    %6 = arith.add %5, %c128 : index
+    %5 = mul %c16, %x : index
+    %6 = add %5, %c128 : index
     %7 = subview %a[%6:8,0:8] : memref<i16x8x8>
-    %8 = arith.mul %c96, %x : index
+    %8 = mul %c96, %x : index
     %9 = subview %b[%8:%5] : memref<i16x?>
 ; CHECK-LABEL: GCD in @subview
 ; CHECK:       offset_gcd(%0) = 64

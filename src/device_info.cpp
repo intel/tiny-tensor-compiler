@@ -3,12 +3,12 @@
 
 #include "device_info.hpp"
 #include "error.hpp"
-#include "support/fnv1a.hpp"
-#include "support/util.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.h"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -64,7 +64,11 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
                                                          .stride_alignment = 8,
                                                          .width_alignment = 4};
         matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
-    } else if (is_arch(tinytc_intel_gpu_architecture_bmg)) {
+    } else if (is_arch(tinytc_intel_gpu_architecture_bmg) ||
+               is_arch(tinytc_intel_gpu_architecture_bmg_g31) ||
+               is_arch(tinytc_intel_gpu_architecture_lnl) ||
+               is_arch(tinytc_intel_gpu_architecture_ptl_h) ||
+               is_arch(tinytc_intel_gpu_architecture_ptl_u)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
 
@@ -81,7 +85,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
 auto core_info_intel::num_reg_small_grf() const -> std::int32_t { return 128; }
 
 auto core_info_intel::num_reg_large_grf() const -> std::int32_t {
-    if (is_arch(tinytc_intel_gpu_architecture_pvc) || is_arch(tinytc_intel_gpu_architecture_bmg)) {
+    if (static_cast<std::uint32_t>(tinytc_intel_gpu_architecture_pvc) <= ip_version_) {
         return 256;
     }
     return num_reg_small_grf();
@@ -139,7 +143,7 @@ using namespace tinytc;
 
 extern "C" {
 tinytc_status_t tinytc_core_info_generic_create(tinytc_core_info_t *info, int32_t register_space,
-                                                int32_t max_work_group_size, uint32_t sgs_size,
+                                                int32_t max_work_group_size, size_t sgs_size,
                                                 int32_t const *sgs) {
     if (info == nullptr || sgs == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -173,11 +177,21 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_global, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_local, false);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_global, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_local, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_global, false);
             (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, false);
             (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
             break;
         case tinytc_intel_gpu_architecture_pvc:
         case tinytc_intel_gpu_architecture_bmg:
+        case tinytc_intel_gpu_architecture_bmg_g31:
+        case tinytc_intel_gpu_architecture_lnl:
+        case tinytc_intel_gpu_architecture_ptl_h:
+        case tinytc_intel_gpu_architecture_ptl_u:
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
                                                       std::vector<std::int32_t>{16, 32})
                         .release();
@@ -192,6 +206,12 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_global, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_local, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_min_max_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_min_max_global, true);
             (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, true);
             (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
             break;
@@ -221,6 +241,22 @@ tinytc_status_t tinytc_core_info_intel_create_from_name(tinytc_core_info_t *info
             CHECK_STATUS(
                 tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_bmg));
             break;
+        case "bmg_g31"_fnv1a:
+            CHECK_STATUS(tinytc_core_info_intel_create_from_arch(
+                info, tinytc_intel_gpu_architecture_bmg_g31));
+            break;
+        case "lnl"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_lnl));
+            break;
+        case "ptl_u"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_ptl_u));
+            break;
+        case "ptl_h"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_ptl_h));
+            break;
         default:
             *info = nullptr;
             throw status::invalid_arguments;
@@ -230,7 +266,7 @@ tinytc_status_t tinytc_core_info_intel_create_from_name(tinytc_core_info_t *info
 
 tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info, uint32_t ip_version,
                                               int32_t num_eus_per_subslice,
-                                              int32_t num_threads_per_eu, uint32_t sgs_size,
+                                              int32_t num_threads_per_eu, size_t sgs_size,
                                               int32_t const *sgs) {
     if (info == nullptr || sgs == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -243,8 +279,8 @@ tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info, uint32_t
     });
 }
 
-tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info,
-                                                    uint32_t *sgs_size, int32_t const **sgs) {
+tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info, size_t *sgs_size,
+                                                    int32_t const **sgs) {
 
     if (info == nullptr || sgs_size == nullptr || sgs == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -337,49 +373,5 @@ tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj) {
     }
     obj->inc_ref();
     return tinytc_status_success;
-}
-
-char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f) {
-    switch (f) {
-    case tinytc_spirv_feature_float16:
-        return "float16";
-    case tinytc_spirv_feature_float64:
-        return "float64";
-    case tinytc_spirv_feature_int64_atomics:
-        return "int64_atomics";
-    case tinytc_spirv_feature_groups:
-        return "groups";
-    case tinytc_spirv_feature_subgroup_dispatch:
-        return "subgroup_dispatch";
-    case tinytc_spirv_feature_atomic_float16_add_local:
-        return "atomic_float16_add_local";
-    case tinytc_spirv_feature_atomic_float16_add_global:
-        return "atomic_float16_add_global";
-    case tinytc_spirv_feature_atomic_float32_add_local:
-        return "atomic_float32_add_local";
-    case tinytc_spirv_feature_atomic_float32_add_global:
-        return "atomic_float32_add_global";
-    case tinytc_spirv_feature_atomic_float64_add_local:
-        return "atomic_float64_add_local";
-    case tinytc_spirv_feature_atomic_float64_add_global:
-        return "atomic_float64_add_global";
-    case tinytc_spirv_feature_atomic_float16_min_max_local:
-        return "atomic_float16_min_max_local";
-    case tinytc_spirv_feature_atomic_float16_min_max_global:
-        return "atomic_float16_min_max_global";
-    case tinytc_spirv_feature_atomic_float32_min_max_local:
-        return "atomic_float32_min_max_local";
-    case tinytc_spirv_feature_atomic_float32_min_max_global:
-        return "atomic_float32_min_max_global";
-    case tinytc_spirv_feature_atomic_float64_min_max_local:
-        return "atomic_float64_min_max_local";
-    case tinytc_spirv_feature_atomic_float64_min_max_global:
-        return "atomic_float64_min_max_global";
-    case tinytc_spirv_feature_bfloat16_conversion:
-        return "bfloat16_conversion";
-    case tinytc_spirv_feature_subgroup_buffer_block_io:
-        return "subgroup_buffer_block_io";
-    }
-    return "unknown";
 }
 }

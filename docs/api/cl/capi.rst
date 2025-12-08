@@ -1,4 +1,4 @@
-.. Copyright (C) 2024 Intel Corporation
+.. Copyright (C) 2025 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
 .. _OpenCL C-API:
@@ -6,23 +6,6 @@
 =====
 C-API
 =====
-
-Common
-======
-
-* Functions
-
-  * :ref:`tinytc_cl_convert_status`
-
-Common Functions
-----------------
-
-.. _tinytc_cl_convert_status:
-
-tinytc_cl_convert_status
-........................
-
-.. doxygenfunction:: tinytc_cl_convert_status
 
 Device Info
 ===========

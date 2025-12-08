@@ -4,6 +4,6 @@
 ; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
 func @axpby(%alpha: f32, %A: memref<f32x8x16>, %B: memref<f32x8x8>) {
     %zero = constant 0.0 : f32
-    axpby.n %alpha, %A, %zero, %B
-; CHECK: 7.5-33: Incompatible tensor shapes
+    axpby %alpha, %A, %zero, %B
+; CHECK: 7.5-31: Incompatible tensor shapes
 }

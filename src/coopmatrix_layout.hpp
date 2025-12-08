@@ -4,18 +4,19 @@
 #ifndef COOPMATRIX_LAYOUT_20250428_HPP
 #define COOPMATRIX_LAYOUT_20250428_HPP
 
-#include "support/fnv1a.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
+#include "util/fnv1a.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 
 namespace tinytc {
-class coopmatrix_data_type;
 class core_config;
-enum class scalar_type;
 
 struct coopmatrix_layout {
-    scalar_type sty;
+    tinytc_type_t sty;
     std::int64_t rows, cols, blocks, length, shape1, blocks1;
     std::int32_t ops_per_chan;
 
@@ -35,15 +36,15 @@ struct coopmatrix_layout {
     }
 };
 
-auto get_layout(core_config const &cfg, coopmatrix_data_type const *ct) -> coopmatrix_layout;
+auto get_layout(core_config const &cfg, coopmatrix_type const *ct) -> coopmatrix_layout;
 
 } // namespace tinytc
 
 namespace std {
 template <> struct hash<tinytc::coopmatrix_layout> {
     inline auto operator()(tinytc::coopmatrix_layout const &key) const -> std::size_t {
-        return fnv1a_combine(key.sty, key.rows, key.cols, key.blocks, key.length, key.shape1,
-                             key.blocks1, key.ops_per_chan);
+        return tinytc::fnv1a_combine(key.sty, key.rows, key.cols, key.blocks, key.length,
+                                     key.shape1, key.blocks1, key.ops_per_chan);
     }
 };
 } // namespace std

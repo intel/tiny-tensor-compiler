@@ -14,6 +14,7 @@ endif()
 
 if(BUILD_SYCL)
     add_subdirectory(benchmark)
+    add_subdirectory(flash_attention)
     add_subdirectory(matrix_chain)
     add_subdirectory(tall_and_skinny)
 endif()

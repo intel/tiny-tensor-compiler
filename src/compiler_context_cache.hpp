@@ -4,10 +4,9 @@
 #ifndef COMPILER_CONTEXT_CACHE_20240925_HPP
 #define COMPILER_CONTEXT_CACHE_20240925_HPP
 
-#include "support/fnv1a.hpp"
 #include "tinytc/types.h"
+#include "util/fnv1a.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -16,9 +15,9 @@
 #include <utility>
 
 namespace std {
-template <> class hash<std::pair<tinytc_data_type_t, std::int64_t>> {
+template <> class hash<std::pair<tinytc_type_t, std::int64_t>> {
   public:
-    auto operator()(std::pair<tinytc_data_type_t, std::int64_t> const &key) const -> std::size_t {
+    auto operator()(std::pair<tinytc_type_t, std::int64_t> const &key) const -> std::size_t {
         return tinytc::fnv1a_combine(key.first, key.second);
     }
 };
@@ -28,11 +27,17 @@ namespace tinytc {
 
 template <typename T> class unique_storage {
   public:
+    unique_storage() = default;
     ~unique_storage() {
         for (auto &m : map_) {
             delete m.second;
         }
     }
+
+    unique_storage(unique_storage const &) = delete;
+    unique_storage(unique_storage &&) = delete;
+    unique_storage &operator=(unique_storage const &) = delete;
+    unique_storage &operator=(unique_storage &&) = delete;
 
     template <typename EqualFun, typename MakeFun>
     auto get(std::uint64_t hash, EqualFun &&is_equal, MakeFun &&make) -> T {
@@ -56,11 +61,14 @@ class compiler_context_cache {
     ~compiler_context_cache();
 
     compiler_context_cache(compiler_context_cache const &) = delete;
+    compiler_context_cache(compiler_context_cache &&) = delete;
     compiler_context_cache &operator=(compiler_context_cache const &) = delete;
+    compiler_context_cache &operator=(compiler_context_cache &&) = delete;
 
-    std::unique_ptr<tinytc_data_type> void_ty, bool_ty;
-    std::array<std::unique_ptr<tinytc_data_type>, TINYTC_NUMBER_OF_SCALAR_TYPES> scalar_tys;
-    unique_storage<tinytc_data_type_t> coopmatrix_tys, group_tys, memref_tys;
+    std::unique_ptr<tinytc_type> void_ty, bool_ty;
+    std::unique_ptr<tinytc_type> i8_ty, i16_ty, i32_ty, i64_ty, index_ty, bf16_ty, f16_ty, f32_ty,
+        f64_ty, c32_ty, c64_ty;
+    unique_storage<tinytc_type_t> coopmatrix_tys, group_tys, memref_tys;
 
     unique_storage<tinytc_attr_t> array_attrs, dictionary_attrs, integer_attrs, string_attrs;
     std::unique_ptr<tinytc_attr> false_attr, true_attr;

@@ -4,7 +4,7 @@
 #ifndef DUMP_BACKWARD_CFG_20240919_HPP
 #define DUMP_BACKWARD_CFG_20240919_HPP
 
-#include "node/function_node.hpp"
+#include "tinytc/types.h"
 
 #include <iosfwd>
 
@@ -14,7 +14,7 @@ class dump_cfg_pass {
   public:
     dump_cfg_pass(std::ostream &os);
 
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
     std::ostream *os_;

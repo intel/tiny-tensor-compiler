@@ -47,10 +47,10 @@ template <typename T> class test_ader : public test {
 
     std::int64_t N_, P_, howmany_, alignment_;
     sycl::queue q_;
-    tinytc::core_info dev_info_;
+    tinytc::shared_handle<tinytc_core_info_t> dev_info_;
     matrix_batch<T> I_ref_, I_opt_, tmp_;
     std::vector<matrix_batch<T>> A_, K_, dQ_;
-    std::vector<tinytc::sycl_recipe_handler> g_;
+    std::vector<tinytc::shared_handle<tinytc_recipe_handler_t>> g_;
     sycl::kernel_bundle<sycl::bundle_state::executable> opt_bundle_;
     sycl::kernel opt_kernel_;
 };

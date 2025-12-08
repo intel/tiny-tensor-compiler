@@ -2,25 +2,26 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/constant_propagation.hpp"
-#include "node/function_node.hpp"
-#include "node/inst_node.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
+#include "node/visit.hpp"
 #include "pass/constant_folding.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/visit.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/overloaded.hpp"
 
+#include <iterator>
 #include <variant>
 
 namespace tinytc {
 
-void constant_propagation_pass::run_on_function(function_node &fn) { run_on_region(fn.body()); }
+void constant_propagation_pass::run_on_function(tinytc_func &fn) { run_on_region(fn.body()); }
 
-void constant_propagation_pass::run_on_region(region_node &reg) {
+void constant_propagation_pass::run_on_region(tinytc_region &reg) {
     for (auto it = reg.begin(); it != reg.end(); ++it) {
         for (auto &subreg : it->child_regions()) {
             run_on_region(subreg);
@@ -47,7 +48,7 @@ void constant_propagation_pass::run_on_region(region_node &reg) {
                                       update_uses(val);
                                   }
                               },
-                              [&](inst &new_constant) {
+                              [&](unique_handle<tinytc_inst_t> &new_constant) {
                                   if (new_constant) {
                                       if (new_constant->num_results() != 1) {
                                           throw status::internal_compiler_error;

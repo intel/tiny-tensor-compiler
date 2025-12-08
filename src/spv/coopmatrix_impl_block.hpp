@@ -6,7 +6,6 @@
 
 #include "spv/coopmatrix_impl.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstdint>
 
@@ -16,13 +15,13 @@ class coopmatrix_impl_block : public coopmatrix_impl {
   public:
     using coopmatrix_impl::coopmatrix_impl;
 
-    auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv, spv_inst *operand,
+    auto load(cooperative_matrix_load_inst in, dope_vector const &odv, spv_inst *operand,
               spv_inst *pos0, spv_inst *pos1) -> spv_inst * override;
-    void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
+    void store(cooperative_matrix_store_inst in, dope_vector const &odv, spv_inst *val,
                spv_inst *operand, spv_inst *pos0, spv_inst *pos1) override;
 
   private:
-    auto get_io_sty(scalar_type sty) -> scalar_type;
+    auto get_io_sty(tinytc_type_t ty) -> tinytc_type_t;
     auto is_aligned(std::int32_t alignment, tinytc_value const &operand, tinytc_value const &pos0)
         -> bool;
 };

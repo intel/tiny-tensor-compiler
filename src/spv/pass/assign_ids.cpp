@@ -5,11 +5,10 @@
 #include "spv/defs.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
-#include "support/casting.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
 
 #include <utility>
 #include <vector>

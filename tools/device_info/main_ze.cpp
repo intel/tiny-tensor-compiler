@@ -1,9 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <level_zero/ze_api.h>
 
@@ -13,11 +14,6 @@
 #include <iostream>
 #include <type_traits>
 #include <vector>
-
-namespace tinytc {
-enum class spirv_feature;
-enum class status;
-} // namespace tinytc
 
 using namespace tinytc;
 
@@ -49,25 +45,27 @@ int main() {
                 ze_device_properties_t props;
                 ZE_CHECK_STATUS(zeDeviceGetProperties(device, &props));
                 std::cout << "\tDevice " << device_no++ << ": " << props.name << std::endl;
-                auto info = make_core_info(device);
+                auto info = create_core_info(device);
                 std::cout << "\t\t" << "Subgroup sizes  :";
-                for (auto sgs : info.get_subgroup_sizes()) {
+                for (auto sgs : get_subgroup_sizes(info.get())) {
                     std::cout << " " << sgs;
                 }
                 std::cout << std::endl;
-                std::cout << "\t\tRegister space  : " << info.get_register_space() << std::endl;
+                std::cout << "\t\tRegister space  : " << get_register_space(info.get())
+                          << std::endl;
                 std::cout << "\t\tSPIR-V features : " << std::endl;
-                for (int i = 0; i < TINYTC_NUMBER_OF_SPIRV_FEATURES; ++i) {
+                for (int i = 0; i < TINYTC_ENUM_NUM_SPIRV_FEATURE; ++i) {
                     const auto feature = spirv_feature{std::underlying_type_t<spirv_feature>(i)};
                     std::cout << "\t\t\t" << std::setw(width) << std::left << to_string(feature)
                               << ": ";
-                    std::cout << (info.have_spirv_feature(feature) ? "yes" : "no") << std::endl;
+                    std::cout << (have_spirv_feature(info.get(), feature) ? "yes" : "no")
+                              << std::endl;
                 }
             }
         }
 
     } catch (status const &st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
         return 1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

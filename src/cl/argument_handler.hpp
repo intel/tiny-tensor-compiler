@@ -51,8 +51,8 @@ class opencl_argument_handler {
      * @param mem Memory object
      */
     inline void set_mem_arg(cl_kernel kernel, std::uint32_t arg_index, const void *value,
-                            tinytc_mem_type_t type) const {
-        switch (type) {
+                            tinytc_mem_type_t ty) const {
+        switch (ty) {
         case tinytc_mem_type_buffer:
             set_arg(kernel, arg_index, sizeof(value), &value);
             return;

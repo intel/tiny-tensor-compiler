@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedFiles)
 include(GenerateExportHeader)
 include(GitVersion)
 include(InstallLib)
@@ -17,31 +18,27 @@ set(SOURCES
     analysis/alias.cpp
     analysis/cfg.cpp
     analysis/gcd.cpp
-    analysis/equal.cpp
     analysis/stack.cpp
-    attribute.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
     compiler_context.cpp
     compiler_context_cache.cpp
     coopmatrix_layout.cpp
-    data_type.cpp
     device_info.cpp
     error.cpp
-    func.cpp
     gemm_tools.cpp
     half.cpp
-    inst.cpp
     location.cpp
     matrix_ext_info.cpp
-    node/attr_node.cpp
-    node/data_type_node.cpp
-    node/function_node.cpp
-    node/inst_node.cpp
-    node/region_node.cpp
-    node/program_node.cpp
-    node/value_node.cpp
+    node/attr.cpp
+    node/func.cpp
+    node/inst.cpp
+    node/inst_view_impl.cpp
+    node/region.cpp
+    node/prog.cpp
+    node/value.cpp
+    number.cpp
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp
@@ -62,12 +59,9 @@ set(SOURCES
     pass/slot_tracker.cpp
     pass/stack.cpp
     pass/work_group_size.cpp
-    prog.cpp
     recipe.cpp
     recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
-    region.cpp
-    scalar_type.cpp
     spv/block2d_diy.cpp
     spv/capex_util.cpp
     spv/converter.cpp
@@ -89,39 +83,43 @@ set(SOURCES
     spv/uniquifier.cpp
     support/temp_counter.cpp
     tiling.cpp
-    value.cpp
     support/walk.cpp
 )
 
 add_library(tinytc-objects OBJECT ${SOURCES})
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser/lexer.cpp)
-    message(STATUS "Pre-generated lexer available -- skipping re2c dependency")
-    target_sources(tinytc-objects PRIVATE parser/lexer.cpp)
-else()
-    find_package(re2c REQUIRED)
-    add_re2c_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
-endif()
-
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser/parser_impl.cpp)
-    message(STATUS "Pre-generated parser available -- skipping bison dependency")
-    target_sources(tinytc-objects PRIVATE parser/parser_impl.cpp)
-else()
-    find_package(BISON 3.8.2 REQUIRED)
-    BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
-                 DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
-    target_sources(tinytc-objects PRIVATE ${BISON_parser_OUTPUTS})
-endif()
+add_re2c_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
+add_bison_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/parser_impl.yy)
+add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
+                                    SOURCES
+                                        builder.cpp.mochi
+                                        enums.cpp.mochi
+                                        node/inst_kind.cpp.mochi
+                                        node/inst_view.cpp.mochi
+                                        node/inst_view.hpp.mochi
+                                        node/type.cpp.mochi
+                                        node/type.hpp.mochi
+                                        node/visit.hpp.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/builder.h.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/builder.hpp.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.h.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.hpp.mochi
+                                    DEPENDS
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/enums.anko
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/instructions.anko
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.anko
+                                    SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
 
 set(PUBLIC_HEADERS
-    tinytc.h
-    tinytc.hpp
-    types.h
-    types.hpp
+    ${PROJECT_BINARY_DIR}/include/tinytc/builder.h
+    ${PROJECT_BINARY_DIR}/include/tinytc/builder.hpp
+    ${PROJECT_SOURCE_DIR}/include/tinytc/core.h
+    ${PROJECT_SOURCE_DIR}/include/tinytc/core.hpp
+    ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.h
+    ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.hpp
+    ${PROJECT_BINARY_DIR}/include/tinytc/types.h
+    ${PROJECT_BINARY_DIR}/include/tinytc/types.hpp
 )
-list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
-
-add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
 
 set_cxx_common_options(tinytc-objects)
 target_compile_definitions(tinytc-objects PUBLIC
@@ -146,6 +144,7 @@ configure_file(${tinytc_version_header_in} ${tinytc_version_header})
 target_include_directories(tinytc-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utilities>"
 )
 target_include_directories(tinytc-objects PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
@@ -177,10 +176,5 @@ endif()
 # cpack
 
 include(GeneratedFiles)
-get_generated_files(GENERATED_FILES tinytc-objects)
-if(BUILD_OPENCL)
-    list(APPEND GENERATED_FILES ${GENERATED_FILES_TINYTC_CL})
-endif()
+write_generated_files(tinytc-objects)
 
-include(CPackSetup)
-cpack_setup()

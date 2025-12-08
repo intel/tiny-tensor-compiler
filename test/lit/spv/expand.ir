@@ -19,11 +19,11 @@ func @f1(%0: memref<f32x32x?x7>, %1: index) {
   %5 = size %2[2] : index
   %6 = size %2[3] : index
   %7 = size %2[4] : index
-  %8 = arith.not %3 : index
-  %9 = arith.not %4 : index
-  %10 = arith.not %5 : index
-  %11 = arith.not %6 : index
-  %12 = arith.not %7 : index
+  %8 = not %3 : index
+  %9 = not %4 : index
+  %10 = not %5 : index
+  %11 = not %6 : index
+  %12 = not %7 : index
   %13 = load %2[%c0,%c0,%c0,%c0,%c0] : f32
 ; CHECK:                %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:      %[[#P_MR:]] = OpFunctionParameter %[[#]]

@@ -4,12 +4,12 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_DEFS_20250605_HPP
-#define GENERATED_DEFS_20250605_HPP
+#ifndef GENERATED_DEFS_20250630_HPP
+#define GENERATED_DEFS_20250630_HPP
 
 #include "enums.hpp"
-#include "support/ilist_base.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
+#include "util/ilist_base.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -423,4 +423,4 @@ class OpCooperativeMatrixStoreCheckedINTEL;      // IWYU pragma: export
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_DEFS_20250605_HPP
+#endif // GENERATED_DEFS_20250630_HPP

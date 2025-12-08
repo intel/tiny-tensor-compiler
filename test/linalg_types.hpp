@@ -4,7 +4,8 @@
 #ifndef LINALG_TYPES_20241023_HPP
 #define LINALG_TYPES_20241023_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>
@@ -51,7 +52,7 @@ concept op_blas_a2 = requires(T op, typename T::alpha_type alpha, typename T::be
     T::kernel_name;
     { op.lA() } -> std::same_as<tensor_layout const &>;
     { op.lB() } -> std::same_as<tensor_layout const &>;
-    { op.make_prog() } -> std::same_as<prog>;
+    { op.make_prog() } -> std::same_as<shared_handle<tinytc_prog_t>>;
     op.reference_impl(alpha, A_ref, beta, B_ref);
 };
 
@@ -68,7 +69,7 @@ concept op_blas_a3 = requires(T op, typename T::alpha_type alpha, typename T::be
     { op.lA() } -> std::same_as<tensor_layout const &>;
     { op.lB() } -> std::same_as<tensor_layout const &>;
     { op.lC() } -> std::same_as<tensor_layout const &>;
-    { op.make_prog() } -> std::same_as<prog>;
+    { op.make_prog() } -> std::same_as<shared_handle<tinytc_prog_t>>;
     op.reference_impl(alpha, A_ref, B_ref, beta, C_ref);
 };
 

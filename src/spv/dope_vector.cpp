@@ -3,7 +3,6 @@
 
 #include "spv/dope_vector.hpp"
 #include "spv/defs.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <cstdint>

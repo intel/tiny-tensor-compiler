@@ -7,6 +7,7 @@
 #include "device_array.hpp"
 
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 
 #include <array>
@@ -31,16 +32,22 @@ template <typename T> class matrix_batch {
     inline void fill(T const &v) { data_.fill(v); }
     inline void random() { data_.random(); }
 
-    inline auto type(tinytc::data_type element_ty) -> tinytc::data_type {
+    inline auto type(tinytc_type_t element_ty) -> tinytc_type_t {
+        auto shape = std::array{nrows(), ncols(), tinytc::dynamic};
+        auto strid = std::array{std::int64_t{1}, ld(), stride()};
         if (howmany_ == 1) {
-            return tinytc::get_memref(element_ty, {nrows(), ncols()}, {1, ld()});
+            return tinytc::get<tinytc::memref_type>(element_ty, tinytc::array_view(shape.data(), 2),
+                                                    tinytc::array_view(strid.data(), 2),
+                                                    tinytc::address_space::global);
         }
-        return tinytc::get_memref(element_ty, {nrows(), ncols(), tinytc::dynamic},
-                                  {1, ld(), stride()});
+        return tinytc::get<tinytc::memref_type>(element_ty, shape, strid,
+                                                tinytc::address_space::global);
     }
-    inline auto local_type(tinytc::data_type element_ty) -> tinytc::data_type {
-        return tinytc::get_memref(element_ty, {nrows(), ncols()}, {1, ld()},
-                                  tinytc::address_space::local);
+    inline auto local_type(tinytc_type_t element_ty) -> tinytc_type_t {
+        auto shape = std::array{nrows(), ncols()};
+        auto strid = std::array{std::int64_t{1}, ld()};
+        return tinytc::get<tinytc::memref_type>(element_ty, shape, strid,
+                                                tinytc::address_space::local);
     }
 
   private:

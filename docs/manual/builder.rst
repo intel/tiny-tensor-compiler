@@ -23,7 +23,7 @@ Consider the following simple copy kernel
     func @copy(%A: memref<${type}x${M}x${N}>, %B: memref<${type}x${M}x${M}>) {
         %c0 = constant 0.0 : ${type}
         %c1 = constant 1.0 : ${type}
-        axpby.n %c1, %A, %c0, %B
+        axpby %c1, %A, %c0, %B
     }
 
 In the following example we build the above code programmatically and replace the place-holders (${.})
@@ -35,16 +35,15 @@ by actual values:
 
        .. code:: C
 
-          tinytc_scalar_type_t sty = ...;
           int64_t M = ...;
           int64_t N = ...;
 
           char const *copy_fun_name = "copy";
-          uint32_t num_results;
-          uint32_t num_params;
+          size_t num_results;
+          size_t num_params;
           tinytc_compiler_context_t ctx;
           tinytc_prog_t program;
-          tinytc_data_type_t void_ty, element_ty, ty;
+          tinytc_type_t void_ty, element_ty, ty;
           tinytc_func_t copy_fun;
           tinytc_region_t copy_body;
           tinytc_inst_t tmp;
@@ -57,15 +56,15 @@ by actual values:
           tinytc_prog_create(&program, ctx, NULL);
 
           // Get types
-          tinytc_scalar_type_get(&element_ty, ctx, sty);
+          tinytc_f32_type_get(&element_ty, ctx);
           int64_t shape[2] = {M, N};
-          tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global, NULL);
+          tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global);
 
           // Get void type
           tinytc_void_type_get(&void_ty, ctx);
 
           // Create function
-          tinytc_data_type_t param_types[2] = {ty, ty};
+          tinytc_type_t param_types[2] = {ty, ty};
           tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, void_ty,
                              NULL);
           tinytc_prog_add_function(program, copy_fun);
@@ -86,7 +85,7 @@ by actual values:
           tinytc_inst_get_values(tmp, &num_results, &beta);
           tinytc_region_append(copy_body, tmp);
 
-          tinytc_axpby_inst_create(&tmp, tinytc_transpose_N, 0, alpha, params[0], beta, params[1], NULL);
+          tinytc_axpby_inst_create(&tmp, 0, tinytc_transpose_N, alpha, params[0], beta, params[1], NULL);
           tinytc_region_append(copy_body, tmp);
 
           // Dump program
@@ -100,26 +99,27 @@ by actual values:
 
        .. code:: C++
 
-          scalar_type sty = ...;
           int64_t M = ...;
           int64_t N = ...;
 
-          auto ctx = make_compiler_context();
-          auto element_ty = get_scalar(ctx, sty);
-          auto ty = get_memref(element_ty, {M, N});
+          auto ctx = create_compiler_context();
+          auto element_ty = get<f32_type>(ctx.get());
+          auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
+                                     address_space::global);
 
-          auto f = make_func("copy", {ty, ty}, get_void(ctx));
+          auto void_ty = get<void_type>(ctx.get());
+          auto f = create_func("copy", {ty, ty}, void_ty);
 
-          auto body = f.get_body();
-          std::array<value, 2u> params;
-          body.get_parameters(params);
+          auto body = get_body(f.get());
+          std::array<tinytc_value_t, 2u> params;
+          get_parameters(body, params);
 
           auto bb = region_builder{body};
-          auto alpha = bb.add(make_constant_one(element_ty));
-          auto beta = bb.add(make_constant_zero(element_ty));
-          bb.add(make_axpby(transpose::N, false, alpha, params[0], beta, params[1]));
+          auto alpha = bb.constant_one(element_ty);
+          auto beta = bb.constant_zero(element_ty);
+          bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
 
-          auto p = make_prog(ctx);
-          p.add_function(std::move(f));
+          auto p = create_prog(ctx.get());
+          add_function(p.get(), std::move(f));
 
-          p.dump();
+          dump(p.get());

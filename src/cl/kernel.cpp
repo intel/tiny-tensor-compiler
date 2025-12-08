@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../compiler_options.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.h"
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/types.h"
 
@@ -13,8 +12,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-
-using tinytc::compiler_context;
 
 extern "C" {
 
@@ -77,14 +74,13 @@ tinytc_status_t tinytc_cl_kernel_bundle_create_with_binary(cl_program *bundle, c
 
     tinytc_compiler_context_t ctx = nullptr;
     TINYTC_CHECK_STATUS(tinytc_binary_get_compiler_context(bin, &ctx));
-    auto ctx_ = compiler_context{ctx}; // Clean-up ctx when ctx_ gets out of scope
 
     char const *options = "";
     if (core_features & tinytc_core_feature_flag_large_register_file) {
         options = tinytc::large_register_file_compiler_option_cl;
     }
     if (err = clBuildProgram(p, 1, &device, options, nullptr, nullptr); err != CL_SUCCESS) {
-        if (ctx_.get()) {
+        if (ctx) {
             std::string log;
             std::size_t log_size;
             clGetProgramBuildInfo(p, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
@@ -92,7 +88,7 @@ tinytc_status_t tinytc_cl_kernel_bundle_create_with_binary(cl_program *bundle, c
             clGetProgramBuildInfo(p, device, CL_PROGRAM_BUILD_LOG, log_size, log.data(), nullptr);
 
             tinytc_location_t loc = {};
-            tinytc_compiler_context_report_error(ctx_.get(), &loc, log.c_str());
+            tinytc_compiler_context_report_error(ctx, &loc, log.c_str());
         }
         clReleaseProgram(p);
         TINYTC_CL_CHECK_STATUS(err);
@@ -123,9 +119,9 @@ tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size) {
             p, CL_PROGRAM_DEVICES, num_devices * sizeof(cl_device_id), dbuf.data(), nullptr));
         d = dbuf[0];
     }
-    return tinytc_cl_convert_status(
-        clGetKernelWorkGroupInfo(kernel, d, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
-                                 3 * sizeof(std::size_t), local_size, nullptr));
+    TINYTC_CL_CHECK_STATUS(clGetKernelWorkGroupInfo(kernel, d, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+                                                    3 * sizeof(std::size_t), local_size, nullptr));
+    return tinytc_status_success;
 }
 
 void tinytc_cl_get_global_size(const size_t *num_groups, const size_t *local_size,

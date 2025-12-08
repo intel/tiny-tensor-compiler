@@ -1,0 +1,41 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: %[[#I8:]] = OpTypeInt 8 0
+; CHECK: %[[#I8_1:]] = OpConstant %[[#I8]] 1
+; CHECK: %[[#F16:]] = OpTypeFloat 16
+; CHECK: %[[#F16_1:]] = OpConstant %[[#F16]] 0x1p+0
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F32_1:]] = OpConstant %[[#F32]] 0x1p+0
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#I8V4:]] = OpTypeVector %[[#I8]] 4
+; CHECK: %[[#F16V2:]] = OpTypeVector %[[#F16]] 2
+; CHECK: %[[#F32V2:]] = OpTypeVector %[[#F32]] 2
+
+func @tconstruct() attributes{subgroup_size=16} {
+    parallel {
+        %n_i8 = constant 1 : i8
+        %n_f16 = constant 1.0 : f16
+        %n_f32 = constant 1.0 : f32
+        %0 = cooperative_matrix_construct %n_i8 : coopmatrix<i8x16x4,matrix_a>
+        %1 = cooperative_matrix_construct %n_f16 : coopmatrix<f16x16x2,matrix_a>
+        %2 = cooperative_matrix_construct %n_f32 : coopmatrix<f32x16x2,matrix_acc>
+        %3 = cooperative_matrix_construct %n_f32 : coopmatrix<f32x16x1,matrix_acc>
+        %4 = neg %3 : coopmatrix<f32x16x1,matrix_acc>
+    }
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK: %[[#C00:]] = OpUndef %[[#I8V4]]
+; CHECK: %[[#C01:]] = OpCompositeInsert %[[#I8V4]] %[[#I8_1]] %[[#C00]] 0
+; CHECK: %[[#C02:]] = OpCompositeInsert %[[#I8V4]] %[[#I8_1]] %[[#C01]] 1
+; CHECK: %[[#C03:]] = OpCompositeInsert %[[#I8V4]] %[[#I8_1]] %[[#C02]] 2
+; CHECK: %[[#C04:]] = OpCompositeInsert %[[#I8V4]] %[[#I8_1]] %[[#C03]] 3
+; CHECK: %[[#]]     = OpBitcast %[[#I32]] %[[#C04]]
+; CHECK: %[[#C10:]] = OpUndef %[[#F16V2]]
+; CHECK: %[[#C11:]] = OpCompositeInsert %[[#F16V2]] %[[#F16_1]] %[[#C10]] 0
+; CHECK: %[[#C12:]] = OpCompositeInsert %[[#F16V2]] %[[#F16_1]] %[[#C11]] 1
+; CHECK: %[[#C13:]] = OpBitcast %[[#I32]] %[[#C12]]
+; CHECK: %[[#]]     = OpCompositeConstruct %[[#F32V2]] %[[#F32_1]] %[[#F32_1]]
+; CHECK: %[[#]]     = OpFNegate %[[#F32]] %[[#F32_1]]
+}

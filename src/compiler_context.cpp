@@ -4,8 +4,8 @@
 #include "compiler_context.hpp"
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
-#include "node/value_node.hpp"
-#include "tinytc/tinytc.h"
+#include "node/value.hpp"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

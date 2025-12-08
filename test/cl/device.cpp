@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "device_info_helper.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -49,26 +49,26 @@ TEST_CASE("device (OpenCL)") {
         return;
     }
 
-    auto info = make_core_info(device);
-    const auto sgs = info.get_subgroup_sizes();
+    auto info = create_core_info(device);
+    const auto sgs = get_subgroup_sizes(info.get());
 
     if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         REQUIRE(sgs.size() == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(info.get_register_space() == 64 * 128);
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_register_space() == 64 * 256);
+        CHECK(get_register_space(info.get()) == 64 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 64 * 256);
     } else if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::tgl)) {
         REQUIRE(sgs.size() == 3u);
         CHECK(sgs[0] == 8);
         CHECK(sgs[1] == 16);
         CHECK(sgs[2] == 32);
 
-        CHECK(info.get_register_space() == 32 * 128);
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_register_space() == 32 * 128);
+        CHECK(get_register_space(info.get()) == 32 * 128);
+        set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info.get()) == 32 * 128);
     } else {
         WARN_MESSAGE(false, "Device test only works on Gen12 / PVC");
     }

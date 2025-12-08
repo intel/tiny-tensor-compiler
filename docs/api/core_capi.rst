@@ -1,4 +1,4 @@
-.. Copyright (C) 2024 Intel Corporation
+.. Copyright (C) 2025 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
 .. _Core C-API:
@@ -9,12 +9,6 @@ Core C-API
 
 Common
 ======
-
-* Enumerations
-
-  * :ref:`tinytc_status_t`
-
-  * :ref:`tinytc_support_level_t`
 
 * Definitions
 
@@ -30,19 +24,87 @@ Common
 
   * :ref:`TINYTC_VERSION_DESCRIPTION`
 
+* Enumerations
+
+  * :ref:`tinytc_address_space_t`
+
+  * :ref:`tinytc_bundle_format_t`
+
+  * :ref:`tinytc_checked_flag_t`
+
+  * :ref:`tinytc_comp3_t`
+
+  * :ref:`tinytc_core_feature_flag_t`
+
+  * :ref:`tinytc_intel_gpu_architecture_t`
+
+  * :ref:`tinytc_matrix_use_t`
+
+  * :ref:`tinytc_mem_type_t`
+
+  * :ref:`tinytc_memory_scope_t`
+
+  * :ref:`tinytc_memory_semantics_t`
+
+  * :ref:`tinytc_optflag_t`
+
+  * :ref:`tinytc_reduce_mode_t`
+
+  * :ref:`tinytc_spirv_feature_t`
+
+  * :ref:`tinytc_status_t`
+
+  * :ref:`tinytc_support_level_t`
+
+  * :ref:`tinytc_transpose_t`
+
 * Functions
 
-  * :ref:`tinytc_error_string`
+  * :ref:`tinytc_address_space_to_string`
+
+  * :ref:`tinytc_bundle_format_to_string`
+
+  * :ref:`tinytc_checked_flag_to_string`
+
+  * :ref:`tinytc_comp3_to_string`
+
+  * :ref:`tinytc_core_feature_flag_to_string`
+
+  * :ref:`tinytc_intel_gpu_architecture_to_string`
+
+  * :ref:`tinytc_matrix_use_to_string`
+
+  * :ref:`tinytc_mem_type_to_string`
+
+  * :ref:`tinytc_memory_scope_to_string`
+
+  * :ref:`tinytc_memory_semantics_to_string`
+
+  * :ref:`tinytc_optflag_to_string`
+
+  * :ref:`tinytc_reduce_mode_to_string`
+
+  * :ref:`tinytc_spirv_feature_to_string`
+
+  * :ref:`tinytc_status_to_string`
 
   * :ref:`tinytc_string_destroy`
 
+  * :ref:`tinytc_support_level_to_string`
+
+  * :ref:`tinytc_transpose_to_string`
+
 * Typedefs
+
+  * :ref:`tinytc_address_spaces_t`
 
   * :ref:`tinytc_binary_t`
 
   * :ref:`tinytc_bool_t`
 
   * :ref:`tinytc_core_info_t`
+
+  * :ref:`tinytc_prog_t`
 
   * :ref:`tinytc_recipe_t`
 
@@ -56,6 +118,8 @@ Common
 
   * :ref:`const_tinytc_core_info_t`
 
+  * :ref:`const_tinytc_prog_t`
+
   * :ref:`const_tinytc_recipe_t`
 
   * :ref:`const_tinytc_recipe_handler_t`
@@ -65,23 +129,6 @@ Common
   * :ref:`const_tinytc_compiler_context_t`
 
   * :ref:`tinytc_error_reporter_t`
-
-Common Enumerations
--------------------
-
-.. _tinytc_status_t:
-
-tinytc_status_t
-...............
-
-.. doxygenenum:: tinytc_status_t
-
-.. _tinytc_support_level_t:
-
-tinytc_support_level_t
-......................
-
-.. doxygenenum:: tinytc_support_level_t
 
 Common Definitions
 ------------------
@@ -128,15 +175,221 @@ TINYTC_VERSION_DESCRIPTION
 
 .. doxygendefine:: TINYTC_VERSION_DESCRIPTION
 
+Common Enumerations
+-------------------
+
+.. _tinytc_address_space_t:
+
+tinytc_address_space_t
+......................
+
+.. doxygenenum:: tinytc_address_space_t
+
+.. _tinytc_bundle_format_t:
+
+tinytc_bundle_format_t
+......................
+
+.. doxygenenum:: tinytc_bundle_format_t
+
+.. _tinytc_checked_flag_t:
+
+tinytc_checked_flag_t
+.....................
+
+.. doxygenenum:: tinytc_checked_flag_t
+
+.. _tinytc_comp3_t:
+
+tinytc_comp3_t
+..............
+
+.. doxygenenum:: tinytc_comp3_t
+
+.. _tinytc_core_feature_flag_t:
+
+tinytc_core_feature_flag_t
+..........................
+
+.. doxygenenum:: tinytc_core_feature_flag_t
+
+.. _tinytc_intel_gpu_architecture_t:
+
+tinytc_intel_gpu_architecture_t
+...............................
+
+.. doxygenenum:: tinytc_intel_gpu_architecture_t
+
+.. _tinytc_matrix_use_t:
+
+tinytc_matrix_use_t
+...................
+
+.. doxygenenum:: tinytc_matrix_use_t
+
+.. _tinytc_mem_type_t:
+
+tinytc_mem_type_t
+.................
+
+.. doxygenenum:: tinytc_mem_type_t
+
+.. _tinytc_memory_scope_t:
+
+tinytc_memory_scope_t
+.....................
+
+.. doxygenenum:: tinytc_memory_scope_t
+
+.. _tinytc_memory_semantics_t:
+
+tinytc_memory_semantics_t
+.........................
+
+.. doxygenenum:: tinytc_memory_semantics_t
+
+.. _tinytc_optflag_t:
+
+tinytc_optflag_t
+................
+
+.. doxygenenum:: tinytc_optflag_t
+
+.. _tinytc_reduce_mode_t:
+
+tinytc_reduce_mode_t
+....................
+
+.. doxygenenum:: tinytc_reduce_mode_t
+
+.. _tinytc_spirv_feature_t:
+
+tinytc_spirv_feature_t
+......................
+
+.. doxygenenum:: tinytc_spirv_feature_t
+
+.. _tinytc_status_t:
+
+tinytc_status_t
+...............
+
+.. doxygenenum:: tinytc_status_t
+
+.. _tinytc_support_level_t:
+
+tinytc_support_level_t
+......................
+
+.. doxygenenum:: tinytc_support_level_t
+
+.. _tinytc_transpose_t:
+
+tinytc_transpose_t
+..................
+
+.. doxygenenum:: tinytc_transpose_t
+
 Common Functions
 ----------------
 
-.. _tinytc_error_string:
+.. _tinytc_address_space_to_string:
 
-tinytc_error_string
-...................
+tinytc_address_space_to_string
+..............................
 
-.. doxygenfunction:: tinytc_error_string
+.. doxygenfunction:: tinytc_address_space_to_string
+
+.. _tinytc_bundle_format_to_string:
+
+tinytc_bundle_format_to_string
+..............................
+
+.. doxygenfunction:: tinytc_bundle_format_to_string
+
+.. _tinytc_checked_flag_to_string:
+
+tinytc_checked_flag_to_string
+.............................
+
+.. doxygenfunction:: tinytc_checked_flag_to_string
+
+.. _tinytc_comp3_to_string:
+
+tinytc_comp3_to_string
+......................
+
+.. doxygenfunction:: tinytc_comp3_to_string
+
+.. _tinytc_core_feature_flag_to_string:
+
+tinytc_core_feature_flag_to_string
+..................................
+
+.. doxygenfunction:: tinytc_core_feature_flag_to_string
+
+.. _tinytc_intel_gpu_architecture_to_string:
+
+tinytc_intel_gpu_architecture_to_string
+.......................................
+
+.. doxygenfunction:: tinytc_intel_gpu_architecture_to_string
+
+.. _tinytc_matrix_use_to_string:
+
+tinytc_matrix_use_to_string
+...........................
+
+.. doxygenfunction:: tinytc_matrix_use_to_string
+
+.. _tinytc_mem_type_to_string:
+
+tinytc_mem_type_to_string
+.........................
+
+.. doxygenfunction:: tinytc_mem_type_to_string
+
+.. _tinytc_memory_scope_to_string:
+
+tinytc_memory_scope_to_string
+.............................
+
+.. doxygenfunction:: tinytc_memory_scope_to_string
+
+.. _tinytc_memory_semantics_to_string:
+
+tinytc_memory_semantics_to_string
+.................................
+
+.. doxygenfunction:: tinytc_memory_semantics_to_string
+
+.. _tinytc_optflag_to_string:
+
+tinytc_optflag_to_string
+........................
+
+.. doxygenfunction:: tinytc_optflag_to_string
+
+.. _tinytc_reduce_mode_to_string:
+
+tinytc_reduce_mode_to_string
+............................
+
+.. doxygenfunction:: tinytc_reduce_mode_to_string
+
+.. _tinytc_spirv_feature_to_string:
+
+tinytc_spirv_feature_to_string
+..............................
+
+.. doxygenfunction:: tinytc_spirv_feature_to_string
+
+.. _tinytc_status_to_string:
+
+tinytc_status_to_string
+.......................
+
+.. doxygenfunction:: tinytc_status_to_string
 
 .. _tinytc_string_destroy:
 
@@ -145,8 +398,29 @@ tinytc_string_destroy
 
 .. doxygenfunction:: tinytc_string_destroy
 
+.. _tinytc_support_level_to_string:
+
+tinytc_support_level_to_string
+..............................
+
+.. doxygenfunction:: tinytc_support_level_to_string
+
+.. _tinytc_transpose_to_string:
+
+tinytc_transpose_to_string
+..........................
+
+.. doxygenfunction:: tinytc_transpose_to_string
+
 Common Typedefs
 ---------------
+
+.. _tinytc_address_spaces_t:
+
+tinytc_address_spaces_t
+.......................
+
+.. doxygentypedef:: tinytc_address_spaces_t
 
 .. _tinytc_binary_t:
 
@@ -168,6 +442,13 @@ tinytc_core_info_t
 ..................
 
 .. doxygentypedef:: tinytc_core_info_t
+
+.. _tinytc_prog_t:
+
+tinytc_prog_t
+.............
+
+.. doxygentypedef:: tinytc_prog_t
 
 .. _tinytc_recipe_t:
 
@@ -210,6 +491,13 @@ const_tinytc_core_info_t
 ........................
 
 .. doxygentypedef:: const_tinytc_core_info_t
+
+.. _const_tinytc_prog_t:
+
+const_tinytc_prog_t
+...................
+
+.. doxygentypedef:: const_tinytc_prog_t
 
 .. _const_tinytc_recipe_t:
 
@@ -311,15 +599,7 @@ tinytc_binary_retain
 Compiler
 ========
 
-* Enumerations
-
-  * :ref:`tinytc_bundle_format_t`
-
-  * :ref:`tinytc_optflag_t`
-
 * Functions
-
-  * :ref:`tinytc_run_function_pass`
 
   * :ref:`tinytc_list_function_passes`
 
@@ -327,34 +607,12 @@ Compiler
 
   * :ref:`tinytc_prog_compile_to_spirv_and_assemble`
 
+  * :ref:`tinytc_run_function_pass`
+
   * :ref:`tinytc_spirv_assemble`
-
-Compiler Enumerations
----------------------
-
-.. _tinytc_bundle_format_t:
-
-tinytc_bundle_format_t
-......................
-
-.. doxygenenum:: tinytc_bundle_format_t
-
-.. _tinytc_optflag_t:
-
-tinytc_optflag_t
-................
-
-.. doxygenenum:: tinytc_optflag_t
 
 Compiler Functions
 ------------------
-
-.. _tinytc_run_function_pass:
-
-tinytc_run_function_pass
-........................
-
-.. doxygenfunction:: tinytc_run_function_pass
 
 .. _tinytc_list_function_passes:
 
@@ -376,6 +634,13 @@ tinytc_prog_compile_to_spirv_and_assemble
 .........................................
 
 .. doxygenfunction:: tinytc_prog_compile_to_spirv_and_assemble
+
+.. _tinytc_run_function_pass:
+
+tinytc_run_function_pass
+........................
+
+.. doxygenfunction:: tinytc_run_function_pass
 
 .. _tinytc_spirv_assemble:
 
@@ -467,14 +732,6 @@ tinytc_compiler_context_retain
 Device Info
 ===========
 
-* Enumerations
-
-  * :ref:`tinytc_core_feature_flag_t`
-
-  * :ref:`tinytc_intel_gpu_architecture_t`
-
-  * :ref:`tinytc_spirv_feature_t`
-
 * Functions
 
   * :ref:`tinytc_core_info_generic_create`
@@ -505,35 +762,9 @@ Device Info
 
   * :ref:`tinytc_core_info_set_spirv_feature`
 
-  * :ref:`tinytc_spirv_feature_to_string`
-
 * Typedefs
 
   * :ref:`tinytc_core_feature_flags_t`
-
-Device Info Enumerations
-------------------------
-
-.. _tinytc_core_feature_flag_t:
-
-tinytc_core_feature_flag_t
-..........................
-
-.. doxygenenum:: tinytc_core_feature_flag_t
-
-.. _tinytc_intel_gpu_architecture_t:
-
-tinytc_intel_gpu_architecture_t
-...............................
-
-.. doxygenenum:: tinytc_intel_gpu_architecture_t
-
-.. _tinytc_spirv_feature_t:
-
-tinytc_spirv_feature_t
-......................
-
-.. doxygenenum:: tinytc_spirv_feature_t
 
 Device Info Functions
 ---------------------
@@ -636,13 +867,6 @@ tinytc_core_info_set_spirv_feature
 
 .. doxygenfunction:: tinytc_core_info_set_spirv_feature
 
-.. _tinytc_spirv_feature_to_string:
-
-tinytc_spirv_feature_to_string
-..............................
-
-.. doxygenfunction:: tinytc_spirv_feature_to_string
-
 Device Info Typedefs
 --------------------
 
@@ -732,144 +956,67 @@ tinytc_parse_string
 
 .. doxygenfunction:: tinytc_parse_string
 
-Recipe
-======
-
-* Enumerations
-
-  * :ref:`tinytc_mem_type_t`
+Program
+=======
 
 * Functions
 
-  * :ref:`tinytc_recipe_get_binary`
+  * :ref:`tinytc_prog_dump`
 
-  * :ref:`tinytc_recipe_get_prog`
+  * :ref:`tinytc_prog_get_compiler_context`
 
-  * :ref:`tinytc_recipe_handler_get_recipe`
+  * :ref:`tinytc_prog_print_to_file`
 
-  * :ref:`tinytc_recipe_small_gemm_batched_create`
+  * :ref:`tinytc_prog_print_to_string`
 
-  * :ref:`tinytc_recipe_small_gemm_batched_set_args`
+  * :ref:`tinytc_prog_release`
 
-  * :ref:`tinytc_recipe_tall_and_skinny_create`
+  * :ref:`tinytc_prog_retain`
 
-  * :ref:`tinytc_recipe_tall_and_skinny_create_specialized`
+Program Functions
+-----------------
 
-  * :ref:`tinytc_recipe_tall_and_skinny_set_args`
+.. _tinytc_prog_dump:
 
-  * :ref:`tinytc_recipe_tall_and_skinny_suggest_block_size`
+tinytc_prog_dump
+................
 
-  * :ref:`tinytc_recipe_release`
+.. doxygenfunction:: tinytc_prog_dump
 
-  * :ref:`tinytc_recipe_retain`
+.. _tinytc_prog_get_compiler_context:
 
-  * :ref:`tinytc_recipe_handler_release`
-
-  * :ref:`tinytc_recipe_handler_retain`
-
-Recipe Enumerations
--------------------
-
-.. _tinytc_mem_type_t:
-
-tinytc_mem_type_t
-.................
-
-.. doxygenenum:: tinytc_mem_type_t
-
-Recipe Functions
-----------------
-
-.. _tinytc_recipe_get_binary:
-
-tinytc_recipe_get_binary
-........................
-
-.. doxygenfunction:: tinytc_recipe_get_binary
-
-.. _tinytc_recipe_get_prog:
-
-tinytc_recipe_get_prog
-......................
-
-.. doxygenfunction:: tinytc_recipe_get_prog
-
-.. _tinytc_recipe_handler_get_recipe:
-
-tinytc_recipe_handler_get_recipe
+tinytc_prog_get_compiler_context
 ................................
 
-.. doxygenfunction:: tinytc_recipe_handler_get_recipe
+.. doxygenfunction:: tinytc_prog_get_compiler_context
 
-.. _tinytc_recipe_small_gemm_batched_create:
+.. _tinytc_prog_print_to_file:
 
-tinytc_recipe_small_gemm_batched_create
-.......................................
+tinytc_prog_print_to_file
+.........................
 
-.. doxygenfunction:: tinytc_recipe_small_gemm_batched_create
+.. doxygenfunction:: tinytc_prog_print_to_file
 
-.. _tinytc_recipe_small_gemm_batched_set_args:
+.. _tinytc_prog_print_to_string:
 
-tinytc_recipe_small_gemm_batched_set_args
-.........................................
+tinytc_prog_print_to_string
+...........................
 
-.. doxygenfunction:: tinytc_recipe_small_gemm_batched_set_args
+.. doxygenfunction:: tinytc_prog_print_to_string
 
-.. _tinytc_recipe_tall_and_skinny_create:
+.. _tinytc_prog_release:
 
-tinytc_recipe_tall_and_skinny_create
-....................................
+tinytc_prog_release
+...................
 
-.. doxygenfunction:: tinytc_recipe_tall_and_skinny_create
+.. doxygenfunction:: tinytc_prog_release
 
-.. _tinytc_recipe_tall_and_skinny_create_specialized:
+.. _tinytc_prog_retain:
 
-tinytc_recipe_tall_and_skinny_create_specialized
-................................................
+tinytc_prog_retain
+..................
 
-.. doxygenfunction:: tinytc_recipe_tall_and_skinny_create_specialized
-
-.. _tinytc_recipe_tall_and_skinny_set_args:
-
-tinytc_recipe_tall_and_skinny_set_args
-......................................
-
-.. doxygenfunction:: tinytc_recipe_tall_and_skinny_set_args
-
-.. _tinytc_recipe_tall_and_skinny_suggest_block_size:
-
-tinytc_recipe_tall_and_skinny_suggest_block_size
-................................................
-
-.. doxygenfunction:: tinytc_recipe_tall_and_skinny_suggest_block_size
-
-.. _tinytc_recipe_release:
-
-tinytc_recipe_release
-.....................
-
-.. doxygenfunction:: tinytc_recipe_release
-
-.. _tinytc_recipe_retain:
-
-tinytc_recipe_retain
-....................
-
-.. doxygenfunction:: tinytc_recipe_retain
-
-.. _tinytc_recipe_handler_release:
-
-tinytc_recipe_handler_release
-.............................
-
-.. doxygenfunction:: tinytc_recipe_handler_release
-
-.. _tinytc_recipe_handler_retain:
-
-tinytc_recipe_handler_retain
-............................
-
-.. doxygenfunction:: tinytc_recipe_handler_retain
+.. doxygenfunction:: tinytc_prog_retain
 
 SPIR-V module
 =============

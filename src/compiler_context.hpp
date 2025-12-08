@@ -6,9 +6,8 @@
 
 #include "compiler_context_cache.hpp"
 #include "reference_counted.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstddef>
@@ -19,20 +18,22 @@
 #include <vector>
 
 namespace tinytc {
+enum class optflag;
+
 void default_error_reporter(char const *what, const tinytc_location_t *location, void *user_data);
 } // namespace tinytc
 
 struct tinytc_compiler_context : tinytc::reference_counted {
   public:
     constexpr static const char unavailable_source_name[] = "Source name unavailable";
-    constexpr static std::array<std::array<bool, TINYTC_NUMBER_OF_OPTFLAGS>, 3u> default_opt_flags =
-        {{{false}, {false}, {true}}};
+    constexpr static std::array<std::array<bool, TINYTC_ENUM_NUM_OPTFLAG>, 3u> default_opt_flags = {
+        {{false}, {false}, {true}}};
 
     tinytc_compiler_context();
 
     inline auto cache() -> tinytc::compiler_context_cache * { return cache_.get(); }
 
-    inline void set_error_reporter(tinytc::error_reporter_t reporter, void *user_data) {
+    inline void set_error_reporter(tinytc_error_reporter_t reporter, void *user_data) {
         reporter_ = reporter;
         user_data_ = user_data;
     }
@@ -51,6 +52,8 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     void report_error(tinytc_location const &l, char const *what);
     void report_error(tinytc_location const &l,
                       tinytc::array_view<const_tinytc_value_t> const &ref_values, char const *what);
+    void report_error(tinytc_location const &l,
+                      tinytc::array_view<const_tinytc_value_t> const &ref_values);
 
     auto opt_flag(tinytc_optflag_t flag) const -> bool;
     inline void opt_flag(tinytc_optflag_t flag, std::int32_t state) { opt_flags_[flag] = state; }
@@ -64,6 +67,8 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     inline auto opt_level() const noexcept -> std::int32_t { return opt_level_; }
     inline void opt_level(std::int32_t level) noexcept { opt_level_ = level; }
 
+    inline auto index_bit_width() const noexcept -> std::size_t { return 64; }
+
   private:
     struct source_input {
         std::string name, text;
@@ -74,10 +79,10 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     }
 
     std::unique_ptr<tinytc::compiler_context_cache> cache_;
-    tinytc::error_reporter_t reporter_ = &tinytc::default_error_reporter;
+    tinytc_error_reporter_t reporter_ = &tinytc::default_error_reporter;
     void *user_data_ = nullptr;
     std::vector<source_input> sources_;
-    std::array<std::int32_t, TINYTC_NUMBER_OF_OPTFLAGS> opt_flags_;
+    std::array<std::int32_t, TINYTC_ENUM_NUM_OPTFLAG> opt_flags_;
     std::int32_t opt_level_ = 2;
 };
 

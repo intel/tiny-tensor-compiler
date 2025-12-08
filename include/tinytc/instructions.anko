@@ -1,0 +1,464 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+include "tinytc/enums.anko"
+
+inst @alloca "Alloca instruction" {
+    collective
+    prop %stack_ptr private => i64
+    ret %result "memref type of allocated variable"
+}
+
+inst @associated "Associated instruction" {
+    op %operand "tensor or group of tensors"
+    ret %result "boolean"
+}
+
+inst @barrier "Barrier instruction" {
+    prop %fence_flags => "tinytc_address_spaces_t" "address space(s) of memory fence; "
+                                                   "set to 0 for no fence"
+    cxx "auto has_fence(address_space as) -> bool;"
+}
+
+inst @cast "Cast instruction" {
+    op %a       "operand"
+    ret %result "target type"
+}
+
+inst @constant "Constant instruction" {
+    skip_builder
+    prop %value => "constant_value_type" "constant value"
+    ret %result                          "type of constant"
+    cxx "auto is_zero() -> bool;"
+    cxx "auto is_identity() -> bool;"
+}
+
+inst @cooperative_matrix_apply "Cooperative matrix apply instruction" {
+    spmd
+    op %a       "matrix"
+    reg %body   "instructions to apply to coopmatrix entries"
+    ret %result "result type"
+    cxx "inline auto row() -> tinytc_value & { return body().param(0); }"
+    cxx "inline auto col() -> tinytc_value & { return body().param(1); }"
+    cxx "inline auto val() -> tinytc_value & { return body().param(2); }"
+}
+
+inst @cooperative_matrix_construct "Cooperative matrix construct instruction" {
+    spmd
+    op %number  "number"
+    ret %result "result type"
+}
+
+inst @cooperative_matrix_extract "Cooperative matrix extract instruction" {
+    spmd
+    prop %index => i64 "index"
+    op %mat            "matrix"
+    ret %result        "result type"
+}
+
+inst @cooperative_matrix_insert "Cooperative matrix insert instruction" {
+    spmd
+    prop %index => i64 "index"
+    op %val            "value to insert"
+    op %mat            "matrix"
+    ret %result        "result type"
+}
+
+inst @cooperative_matrix_memory_read "Cooperative matrix memory read instruction" {
+    prop %t       => @transpose    "transposed load"
+    prop %checked => @checked_flag "boundary check"
+    op %operand                    "matrix"
+    op %pos0                       "row offset"
+    op %pos1                       "column offset"
+    ret %result                    "result type"
+}
+inst @cooperative_matrix_load : @cooperative_matrix_memory_read
+    "Cooperative matrix load instruction" {
+    spmd
+}
+inst @cooperative_matrix_atomic_load : @cooperative_matrix_memory_read
+    "Cooperative matrix atomic load instruction" {
+    spmd
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+
+inst @cooperative_matrix_mul_add "Cooperative matrix mul add instruction" {
+    spmd
+    op %a       "a matrix"
+    op %b       "b matrix"
+    op %c       "c matrix"
+    ret %result "result type"
+    cxx "auto is_c_zero() -> bool;"
+}
+
+inst @cooperative_matrix_prefetch "Cooperative matrix prefetch instruction" {
+    spmd
+    prop %cache_level => i32 "cache level; 0 is closest to the core"
+    prop %rows        => i32 "number of rows"
+    prop %cols        => i32 "number of columns"
+    op %operand              "matrix"
+    op %pos0                 "row offset"
+    op %pos1                 "column offset"
+}
+
+inst @cooperative_matrix_reduce "Cooperative matrix reduce instruction" {
+    prop %mode => @reduce_mode "reduce mode"
+    op %a                      "matrix"
+    ret %result                "result type"
+}
+inst @cooperative_matrix_reduce_add : @cooperative_matrix_reduce "Cooperative matrix reduce add instruction" { spmd }
+inst @cooperative_matrix_reduce_max : @cooperative_matrix_reduce "Cooperative matrix reduce max instruction" { spmd }
+inst @cooperative_matrix_reduce_min : @cooperative_matrix_reduce "Cooperative matrix reduce min instruction" { spmd }
+
+inst @cooperative_matrix_scale "Cooperative matrix scale instruction" {
+    spmd
+    op %a       "scalar"
+    op %b       "matrix"
+    ret %result "result type"
+}
+
+inst @cooperative_matrix_memory_write "Cooperative matrix memory write instruction" {
+    prop %t       => @transpose    "transposed store"
+    prop %checked => @checked_flag "boundary check"
+    op %val                        "value to store"
+    op %operand                    "matrix"
+    op %pos0                       "row offset"
+    op %pos1                       "column offset"
+}
+inst @cooperative_matrix_atomic_store : @cooperative_matrix_memory_write
+    "Cooperative matrix atomic store instruction" {
+    spmd
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+inst @cooperative_matrix_store : @cooperative_matrix_memory_write
+    "Cooperative matrix store instruction" {
+    spmd
+}
+
+inst @cooperative_matrix_atomic_update : @cooperative_matrix_memory_write
+    "Cooperative matrix atomic update instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+    ret %result                          "atomically updated matrix"
+}
+inst @cooperative_matrix_atomic_add : @cooperative_matrix_atomic_update
+    "Cooperative matrix atomic add instruction" {
+    spmd
+}
+inst @cooperative_matrix_atomic_max : @cooperative_matrix_atomic_update
+    "Cooperative matrix atomic max instruction" {
+    spmd
+}
+inst @cooperative_matrix_atomic_min : @cooperative_matrix_atomic_update
+    "Cooperative matrix atomic min instruction" {
+    spmd
+}
+
+
+inst @expand "Expand instruction" {
+    prop %expanded_mode        => i64 "expanded mode"
+    prop* %static_expand_shape => i64 "static expand shape"
+    op %operand                       "tensor"
+    op* %expand_shape                 "dynamic expand shape"
+    ret %result                       "result type"
+}
+
+inst @fuse "Fuse instruction" {
+    prop %from => i64 "first mode to fuse"
+    prop %to   => i64 "last mode to fuse"
+    op %operand       "tensor"
+    ret %result       "result type"
+}
+
+inst @if "If instruction"{
+    op %condition  "condition"
+    reg %then      "then block"
+    reg %otherwise "else block"
+    ret* %results  "return type array"
+    cxx "auto is_otherwise_empty() -> bool;"
+}
+
+inst @lifetime_stop "Lifetime stop instruction" {
+    collective
+    op %object "stack object whose lifetime ends"
+}
+
+inst @memory_read "Memory read instruction" {
+    op %operand     "tensor or group of tensors"
+    op* %index_list "indices"
+    ret %result     "result type"
+}
+inst @atomic_load : @memory_read "Atomic load instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+inst @load : @memory_read "Load instruction" {}
+
+inst @parallel "Parallel instruction" {
+    collective
+    reg %body "parallel region"
+}
+
+inst @size "Size instruction" {
+    prop %mode => i64 "mode for which size is extracted"
+    op %operand       "tensor"
+    ret %result       "result type"
+}
+
+inst @subgroup_broadcast "Subgroup broadcast instruction" {
+    spmd
+    op %a       "operand"
+    op %idx     "subgroup local index"
+    ret %result "result index"
+}
+
+inst @subview "Subview instruction" {
+    prop* %static_offsets => i64 "static offsets (need to add value to dynamic offsets "
+                                 "if static_offsets[i] == TINYTC_DYNAMIC)"
+    prop* %static_sizes   => i64 "static sizes (need to add value to dynamic sizes "
+                                 "if static_sizes[i] == TINYTC_DYNAMIC)"
+    op %operand                  "operand"
+    op* %offsets                 "dynamic offsets"
+    op* %sizes                   "dynamic sizes"
+    ret %result                  "resulting memref type"
+}
+
+; Atomics
+
+inst @memory_write "Instruction that writes to memory" {
+    op %val         "value to store"
+    op %operand     "operand"
+    op* %index_list "indices"
+}
+
+inst @store : @memory_write "Store instruction" {}
+
+inst @atomic_store : @memory_write "Atomic store instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+}
+
+inst @atomic_update : @memory_write "Atomic update instruction" {
+    prop %scope     => @memory_scope     "memory scope"
+    prop %semantics => @memory_semantics "memory semantics"
+    ret %result                          "atomically updated value"
+}
+inst @atomic_add : @atomic_update "Atomic add instruction" {}
+inst @atomic_max : @atomic_update "Atomic max instruction" {}
+inst @atomic_min : @atomic_update "Atomic min instruction" {}
+
+inst @yield "Yield instruction" {
+    op* %yielded_vals "yielded values"
+}
+
+
+; Binary aritmetic
+
+inst @arith "Arithmetic instruction (binary)" {
+    op %a                          "left-hand operand"
+    op %b                          "right-hand operand"
+    ret %result                    "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @add : @arith "Addition instruction" {}
+inst @sub : @arith "Subtraction instruction" {}
+inst @mul : @arith "Multiplication instruction" {}
+inst @div : @arith "Division instruction" {}
+inst @rem : @arith "Remainder instruction" {}
+inst @max : @arith "Max instruction" {}
+inst @min : @arith "Min instruction" {}
+inst @shl : @arith "Shift-left instruction" {}
+inst @shr : @arith "Shift-right instruction" {}
+inst @and : @arith "Bitwise and instruction" {}
+inst @or  : @arith "Bitwise or instruction" {}
+inst @xor : @arith "Bitwise xor instruction" {}
+
+
+; Unary aritmetic
+
+inst @arith_unary "Arithmetic instruction (unary)" {
+    op %a                                "operand"
+    ret %result                          "result type"
+    cxx "void setup_and_check(support_flags support, bool component_type_match = false);"
+}
+inst @neg  : @arith_unary "Negation instruction" {}
+inst @not  : @arith_unary "Bitwise not instruction" {}
+inst @abs  : @arith_unary "Absolute value instruction" {}
+inst @conj : @arith_unary "Complex conjugate instruction" {}
+inst @im   : @arith_unary "Imaginary part instruction" {}
+inst @re   : @arith_unary "Real part instruction" {}
+
+
+; BLAS with 2 tensor operands
+
+inst @blas_a2 "BLAS instruction with 2 tensor operands" {
+    prop %atomic => bool "atomic flag"
+    op %alpha            "alpha scalar"
+    op %A                "A tensor"
+    op %beta             "beta scalar"
+    op %B                "B tensor"
+}
+
+inst @axpby : @blas_a2 "AXPBY instruction" {
+    collective
+    prop %tA => @transpose "transpose A"
+}
+
+inst @cumsum : @blas_a2 "Cumsum instruction" {
+    collective
+    prop %mode => i64 "sum mode"
+}
+
+inst @sum : @blas_a2 "Sum instruction" {
+    collective
+    prop %tA => @transpose "transpose A"
+}
+
+
+; BLAS with 3 tensor operands
+
+inst @blas_a3 "BLAS instruction with 3 tensor operands" {
+    prop %atomic => bool "atomic flag"
+    op %alpha            "alpha scalar"
+    op %A                "A tensor"
+    op %B                "B tensor"
+    op %beta             "beta scalar"
+    op %C                "C tensor"
+}
+
+inst @gemm : @blas_a3 "GEMM instruction" {
+    collective
+    prop %tA => @transpose "transpose A"
+    prop %tB => @transpose "transpose B"
+}
+
+inst @gemv : @blas_a3 "GEMV instruction" {
+    collective
+    prop %tA => @transpose "transpose A"
+}
+
+inst @ger : @blas_a3 "GER instruction" {
+    collective
+}
+
+inst @hadamard : @blas_a3 "Hadamard instruction" {
+    collective
+}
+
+
+; Built-in functions
+
+inst @builtin "Builtin instruction" {
+    ret %result "result type"
+}
+inst @group_id : @builtin "Group ID instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @num_groups : @builtin "Number of groups instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @num_subgroups : @builtin "Number of subgroups instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @subgroup_size : @builtin "Subgroup size instruction" {}
+inst @subgroup_id : @builtin "Subgroup id instruction" {
+    spmd
+    prop %mode => @comp3 "mode"
+}
+inst @subgroup_linear_id : @builtin "Subgroup linear id instruction" {
+    spmd
+}
+inst @subgroup_local_id : @builtin "Subgroup local id instruction" {
+    spmd
+}
+
+; Comparison
+
+inst @compare "Comparison instruction" {
+    op %a                        "left-hand operand"
+    op %b                        "right-hand operand"
+    ret %result                  "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @equal : @compare "Equal instruction" {}
+inst @not_equal : @compare "Not equal instruction" {}
+inst @greater_than : @compare "Greater instruction" {}
+inst @greater_than_equal : @compare "Greater than or equal instruction" {}
+inst @less_than : @compare "Less than instruction" {}
+inst @less_than_equal : @compare "Less than or equal instruction" {}
+
+
+; Loops
+
+inst @loop "Loop instruction" {
+    reg %body "loop body"
+}
+
+inst @for : @loop "Create for loop" {
+    op %from       "loop begin (inclusive)"
+    op %to         "loop end (exclusive)"
+    op? %step      "loop step"
+    op* %iter_init "array of initial values"
+    ret* %results  "array of return types"
+    cxx "inline auto loop_var() -> tinytc_value & { return body().param(0); }"
+    cxx "inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }"
+}
+
+inst @foreach : @loop "Create foreach loop" {
+    collective
+    op* %from "array of loop begin (inclusive)"
+    op* %to   "array of loop end (exclusive)"
+    cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
+    cxx "inline auto loop_vars() { return body().params(); }"
+}
+
+inst @foreach_tile : @loop "Create tiled foreach loop" {
+    collective
+    prop* %tile_shape => i64 "tile shape"
+    op* %from "array of loop begin (inclusive)"
+    op* %to   "array of loop end (exclusive)"
+    cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
+    cxx "inline auto loop_vars() { return iterator_range_wrapper{body().param_begin(), body().param_begin()+dim()}; }"
+    cxx "inline auto sizes() { return iterator_range_wrapper{body().param_begin()+dim(), body().param_end()}; }"
+}
+
+; Math
+
+inst @math_unary "Math instruction" {
+    op %a       "argument"
+    ret %result "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @cos : @math_unary "Cosine instruction" {}
+inst @sin : @math_unary "Sine instruction" {}
+inst @exp : @math_unary "Base-e exponential instruction" {}
+inst @exp2 : @math_unary "Base-2 exponential instruction" {}
+inst @log : @math_unary "Base-e logarithm instruction" {}
+inst @log2 : @math_unary "Base-2 logarithm instruction" {}
+inst @native_cos : @math_unary "Cosine instruction (native)" {}
+inst @native_sin : @math_unary "Sine instruction (native)" {}
+inst @native_exp : @math_unary "Base-e exponential instruction (native)" {}
+inst @native_exp2 : @math_unary "Base-2 exponential instruction (native)" {}
+inst @native_log : @math_unary "Base-e logarithm instruction (native)" {}
+inst @native_log2 : @math_unary "Base-2 logarithm instruction (native)" {}
+
+
+; Subgroup operation
+
+inst @subgroup_operation "Subgroup operation instruction" {
+    op %a       "operand"
+    ret %result "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @subgroup_exclusive_scan_add : @subgroup_operation "Subgroup exclusive scan add" { spmd }
+inst @subgroup_exclusive_scan_max : @subgroup_operation "Subgroup exclusive scan max" { spmd }
+inst @subgroup_exclusive_scan_min : @subgroup_operation "Subgroup exclusive scan min" { spmd }
+inst @subgroup_inclusive_scan_add : @subgroup_operation "Subgroup inclusive scan add" { spmd }
+inst @subgroup_inclusive_scan_max : @subgroup_operation "Subgroup inclusive scan max" { spmd }
+inst @subgroup_inclusive_scan_min : @subgroup_operation "Subgroup inclusive scan min" { spmd }
+inst @subgroup_reduce_add : @subgroup_operation "Subgroup reduce add" { spmd }
+inst @subgroup_reduce_max : @subgroup_operation "Subgroup reduce max" { spmd }
+inst @subgroup_reduce_min : @subgroup_operation "Subgroup reduce min" { spmd }
+

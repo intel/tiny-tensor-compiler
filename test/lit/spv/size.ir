@@ -12,8 +12,8 @@ func @size(%0: memref<i32x?x?x8x32>) {
     %2 = size %0[1] : index
     %3 = size %0[2] : index
     %4 = size %0[3] : index
-    %5 = arith.add %1, %2 : index
-    %6 = arith.add %3, %4 : index
+    %5 = add %1, %2 : index
+    %6 = add %3, %4 : index
 ; CHECK:              %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:         %[[#]] = OpFunctionParameter %[[#]]
 ; CHECK-NEXT:  %[[#SHAPE1:]] = OpFunctionParameter %[[#]]
@@ -27,7 +27,7 @@ func @size(%0: memref<i32x?x?x8x32>) {
 
 func @group_size(%0: group<memref<i32x8x32>x?>) {
     %1 = size %0[0] : index
-    %2 = arith.add %1, %1 : index
+    %2 = add %1, %1 : index
 ; CHECK:              %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:         %[[#]] = OpFunctionParameter %[[#]]
 ; CHECK-NEXT:  %[[#SHAPE1:]] = OpFunctionParameter %[[#I64]]

@@ -9,12 +9,12 @@
 #include "spv/nonsemantic.shader.debuginfo.100.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
-#include "support/casting.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/overloaded.hpp"
 
 #include <concepts>
 #include <cstdint>
@@ -31,7 +31,7 @@ capex::capex(uniquifier &unique) : unique_{&unique} {}
 void capex::operator()(spv_inst const &) {}
 void capex::operator()(OpAtomicStore const &in) {
     auto ty = visit(overloaded{[](inst_with_return_type auto &a) -> spv_inst * { return a.type(); },
-                               [](auto &) -> spv_inst * { return nullptr; }},
+                               [](spv_inst &) -> spv_inst * { return nullptr; }},
                     *in.op3());
     if (!ty) {
         throw status::internal_compiler_error;
@@ -52,7 +52,7 @@ auto capex::float_atomic_class(spv_inst *raw_ty, spv_inst *op0)
     auto pointer_ty = visit(overloaded{[](inst_with_return_type auto &a) -> OpTypePointer * {
                                            return dyn_cast<OpTypePointer>(a.type());
                                        },
-                                       [](auto &) -> OpTypePointer * { return nullptr; }},
+                                       [](spv_inst &) -> OpTypePointer * { return nullptr; }},
                             *op0);
     if (!pointer_ty) {
         throw status::internal_compiler_error;

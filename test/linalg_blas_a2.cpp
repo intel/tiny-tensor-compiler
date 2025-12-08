@@ -8,46 +8,41 @@
 namespace tinytc::test {
 
 auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
-                       scalar_type alpha_ty, scalar_type A_ty, scalar_type beta_ty,
-                       scalar_type B_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op,
-                       std::int32_t work_group_size) -> prog {
-    auto ctx = make_compiler_context();
+                       tinytc_type_t alpha_ty, tinytc_type_t A_ty, tinytc_type_t beta_ty,
+                       tinytc_type_t B_ty,
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
+                       std::int32_t work_group_size) -> shared_handle<tinytc_prog_t> {
+    auto ctx = get_compiler_context(alpha_ty);
+    auto p = create_prog(ctx.get());
 
-    auto const alphat = get_scalar(ctx, alpha_ty);
-    auto const at = get_scalar(ctx, A_ty);
-    auto const betat = get_scalar(ctx, beta_ty);
-    auto const bt = get_scalar(ctx, B_ty);
+    auto At = get<memref_type>(A_ty, layoutA.static_shape(), layoutA.static_stride(),
+                               address_space::global);
+    auto Bt = get<memref_type>(B_ty, layoutB.static_shape(), layoutB.static_stride(),
+                               address_space::global);
 
-    auto p = make_prog(ctx);
-
-    auto At =
-        get_memref(at, layoutA.static_shape(), layoutA.static_stride(), address_space::global);
-    auto Bt =
-        get_memref(bt, layoutB.static_shape(), layoutB.static_stride(), address_space::global);
-
-    auto f = make_func(name, {alphat, At, betat, Bt}, get_void(ctx));
+    auto void_ty = get<void_type>(ctx.get());
+    auto f = create_func(name, {alpha_ty, At, beta_ty, Bt}, void_ty);
     if (work_group_size) {
-        auto const wgs_attr =
-            named_attr{get_string_attr(ctx, "work_group_size"),
-                       get_array_attr(ctx, {get_integer_attr(ctx, work_group_size),
-                                            get_integer_attr(ctx, 1)})};
-        f.set_attr(get_dictionary_attr_with_sorted(ctx, wgs_attr));
+        auto const wgs_attr = tinytc_named_attr_t{
+            get<string_attr>(ctx.get(), "work_group_size"),
+            get<array_attr>(ctx.get(), array_view{get<integer_attr>(ctx.get(), work_group_size),
+                                                  get<integer_attr>(ctx.get(), 1)})};
+        set_attr(f.get(), get_dictionary_attr_with_sorted(ctx.get(), wgs_attr));
     }
 
-    auto fn_body = f.get_body();
-    auto params = std::array<value, 4u>{};
-    fn_body.get_parameters(params);
-    params[0].set_name("alpha");
-    params[1].set_name("A");
-    params[2].set_name("beta");
-    params[3].set_name("B");
+    auto fn_body = get_body(f.get());
+    auto params = std::array<tinytc_value_t, 4u>{};
+    get_parameters(fn_body, params);
+    set_name(params[0], "alpha");
+    set_name(params[1], "A");
+    set_name(params[2], "beta");
+    set_name(params[3], "B");
 
     auto bb = region_builder{fn_body};
 
     make_op(bb, params);
 
-    p.add_function(std::move(f));
+    add_function(p.get(), std::move(f));
 
     return p;
 }

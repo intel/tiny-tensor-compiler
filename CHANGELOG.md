@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.4.0] - 2025-XX-XX
+## [0.5.0] - 2025-11-13
+
+* Add -o option for tinytc and tinytc-opt
+* (Experimental) add support for BMG G31, LNL, and PTL
+* Bugfix: group offset was applied incorrectly
+
+## [0.4.0] - 2025-10-06
 
 ### Major changes
 * Support for complex numbers (c32 and c64) with optimized complex GEMM
@@ -8,6 +14,7 @@
 * (Experimental) Support for accelerating low precision GEMMs with tensor cores (XMX)
 * Compiler directly generates SPIR-V binaries (instead of OpenCL-C); JIT compilation speed-up of about 2x
 * Removed dependency on clir and ocloc libraries
+* Added preprocessor
 
 ### Tiny Tensor Language
 * Clarified execution model
@@ -16,13 +23,13 @@
 * Added boolean, f16 (half precision), bf16 (bfloat16), c32 (single complex), and c64 (double complex) type
 * Added address space to memref type
 * Added cooperative matrix type
-* Added new instructions: barrier, builtin, constant, cooperative_matrix_load/mul_add/scale/store, parallel,
-  subgroup_broadcast, work_group
+* Added cooperative matrix instructions (prefix "cooperative_matrix_"): apply, atomic_load, atomic_store,
+  atomic_update, construct, extract, insert, load, mul_add, reduce, scale, store
+* Added new instructions: associated, barrier, constant, cumsum, foreach_tile, parallel, subgroup operations
 * Extended foreach for iteration spaces with dim > 1
 * For-loops can yield values
 * Removed immediate operands in favour of constant instruction
 * Instructions annotate the return type instead of operand types
-* Added cumulative sum instruction
 * Change 1d group id to 3d group id; introduce 2d subgroup id
 
 ### Core API
@@ -49,6 +56,7 @@
 * Introduced GEMM to cooperative matrix conversion (instead of direct GEMM to OpenCL-C conversion)
 * Added fast cooperative matrix mul add implementation for complex numbers
 * Added attributes
+* Added "mochi" compiler-compiler to generate boilerplate for instructions, types, and enums
 
 ## [0.3.1] - 2024-05-22
 * Bugfix: Add alias analysis for stack; needed to correctly insert barriers

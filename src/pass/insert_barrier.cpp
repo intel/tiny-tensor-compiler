@@ -6,17 +6,20 @@
 #include "analysis/alias.hpp"
 #include "analysis/cfg.hpp"
 #include "error.hpp"
-#include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
-#include "node/value_node.hpp"
-#include "support/casting.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
-#include "support/visit.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
+#include "node/inst_view.hpp"
+#include "node/region.hpp"
+#include "node/type.hpp"
+#include "node/value.hpp"
+#include "node/visit.hpp"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/iterator.hpp"
+#include "util/overloaded.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <queue>
 #include <unordered_map>
 #include <utility>
@@ -121,35 +124,36 @@ auto insert_barrier_pass::reads_writes::address_space_to_index(address_space as)
     throw internal_compiler_error{};
 }
 
-void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) {
+void insert_barrier_pass::run_on_region(tinytc_region &reg, aa_results const &aa) {
     // irw = reads and writes invisible to other threads
-    auto irw_in = std::unordered_map<inst_node *, reads_writes>{};
-    auto irw_out = std::unordered_map<inst_node *, reads_writes>{};
+    auto irw_in = std::unordered_map<tinytc_inst_t, reads_writes>{};
+    auto irw_out = std::unordered_map<tinytc_inst_t, reads_writes>{};
 
-    auto const get_rw = [](inst_node &in) -> reads_writes {
+    auto const get_rw = [](tinytc_inst &in) -> reads_writes {
         auto rw = reads_writes{};
-        auto const emplace_read = [&rw](value_node const &v) {
-            if (auto *m = dyn_cast<memref_data_type>(v.ty()); m) {
+        auto const emplace_read = [&rw](tinytc_value const &v) {
+            if (auto *m = dyn_cast<memref_type>(v.ty()); m) {
                 rw.emplace_read(m->addrspace(), &v);
             }
         };
-        auto const emplace_write = [&rw](value_node const &v) {
-            if (auto *m = dyn_cast<memref_data_type>(v.ty()); m) {
+        auto const emplace_write = [&rw](tinytc_value const &v) {
+            if (auto *m = dyn_cast<memref_type>(v.ty()); m) {
                 rw.emplace_write(m->addrspace(), &v);
             }
         };
 
-        visit(overloaded{[&](blas_a2_inst &in) {
+        visit(overloaded{[&](blas_a2_inst in) {
                              emplace_read(in.A());
                              emplace_write(in.B());
                          },
-                         [&](blas_a3_inst &in) {
+                         [&](blas_a3_inst in) {
                              emplace_read(in.A());
                              emplace_read(in.B());
                              emplace_write(in.C());
                          },
-                         [&](load_inst &in) { emplace_read(in.operand()); },
-                         [&](store_inst &in) { emplace_write(in.operand()); }, [](inst_node &) {}},
+                         [&](memory_read_inst in) { emplace_read(in.operand()); },
+                         [&](memory_write_inst in) { emplace_write(in.operand()); },
+                         [](inst_view) {}},
               in);
         return rw;
     };
@@ -178,9 +182,9 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
 
         auto out_size_before_update = get_cardinal(out);
 
-        if (auto *barrier = dyn_cast<barrier_inst>(n); insert_barriers && barrier) {
+        if (auto barrier = dyn_cast<barrier_inst>(n); insert_barriers && barrier) {
             for (auto &as : reads_writes::address_spaces) {
-                if (!barrier->has_fence(as)) {
+                if (!barrier.has_fence(as)) {
                     out.merge(as, in);
                 }
             }
@@ -199,8 +203,7 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
                 tinytc_region *subreg = n->parent();
                 auto new_barrier =
                     subreg->insts()
-                        .insert(n->iterator(),
-                                std::make_unique<barrier_inst>(fence_flags).release())
+                        .insert(n->iterator(), barrier_inst::create(fence_flags, {}).release())
                         .get();
                 // update cfg
                 cfg.insert_before(n, new_barrier);
@@ -218,7 +221,7 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
 }
 
 /* Function nodes */
-void insert_barrier_pass::run_on_function(function_node &fn) {
+void insert_barrier_pass::run_on_function(tinytc_func &fn) {
     auto aa = alias_analysis{}.run_on_function(fn);
     run_on_region(fn.body(), aa);
 }

@@ -19,9 +19,9 @@
 ; CHECK: %[[#F32_3:]] = OpTypeVector %[[#F32]] 3
 
 func @tbool(%a: bool, %b: bool) {
-    %0 = arith.and %a, %b : bool
-    %1 = arith.or %a, %b : bool
-    %2 = arith.xor %a, %b : bool
+    %0 = and %a, %b : bool
+    %1 = or %a, %b : bool
+    %2 = xor %a, %b : bool
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpLogicalAnd %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpLogicalOr %[[#BOOL]] %[[#]] %[[#]]
@@ -29,18 +29,18 @@ func @tbool(%a: bool, %b: bool) {
 }
 
 func @tint(%a: i64, %b: i64) {
-    %0 = arith.add %a, %b : i64
-    %1 = arith.sub %a, %b : i64
-    %2 = arith.mul %a, %b : i64
-    %3 = arith.div %a, %b : i64
-    %4 = arith.rem %a, %b : i64
-    %5 = arith.shl %a, %b : i64
-    %6 = arith.shr %a, %b : i64
-    %7 = arith.and %a, %b : i64
-    %8 = arith.or %a, %b : i64
-    %9 = arith.xor %a, %b : i64
-    %10 = arith.min %a, %b : i64
-    %11 = arith.max %a, %b : i64
+    %0 = add %a, %b : i64
+    %1 = sub %a, %b : i64
+    %2 = mul %a, %b : i64
+    %3 = div %a, %b : i64
+    %4 = rem %a, %b : i64
+    %5 = shl %a, %b : i64
+    %6 = shr %a, %b : i64
+    %7 = and %a, %b : i64
+    %8 = or %a, %b : i64
+    %9 = xor %a, %b : i64
+    %10 = min %a, %b : i64
+    %11 = max %a, %b : i64
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpIAdd %[[#I64]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpISub %[[#I64]] %[[#]] %[[#]]
@@ -57,13 +57,13 @@ func @tint(%a: i64, %b: i64) {
 }
 
 func @tfloat(%a: f32, %b: f32) {
-    %0 = arith.add %a, %b : f32
-    %1 = arith.sub %a, %b : f32
-    %2 = arith.mul %a, %b : f32
-    %3 = arith.div %a, %b : f32
-    %4 = arith.rem %a, %b : f32
-    %5 = arith.min %a, %b : f32
-    %6 = arith.max %a, %b : f32
+    %0 = add %a, %b : f32
+    %1 = sub %a, %b : f32
+    %2 = mul %a, %b : f32
+    %3 = div %a, %b : f32
+    %4 = rem %a, %b : f32
+    %5 = min %a, %b : f32
+    %6 = max %a, %b : f32
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
@@ -75,13 +75,13 @@ func @tfloat(%a: f32, %b: f32) {
 }
 
 func @thalf(%a: f16, %b: f16) {
-    %0 = arith.add %a, %b : f16
-    %1 = arith.sub %a, %b : f16
-    %2 = arith.mul %a, %b : f16
-    %3 = arith.div %a, %b : f16
-    %4 = arith.rem %a, %b : f16
-    %5 = arith.min %a, %b : f16
-    %6 = arith.max %a, %b : f16
+    %0 = add %a, %b : f16
+    %1 = sub %a, %b : f16
+    %2 = mul %a, %b : f16
+    %3 = div %a, %b : f16
+    %4 = rem %a, %b : f16
+    %5 = min %a, %b : f16
+    %6 = max %a, %b : f16
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFAdd %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFSub %[[#F16]] %[[#]] %[[#]]
@@ -93,13 +93,13 @@ func @thalf(%a: f16, %b: f16) {
 }
 
 func @tbf16(%a: bf16, %b: bf16) {
-    %0 = arith.add %a, %b : bf16
-    %1 = arith.sub %a, %b : bf16
-    %2 = arith.mul %a, %b : bf16
-    %3 = arith.div %a, %b : bf16
-    %4 = arith.rem %a, %b : bf16
-    %5 = arith.min %a, %b : bf16
-    %6 = arith.max %a, %b : bf16
+    %0 = add %a, %b : bf16
+    %1 = sub %a, %b : bf16
+    %2 = mul %a, %b : bf16
+    %3 = div %a, %b : bf16
+    %4 = rem %a, %b : bf16
+    %5 = min %a, %b : bf16
+    %6 = max %a, %b : bf16
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:          %[[#BF16_AF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
 ; CHECK-NEXT:     %[[#BF16_BF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
@@ -132,10 +132,10 @@ func @tbf16(%a: bf16, %b: bf16) {
 }
 
 func @tcomplex(%a: c32, %b: c32) {
-    %0 = arith.add %a, %b : c32
-    %1 = arith.sub %a, %b : c32
-    %2 = arith.mul %a, %b : c32
-    %3 = arith.div %a, %b : c32
+    %0 = add %a, %b : c32
+    %1 = sub %a, %b : c32
+    %2 = mul %a, %b : c32
+    %3 = div %a, %b : c32
 ; CHECK-LABEL:                        %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:                    %[[#TC_A:]] = OpFunctionParameter %[[#C32]]
 ; CHECK-NEXT:                    %[[#TC_B:]] = OpFunctionParameter %[[#C32]]
@@ -165,8 +165,8 @@ func @tcomplex(%a: c32, %b: c32) {
 
 func @tfloatcomplex(%a: f32, %b: c32) {
     %a2 = cast %a : c32
-    %0 = arith.mul %a2, %b : c32
-    %1 = arith.mul %b, %a2 : c32
+    %0 = mul %a2, %b : c32
+    %1 = mul %b, %a2 : c32
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:        %[[#A2:]] = OpCompositeInsert %[[#C32]] %[[#]] %[[#C32_NULL]] 0
 ; CHECK-NEXT: %[[#A2_1:]] = OpVectorShuffle %[[#C32]] %[[#A2]] %[[#A2]] 0 0
@@ -178,7 +178,7 @@ func @tfloatcomplex(%a: f32, %b: c32) {
 func @tfloatcoopmatrix() attributes{subgroup_size=16} {
     %0 = constant 1.0 : coopmatrix<f32x16x3,matrix_a>
     %1 = constant 2.0 : coopmatrix<f32x16x3,matrix_a>
-    %2 = arith.add %0, %1 : coopmatrix<f32x16x3,matrix_a>
+    %2 = add %0, %1 : coopmatrix<f32x16x3,matrix_a>
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:         %[[#R3:]] = OpUndef %[[#F32_3]]
 ; CHECK-NEXT:  %[[#A3_0:]] = OpCompositeExtract %[[#F32]] %[[#]] 0

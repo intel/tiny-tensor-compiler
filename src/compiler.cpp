@@ -3,7 +3,7 @@
 
 #include "compiler_context.hpp"
 #include "error.hpp"
-#include "node/program_node.hpp"
+#include "node/prog.hpp"
 // IWYU pragma: begin_keep
 #include "pass/dump_cfg.hpp"
 #include "pass/dump_def_use.hpp"
@@ -24,12 +24,10 @@
 #include "passes.hpp"
 #include "spv/pass/assemble.hpp"
 #include "spv/pass/assign_ids.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
-#include <cstdint>
 #include <cstring>
 #include <iostream> // IWYU pragma: keep
 #include <utility>
@@ -113,7 +111,7 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
         prg->context());
 }
 
-tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *const **names) {
+tinytc_status_t tinytc_list_function_passes(size_t *names_size, char const *const **names) {
     if (names_size == nullptr || names == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -152,7 +150,7 @@ tinytc_status_t tinytc_prog_compile_to_spirv_and_assemble(tinytc_binary_t *bin, 
     }
     tinytc_spv_mod_t mod;
     TINYTC_CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg, info));
-    auto mod_ = spv_mod{mod}; // For clean-up
+    auto mod_ = shared_handle{mod}; // For clean-up
     TINYTC_CHECK_STATUS(tinytc_spirv_assemble(bin, mod_.get()));
     return tinytc_status_success;
 }

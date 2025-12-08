@@ -1,0 +1,10 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#include "error.hpp"
+#include "node/inst.hpp"
+#include "node/inst_view.hpp"
+
+using namespace tinytc;
+
+// もち inst_kind_cpp "tinytc/instructions.anko"

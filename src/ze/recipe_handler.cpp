@@ -4,7 +4,7 @@
 #include "recipe_handler.hpp"
 #include "../recipe.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
@@ -17,15 +17,15 @@
 namespace tinytc {
 
 ze_recipe_handler::ze_recipe_handler(ze_context_handle_t context, ze_device_handle_t device,
-                                     recipe rec)
+                                     shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_recipe().get_binary());
+    module_ = create_kernel_bundle(context, device, get_binary(get_recipe()).get());
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_.get(), get_recipe()->kernel_name(num)));
     }
 }
 
@@ -63,8 +63,9 @@ tinytc_status_t tinytc_ze_recipe_handler_create(tinytc_recipe_handler_t *handler
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code_ze([&] {
-        *handler = std::make_unique<tinytc::ze_recipe_handler>(context, device, recipe{rec, true})
-                       .release();
+        *handler =
+            std::make_unique<tinytc::ze_recipe_handler>(context, device, shared_handle{rec, true})
+                .release();
     });
 }
 

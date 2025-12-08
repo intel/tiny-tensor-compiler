@@ -4,7 +4,6 @@
 #ifndef GCD_20241203_HPP
 #define GCD_20241203_HPP
 
-#include "node/function_node.hpp"
 #include "tinytc/types.h"
 
 #include <cstddef>
@@ -32,7 +31,7 @@ class memref_info {
     inline auto stride_gcd(std::size_t i) const -> std::int64_t { return stride_gcd_[i]; }
 
   private:
-    std::int64_t offset_gcd_;
+    std::int64_t offset_gcd_ = 1;
     std::vector<std::int64_t> shape_gcd_, stride_gcd_;
 };
 
@@ -58,7 +57,7 @@ class gcd_analysis_result {
  * divisible. For example, for
  *
  * %0 = constant 32 : index
- * %1 = arith.mul %0, %x : index
+ * %1 = mul %0, %x : index
  *
  * we know that %1 is at least divisible by 2, 4, 8, 16, 32 without knowing anything about %x.
  *
@@ -67,10 +66,10 @@ class gcd_analysis_result {
  * "%x = constant C": P(%x) := set of prime factors of |C|
  *
  * For multiplication and addition formulae we define
- * "%z = arith.add %x, %y": P(%z) := P(%x) ∩ P(%y)
- * "%z = arith.sub %x, %y": P(%z) := P(%x) ∩ P(%y)
- * "%z = arith.mul %x, %y": P(%z) := P(%x) ∪ P(%y)
- * "%z = arith.div %x, %y": P(%z) := P(%x) ∖ P(%y) if P(%y) ⊆ P(%x) else {1}
+ * "%z = add %x, %y": P(%z) := P(%x) ∩ P(%y)
+ * "%z = sub %x, %y": P(%z) := P(%x) ∩ P(%y)
+ * "%z = mul %x, %y": P(%z) := P(%x) ∪ P(%y)
+ * "%z = div %x, %y": P(%z) := P(%x) ∖ P(%y) if P(%y) ⊆ P(%x) else {1}
  *
  * If nothing is known about %x we let
  * P(%x) := {1}
@@ -81,25 +80,25 @@ class gcd_analysis_result {
  *
  * We can update p without having to resort to P as following:
  *
- * "%x = constant C": p(%x) := C
- * "%z = arith.add %x, %y": p(%z) := gcd(p(%x),p(%y))
- * "%z = arith.sub %x, %y": p(%z) := gcd(p(%x),p(%y))
- * "%z = arith.mul %x, %y": p(%z) := p(%x) * p(%y)
- * "%z = arith.div %x, %y": p(%z) := p(%x) / p(%y) if p(%x) % p(%y) == 0 else 1
+ * "%x = constant C": p(%x) := |C|
+ * "%z = add %x, %y": p(%z) := gcd(p(%x),p(%y))
+ * "%z = sub %x, %y": p(%z) := gcd(p(%x),p(%y))
+ * "%z = mul %x, %y": p(%z) := p(%x) * p(%y)
+ * "%z = div %x, %y": p(%z) := p(%x) / p(%y) if p(%x) % p(%y) == 0 else 1
  * "%x = unknown":          p(%x) := 1
  *
  * where gcd is the greatest common divisor.
  *
  * One special case is when we have %zero = constant 0. By definition gcd(%zero) = 0.
  * We then have automatically
- * "%z = arith.add %zero, %x": p(%z) = p(%x) // Fine, 0 + x = x so we must have p(%z) = p(%x)
- * "%z = arith.mul %zero, %x": p(%z) = 0     // Fine, 0 * x = 0 so we must have p(%z) = p(%zero)
+ * "%z = add %zero, %x": p(%z) = p(%x) // Fine, 0 + x = x so we must have p(%z) = p(%x)
+ * "%z = mul %zero, %x": p(%z) = 0     // Fine, 0 * x = 0 so we must have p(%z) = p(%zero)
  */
 class gcd_analysis {
   public:
     inline gcd_analysis(std::int32_t default_alignment) : default_alignment_(default_alignment) {}
 
-    auto run_on_function(function_node const &fn) -> gcd_analysis_result;
+    auto run_on_function(tinytc_func &fn) -> gcd_analysis_result;
 
   private:
     std::int32_t default_alignment_;

@@ -1,4 +1,4 @@
-.. Copyright (C) 2024 Intel Corporation
+.. Copyright (C) 2025 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
 .. _Level Zero C-API:
@@ -6,23 +6,6 @@
 =====
 C-API
 =====
-
-Common
-======
-
-* Functions
-
-  * :ref:`tinytc_ze_convert_status`
-
-Common Functions
-----------------
-
-.. _tinytc_ze_convert_status:
-
-tinytc_ze_convert_status
-........................
-
-.. doxygenfunction:: tinytc_ze_convert_status
 
 Device Info
 ===========

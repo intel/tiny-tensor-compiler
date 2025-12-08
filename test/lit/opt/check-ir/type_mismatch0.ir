@@ -4,5 +4,5 @@
 ; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
 func @kernel(%K0: memref<f32>) {
   %0 = load %K0[] : f64
-; CHECK: 6.8-23: Type of operand must match return type
+; CHECK: 6.8-23: Operand type must match return type
 }
