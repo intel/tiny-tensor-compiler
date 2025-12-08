@@ -15,8 +15,9 @@
 
 namespace tinytc {
 
-parse_context::parse_context(shared_handle<tinytc_compiler_context_t> compiler_ctx)
-    : compiler_ctx_(std::move(compiler_ctx)), program_{create_prog(compiler_ctx_.get(), {})} {
+parse_context::parse_context(shared_handle<tinytc_compiler_context_t> compiler_ctx,
+                             location const &loc)
+    : compiler_ctx_(std::move(compiler_ctx)), program_{create_prog(compiler_ctx_.get(), loc)} {
     def_map_.push_back({});
 }
 

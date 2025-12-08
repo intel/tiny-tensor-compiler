@@ -21,7 +21,7 @@ using def_rhs = std::variant<bool, std::int64_t, double, std::string, tinytc_typ
 
 class parse_context {
   public:
-    parse_context(shared_handle<tinytc_compiler_context_t> compiler_ctx);
+    parse_context(shared_handle<tinytc_compiler_context_t> compiler_ctx, location const &loc = {});
     inline auto program() { return program_; }
 
     void val(std::variant<std::int64_t, std::string> const &id, tinytc_value &val,

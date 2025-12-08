@@ -101,19 +101,36 @@ void inst_converter::add_debug_info(tinytc_compiler_context_t ctx, location cons
     auto [source_text, source_text_size] = ctx->source_text(loc.begin.source_id);
     auto source_name_id = mod_->add_to<OpString>(
         section::debug, std::string(source_name, source_name + source_name_size));
-    auto source_text_id =
-        source_text_size > 0
-            ? mod_->add_to<OpString>(section::debug,
-                                     std::string(source_text, source_text + source_text_size))
-            : nullptr;
 
-    auto debug_source_ops = std::vector<IdRef>{source_name_id};
-    if (source_text_id) {
-        debug_source_ops.push_back(source_text_id);
+    auto const set_debug_source = [&](IdRef source_text_id) {
+        auto debug_source_ops = std::vector<IdRef>{source_name_id};
+        if (source_text_id) {
+            debug_source_ops.push_back(source_text_id);
+        }
+        debug_source_ = mod_->add_to<OpExtInst>(
+            section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+            static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugSource),
+            debug_source_ops);
+    };
+
+    if (source_text_size > 0) {
+        constexpr std::size_t string_size_limit = 4 * ((1 << 16) - 4);
+        for (std::size_t i = 0; i < source_text_size; i += string_size_limit) {
+            const std::size_t iend = std::min(source_text_size, i + string_size_limit);
+            auto str = mod_->add_to<OpString>(section::debug,
+                                              std::string(source_text + i, source_text + iend));
+            if (i == 0) {
+                set_debug_source(str);
+            } else {
+                mod_->add_to<OpExtInst>(
+                    section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+                    static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugSourceContinued),
+                    std::vector<IdRef>{str});
+            }
+        }
+    } else {
+        set_debug_source(nullptr);
     }
-    debug_source_ = mod_->add_to<OpExtInst>(
-        section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
-        static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugSource), debug_source_ops);
 
     const auto debug_info_version = unique_.constant(std::int32_t{0x10000});
     const auto dwarf_version = unique_.constant(std::int32_t{0x0});

@@ -30,7 +30,7 @@ auto parse(std::string name, std::string text,
 
     auto [ir, ir_size] = compiler_ctx->source_text(source_id);
     auto lex = lexer(ir_size, ir, initial_loc);
-    auto parse_ctx = parse_context{std::move(compiler_ctx)};
+    auto parse_ctx = parse_context{std::move(compiler_ctx), initial_loc};
     auto p = parser(lex, parse_ctx);
     if (p() == 0) {
         return parse_ctx.program();
