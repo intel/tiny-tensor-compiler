@@ -1099,7 +1099,7 @@ void less_than_equal_inst::setup_and_check() {
     compare_inst::setup_and_check(supports_int | supports_float);
 }
 
-void loop_inst::setup_and_check() {}
+void loop_inst::setup_and_check() { body().loc(loc()); }
 
 void for_inst::setup_and_check() {
     loop_inst::setup_and_check();

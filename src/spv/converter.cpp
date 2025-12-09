@@ -141,6 +141,55 @@ void inst_converter::add_debug_info(tinytc_compiler_context_t ctx, location cons
         std::vector<IdRef>{debug_info_version, dwarf_version, debug_source_, language});
 }
 
+auto inst_converter::add_debug_lexical_block(location const &loc) -> spv_inst * {
+    spv_inst *parent_scope = !lexical_scopes_.empty() ? lexical_scopes_.top() : nullptr;
+    if (parent_scope) {
+        auto line_start = unique_.constant(loc.begin.line);
+        auto column_start = unique_.constant(loc.begin.column);
+        auto scope = mod_->add_to<OpExtInst>(
+            section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+            static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugLexicalBlock),
+            std::vector<IdRef>{debug_source_, line_start, column_start, parent_scope});
+        return scope;
+    }
+    return nullptr;
+}
+
+void inst_converter::add_debug_line(location const &loc) {
+    if (!lexical_scopes_.empty() && lexical_scopes_.top()) {
+        auto line_start = unique_.constant(loc.begin.line);
+        auto line_end = unique_.constant(loc.end.line);
+        auto column_start = unique_.constant(loc.begin.column);
+        auto column_end = unique_.constant(loc.end.column);
+        mod_->add<OpExtInst>(
+            unique_.void_ty(), unique_.debug_ext(),
+            static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugLine),
+            std::vector<IdRef>{debug_source_, line_start, line_end, column_start, column_end});
+    }
+}
+
+void inst_converter::push_debug_scope(spv_inst *lexical_scope) {
+    if (lexical_scope) {
+        mod_->add<OpExtInst>(unique_.void_ty(), unique_.debug_ext(),
+                             static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugScope),
+                             std::vector<IdRef>{lexical_scope});
+        lexical_scopes_.push(lexical_scope);
+    }
+}
+void inst_converter::pop_debug_scope() {
+    lexical_scopes_.pop();
+    if (!lexical_scopes_.empty()) {
+        spv_inst *lexical_scope = lexical_scopes_.top();
+        mod_->add<OpExtInst>(unique_.void_ty(), unique_.debug_ext(),
+                             static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugScope),
+                             std::vector<IdRef>{lexical_scope});
+    }
+}
+void inst_converter::replace_debug_scope(spv_inst *lexical_scope) {
+    lexical_scopes_.pop();
+    push_debug_scope(lexical_scope);
+}
+
 auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
     if (auto it = dope_vec_.find(&v); it != dope_vec_.end()) {
         return &it->second;
@@ -550,6 +599,10 @@ void inst_converter::operator()(for_inst in) {
     };
     auto iter_arg_phis = make_iter_arg_phi();
 
+    auto header_lexical_block = add_debug_lexical_block(in.loc());
+    push_debug_scope(header_lexical_block);
+
+    add_debug_line(in.loc());
     auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
     auto loop_control = [&]() -> std::pair<LoopControl, std::optional<LoopControlAttr>> {
         auto unroll = get_attr(in.get().attr(), "unroll");
@@ -572,6 +625,8 @@ void inst_converter::operator()(for_inst in) {
 
     // Body block
     mod_->insts(section::function).push_back(body_label_op.release());
+    auto body_lexical_block = add_debug_lexical_block(in.body().loc());
+    push_debug_scope(body_lexical_block);
 
     auto results = in.results();
     auto yielded_for = run_on_region_with_yield(in.body(), results.size());
@@ -584,12 +639,14 @@ void inst_converter::operator()(for_inst in) {
 
     // Continue block
     mod_->insts(section::function).push_back(continue_label_op.release());
+    pop_debug_scope();
     auto step = [&]() -> spv_inst * {
         if (in.has_step()) {
             return val(in.step());
         }
         return make_constant(unique_, in.loop_var().ty(), std::int64_t{1});
     }();
+    add_debug_line(in.loc());
     auto loop_var_update = mod_->add<OpIAdd>(spv_loop_var_ty, loop_var_phi, step);
     loop_var_phi->op0().back().first = loop_var_update;
     mod_->add<OpBranch>(header_label);
@@ -603,6 +660,8 @@ void inst_converter::operator()(for_inst in) {
         }
     };
     set_results();
+
+    pop_debug_scope();
 }
 
 void inst_converter::operator()(fuse_inst in) {
@@ -655,6 +714,8 @@ void inst_converter::operator()(if_inst in) {
     auto then_label = std::make_unique<OpLabel>();
     auto otherwise_label = std::make_unique<OpLabel>();
     auto merge_label = std::make_unique<OpLabel>();
+    auto then_lexical_block = add_debug_lexical_block(in.then().loc());
+    auto otherwise_lexical_block = add_debug_lexical_block(in.otherwise().loc());
 
     auto conditionv = val(in.condition());
     mod_->add<OpSelectionMerge>(merge_label.get(), SelectionControl::None);
@@ -662,6 +723,7 @@ void inst_converter::operator()(if_inst in) {
                                    std::vector<LiteralInteger>{});
     mod_->insts(section::function).push_back(then_label.release());
     auto results = in.results();
+    push_debug_scope(then_lexical_block);
     auto yielded_then = run_on_region_with_yield(in.then(), results.size());
     mod_->add<OpBranch>(merge_label.get());
     auto then_last_label = get_last_label(*mod_);
@@ -669,6 +731,7 @@ void inst_converter::operator()(if_inst in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     }
     mod_->insts(section::function).push_back(otherwise_label.release());
+    replace_debug_scope(otherwise_lexical_block);
     auto yielded_otherwise = run_on_region_with_yield(in.otherwise(), results.size());
     mod_->add<OpBranch>(merge_label.get());
     auto otherwise_last_label = get_last_label(*mod_);
@@ -688,6 +751,7 @@ void inst_converter::operator()(if_inst in) {
         ++val_no;
         declare(results[i], phi_inst);
     }
+    pop_debug_scope();
 }
 
 void inst_converter::operator()(lifetime_stop_inst) {}
@@ -742,7 +806,12 @@ void inst_converter::operator()(math_unary_inst in) {
     declare(in.result(), make_math_unary_op(unique_, ty, ik, av, in.loc()));
 }
 
-void inst_converter::operator()(parallel_inst in) { run_on_region(in.body()); }
+void inst_converter::operator()(parallel_inst in) {
+    auto lexical_block = add_debug_lexical_block(in.body().loc());
+    push_debug_scope(lexical_block);
+    run_on_region(in.body());
+    pop_debug_scope();
+}
 
 void inst_converter::operator()(size_inst in) {
     auto dv = get_dope_vector(in.operand());
@@ -917,16 +986,7 @@ void inst_converter::operator()(subgroup_local_id_inst in) {
 
 void inst_converter::run_on_region(tinytc_region &reg) {
     for (auto &i : reg) {
-        if (debug_source_) {
-            auto line_start = unique_.constant(i.loc().begin.line);
-            auto line_end = unique_.constant(i.loc().end.line);
-            auto column_start = unique_.constant(i.loc().begin.column);
-            auto column_end = unique_.constant(i.loc().end.column);
-            mod_->add<OpExtInst>(
-                unique_.void_ty(), unique_.debug_ext(),
-                static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugLine),
-                std::vector<IdRef>{debug_source_, line_start, line_end, column_start, column_end});
-        }
+        add_debug_line(i.loc());
         visit(*this, i);
     }
 }
@@ -1064,11 +1124,9 @@ void inst_converter::run_on_function(tinytc_func &fn) {
             unique_.void_ty(), unique_.debug_ext(),
             static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugFunctionDefinition),
             std::vector<IdRef>{debug_func, fun});
-        mod_->add<OpExtInst>(unique_.void_ty(), unique_.debug_ext(),
-                             static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugScope),
-                             std::vector<IdRef>{debug_func});
     }
 
+    push_debug_scope(debug_func);
     run_on_region(fn.body());
 
     auto func_end = mod_->insts(section::function).end();
@@ -1096,6 +1154,10 @@ void inst_converter::run_on_function(tinytc_func &fn) {
         ExecutionModeAttr{std::array<std::int32_t, 3u>{work_group_size[0], work_group_size[1], 1}});
     mod_->add_to<OpExecutionMode>(section::execution_mode, fun, ExecutionMode::SubgroupSize,
                                   ExecutionModeAttr{subgroup_size});
+
+    while (!lexical_scopes_.empty()) {
+        lexical_scopes_.pop();
+    }
 }
 
 } // namespace tinytc::spv

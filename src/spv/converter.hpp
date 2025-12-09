@@ -87,6 +87,11 @@ class inst_converter {
     inline auto unique() -> uniquifier & { return unique_; }
 
   private:
+    auto add_debug_lexical_block(location const &loc) -> spv_inst *;
+    void add_debug_line(location const &loc);
+    void push_debug_scope(spv_inst *lexical_scope);
+    void pop_debug_scope();
+    void replace_debug_scope(spv_inst *lexical_scope);
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
@@ -103,6 +108,7 @@ class inst_converter {
     tinytc_core_info const *info_;
     uniquifier unique_;
     spv_inst *debug_source_ = nullptr;
+    std::stack<spv_inst *> lexical_scopes_;
     spv_inst *compilation_unit_ = nullptr;
     std::unique_ptr<coopmatrix_impl> matrix_impl_ = nullptr;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;

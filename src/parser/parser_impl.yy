@@ -713,6 +713,7 @@ for_inst:
             ctx.push_region(&inode.body());
         });
     }[loop_header] region optional_dictionary_attribute_with_label[attr] {
+        $loop_header->child_region(0).loc(@region);
         ctx.pop_region();
         ctx.pop_scope();
         $loop_header->attr($attr);
@@ -1240,10 +1241,12 @@ if_inst:
             ctx.push_region(&inode.then());
         });
     }[header] region {
+        $header->child_region(0).loc(@region);
         ctx.pop_region();
         auto inode = if_inst($header.get());
         ctx.push_region(&inode.otherwise());
     } else_region {
+        $header->child_region(1).loc(@else_region);
         ctx.pop_region();
         $$ = std::move($header);
     }
