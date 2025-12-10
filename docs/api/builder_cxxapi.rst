@@ -448,6 +448,8 @@ Instruction Builder
 
   * :ref:`tinytc::creator\< and_inst \>`
 
+  * :ref:`tinytc::creator\< associated_inst \>`
+
   * :ref:`tinytc::creator\< atomic_add_inst \>`
 
   * :ref:`tinytc::creator\< atomic_load_inst \>`
@@ -479,6 +481,8 @@ Instruction Builder
   * :ref:`tinytc::creator\< cooperative_matrix_atomic_min_inst \>`
 
   * :ref:`tinytc::creator\< cooperative_matrix_atomic_store_inst \>`
+
+  * :ref:`tinytc::creator\< cooperative_matrix_construct_inst \>`
 
   * :ref:`tinytc::creator\< cooperative_matrix_extract_inst \>`
 
@@ -548,6 +552,10 @@ Instruction Builder
 
   * :ref:`tinytc::creator\< load_inst \>`
 
+  * :ref:`tinytc::creator\< log2_inst \>`
+
+  * :ref:`tinytc::creator\< log_inst \>`
+
   * :ref:`tinytc::creator\< max_inst \>`
 
   * :ref:`tinytc::creator\< min_inst \>`
@@ -559,6 +567,10 @@ Instruction Builder
   * :ref:`tinytc::creator\< native_exp2_inst \>`
 
   * :ref:`tinytc::creator\< native_exp_inst \>`
+
+  * :ref:`tinytc::creator\< native_log2_inst \>`
+
+  * :ref:`tinytc::creator\< native_log_inst \>`
 
   * :ref:`tinytc::creator\< native_sin_inst \>`
 
@@ -668,6 +680,13 @@ creator<and_inst>
 .................
 
 .. doxygenstruct:: tinytc::creator< and_inst >
+
+.. _tinytc::creator\< associated_inst \>:
+
+creator<associated_inst>
+........................
+
+.. doxygenstruct:: tinytc::creator< associated_inst >
 
 .. _tinytc::creator\< atomic_add_inst \>:
 
@@ -780,6 +799,13 @@ creator<cooperative_matrix_atomic_store_inst>
 .............................................
 
 .. doxygenstruct:: tinytc::creator< cooperative_matrix_atomic_store_inst >
+
+.. _tinytc::creator\< cooperative_matrix_construct_inst \>:
+
+creator<cooperative_matrix_construct_inst>
+..........................................
+
+.. doxygenstruct:: tinytc::creator< cooperative_matrix_construct_inst >
 
 .. _tinytc::creator\< cooperative_matrix_extract_inst \>:
 
@@ -1019,6 +1045,20 @@ creator<load_inst>
 
 .. doxygenstruct:: tinytc::creator< load_inst >
 
+.. _tinytc::creator\< log2_inst \>:
+
+creator<log2_inst>
+..................
+
+.. doxygenstruct:: tinytc::creator< log2_inst >
+
+.. _tinytc::creator\< log_inst \>:
+
+creator<log_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< log_inst >
+
 .. _tinytc::creator\< max_inst \>:
 
 creator<max_inst>
@@ -1060,6 +1100,20 @@ creator<native_exp_inst>
 ........................
 
 .. doxygenstruct:: tinytc::creator< native_exp_inst >
+
+.. _tinytc::creator\< native_log2_inst \>:
+
+creator<native_log2_inst>
+.........................
+
+.. doxygenstruct:: tinytc::creator< native_log2_inst >
+
+.. _tinytc::creator\< native_log_inst \>:
+
+creator<native_log_inst>
+........................
+
+.. doxygenstruct:: tinytc::creator< native_log_inst >
 
 .. _tinytc::creator\< native_sin_inst \>:
 

@@ -629,6 +629,15 @@ inline void set_error_reporter(tinytc_compiler_context_t ctx, tinytc_error_repor
 }
 
 /**
+ * @brief Set debug level
+ *
+ * @param ctx compiler context
+ * @param level debug level
+ */
+inline void set_debug_level(tinytc_compiler_context_t ctx, std::int32_t level) {
+    CHECK_STATUS(tinytc_compiler_context_set_debug_level(ctx, level));
+}
+/**
  * @brief Sets an optimization flag
  *
  * The state can be 0 (disabled), 1 (enabled), or -1 (use default according to optimization

@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
     char const *output_filename = nullptr;
     auto info = shared_handle<tinytc_core_info_t>{};
     tinytc_core_feature_flags_t core_features = 0;
+    std::int32_t debug_level = 0;
     std::int32_t opt_level = 2;
     auto flags = cmd::optflag_states{};
     bool emit_asm = false;
@@ -64,6 +65,7 @@ int main(int argc, char **argv) {
                     }
                     return cmd::parser_status::success;
                 });
+        parser.set_short_opt('g', &debug_level, "Debug level", 2);
         parser.set_short_opt('o', &output_filename,
                              "Path to output file; leave empty to print to stdout");
         parser.set_short_opt('S', &emit_asm, "Compile only; do not assemble");
@@ -99,6 +101,7 @@ int main(int argc, char **argv) {
         set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
             std::cerr << what << std::endl;
         });
+        set_debug_level(ctx.get(), debug_level);
         set_optimization_level(ctx.get(), opt_level);
         cmd::set_optflags(ctx.get(), flags);
         set_core_features(info.get(), core_features);

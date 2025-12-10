@@ -391,6 +391,22 @@ TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_set_error_reporter(
     tinytc_compiler_context_t ctx, tinytc_error_reporter_t reporter, void *user_data);
 
 /**
+ * @brief Set debug level
+ *
+ * Enables the generation of debugging information. Possible values are:
+ *
+ * - 0:    Disables the generation of debugging information.
+ * - >0:   Enables the generation of debugging information.
+ *
+ * @param ctx [inout] context object
+ * @param level [in] debug level
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_set_debug_level(tinytc_compiler_context_t ctx,
+                                                                      int32_t level);
+
+/**
  * @brief Sets an optimization flag
  *
  * The state can be 0 (disabled), 1 (enabled), or -1 (use default according to optimization level).
@@ -545,7 +561,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(
     const_tinytc_binary_t bin, tinytc_core_feature_flags_t *core_features);
-
 
 #ifdef __cplusplus
 }

@@ -38,6 +38,7 @@ Core C++-API:
     function:
       - tinytc::add_source
       - tinytc::create_compiler_context
+      - tinytc::set_debug_level
       - tinytc::set_error_reporter
       - tinytc::set_optimization_flag
       - tinytc::set_optimization_level

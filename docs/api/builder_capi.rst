@@ -564,6 +564,8 @@ Instruction Builder
 
   * :ref:`tinytc_and_inst_create`
 
+  * :ref:`tinytc_associated_inst_create`
+
   * :ref:`tinytc_atomic_add_inst_create`
 
   * :ref:`tinytc_atomic_load_inst_create`
@@ -605,6 +607,8 @@ Instruction Builder
   * :ref:`tinytc_cooperative_matrix_atomic_min_inst_create`
 
   * :ref:`tinytc_cooperative_matrix_atomic_store_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_construct_inst_create`
 
   * :ref:`tinytc_cooperative_matrix_extract_inst_create`
 
@@ -674,6 +678,10 @@ Instruction Builder
 
   * :ref:`tinytc_load_inst_create`
 
+  * :ref:`tinytc_log2_inst_create`
+
+  * :ref:`tinytc_log_inst_create`
+
   * :ref:`tinytc_max_inst_create`
 
   * :ref:`tinytc_min_inst_create`
@@ -685,6 +693,10 @@ Instruction Builder
   * :ref:`tinytc_native_exp2_inst_create`
 
   * :ref:`tinytc_native_exp_inst_create`
+
+  * :ref:`tinytc_native_log2_inst_create`
+
+  * :ref:`tinytc_native_log_inst_create`
 
   * :ref:`tinytc_native_sin_inst_create`
 
@@ -784,6 +796,13 @@ tinytc_and_inst_create
 ......................
 
 .. doxygenfunction:: tinytc_and_inst_create
+
+.. _tinytc_associated_inst_create:
+
+tinytc_associated_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_associated_inst_create
 
 .. _tinytc_atomic_add_inst_create:
 
@@ -931,6 +950,13 @@ tinytc_cooperative_matrix_atomic_store_inst_create
 ..................................................
 
 .. doxygenfunction:: tinytc_cooperative_matrix_atomic_store_inst_create
+
+.. _tinytc_cooperative_matrix_construct_inst_create:
+
+tinytc_cooperative_matrix_construct_inst_create
+...............................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_construct_inst_create
 
 .. _tinytc_cooperative_matrix_extract_inst_create:
 
@@ -1170,6 +1196,20 @@ tinytc_load_inst_create
 
 .. doxygenfunction:: tinytc_load_inst_create
 
+.. _tinytc_log2_inst_create:
+
+tinytc_log2_inst_create
+.......................
+
+.. doxygenfunction:: tinytc_log2_inst_create
+
+.. _tinytc_log_inst_create:
+
+tinytc_log_inst_create
+......................
+
+.. doxygenfunction:: tinytc_log_inst_create
+
 .. _tinytc_max_inst_create:
 
 tinytc_max_inst_create
@@ -1211,6 +1251,20 @@ tinytc_native_exp_inst_create
 .............................
 
 .. doxygenfunction:: tinytc_native_exp_inst_create
+
+.. _tinytc_native_log2_inst_create:
+
+tinytc_native_log2_inst_create
+..............................
+
+.. doxygenfunction:: tinytc_native_log2_inst_create
+
+.. _tinytc_native_log_inst_create:
+
+tinytc_native_log_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_native_log_inst_create
 
 .. _tinytc_native_sin_inst_create:
 

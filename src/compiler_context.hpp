@@ -64,6 +64,9 @@ struct tinytc_compiler_context : tinytc::reference_counted {
         opt_flag(static_cast<tinytc_optflag_t>(flag), state);
     }
 
+    inline auto debug_level() const noexcept -> std::int32_t { return debug_level_; }
+    inline void debug_level(std::int32_t level) noexcept { debug_level_ = level; }
+
     inline auto opt_level() const noexcept -> std::int32_t { return opt_level_; }
     inline void opt_level(std::int32_t level) noexcept { opt_level_ = level; }
 
@@ -83,6 +86,7 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     void *user_data_ = nullptr;
     std::vector<source_input> sources_;
     std::array<std::int32_t, TINYTC_ENUM_NUM_OPTFLAG> opt_flags_;
+    std::int32_t debug_level_ = 0;
     std::int32_t opt_level_ = 2;
 };
 

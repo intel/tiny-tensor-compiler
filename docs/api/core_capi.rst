@@ -658,6 +658,8 @@ Compiler Context
 
   * :ref:`tinytc_compiler_context_add_source`
 
+  * :ref:`tinytc_compiler_context_set_debug_level`
+
   * :ref:`tinytc_compiler_context_set_error_reporter`
 
   * :ref:`tinytc_compiler_context_set_optimization_flag`
@@ -686,6 +688,13 @@ tinytc_compiler_context_add_source
 ..................................
 
 .. doxygenfunction:: tinytc_compiler_context_add_source
+
+.. _tinytc_compiler_context_set_debug_level:
+
+tinytc_compiler_context_set_debug_level
+.......................................
+
+.. doxygenfunction:: tinytc_compiler_context_set_debug_level
 
 .. _tinytc_compiler_context_set_error_reporter:
 

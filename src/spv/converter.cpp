@@ -58,7 +58,9 @@ auto convert_prog_to_spirv(tinytc_prog &p, tinytc_core_info const &info)
     auto conv = inst_converter{*m, info};
 
     conv.add_memory_model();
-    conv.add_debug_info(p.context(), p.loc());
+    if (p.context()->debug_level() > 0) {
+        conv.add_debug_info(p.context(), p.loc());
+    }
 
     for (auto &fn : p) {
         conv.run_on_function(fn);
@@ -133,7 +135,7 @@ void inst_converter::add_debug_info(tinytc_compiler_context_t ctx, location cons
     }
 
     const auto debug_info_version = unique_.constant(std::int32_t{0x10000});
-    const auto dwarf_version = unique_.constant(std::int32_t{0x0});
+    const auto dwarf_version = unique_.constant(std::int32_t{0x4});
     const auto language = unique_.constant(static_cast<std::int32_t>(SourceLanguage::Unknown));
     compilation_unit_ = mod_->add_to<OpExtInst>(
         section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
@@ -173,12 +175,12 @@ void inst_converter::push_debug_scope(spv_inst *lexical_scope) {
         mod_->add<OpExtInst>(unique_.void_ty(), unique_.debug_ext(),
                              static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugScope),
                              std::vector<IdRef>{lexical_scope});
-        lexical_scopes_.push(lexical_scope);
     }
+    lexical_scopes_.push(lexical_scope);
 }
 void inst_converter::pop_debug_scope() {
     lexical_scopes_.pop();
-    if (!lexical_scopes_.empty()) {
+    if (!lexical_scopes_.empty() && lexical_scopes_.top()) {
         spv_inst *lexical_scope = lexical_scopes_.top();
         mod_->add<OpExtInst>(unique_.void_ty(), unique_.debug_ext(),
                              static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugScope),
