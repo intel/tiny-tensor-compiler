@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0] - 202X-XX-XX
+* Add generation of debugging information (tinytc_compiler_context_set_debug_level)
+* Add -g flag to tinytc to control debug level
+* Bugfix: Fix GEMM with .atomic flag set
+
 ## [0.5.0] - 2025-11-13
 
 * Add -o option for tinytc and tinytc-opt
