@@ -73,6 +73,10 @@ auto alignment(tinytc_type_t ty, vector_size count) -> std::int32_t {
     return scale * size(ty);
 }
 
+auto is_bitcast_allowed(tinytc_type_t from_ty, tinytc_type_t to_ty) -> bool {
+    return size(from_ty) == size(to_ty);
+}
+
 auto is_cast_allowed(tinytc_type_t from_ty, tinytc_type_t to_ty) -> bool {
     return isa<number_type>(*from_ty) && isa<number_type>(*to_ty) &&
            (!isa<complex_type>(*from_ty) || isa<complex_type>(*to_ty));

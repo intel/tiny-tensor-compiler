@@ -158,6 +158,7 @@
     ATOMIC_MAX                      "atomic_max"
     ATOMIC_MIN                      "atomic_min"
     BARRIER                         "barrier"
+    BITCAST                         "bitcast"
     CAST                            "cast"
     CONSTANT                        "constant"
     COOPERATIVE_MATRIX_APPLY        "cooperative_matrix_apply"
@@ -893,6 +894,12 @@ valued_inst: SUBGROUP_SIZE       COLON data_type[ty] { yytry(ctx, [&] { $$ = sub
 valued_inst: SUBGROUP_ID COMP3   COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_id_inst::create($COMP3, $ty, @valued_inst); }); };
 valued_inst: SUBGROUP_LINEAR_ID  COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_linear_id_inst::create($ty, @valued_inst); }); };
 valued_inst: SUBGROUP_LOCAL_ID   COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_local_id_inst::create($ty, @valued_inst); }); };
+
+valued_inst:
+    BITCAST var[a] COLON data_type[to] {
+        yytry(ctx, [&] { $$ = bitcast_inst::create(std::move($a), $to, @valued_inst); });
+    }
+;
 
 valued_inst:
     CAST var[a] COLON data_type[to] {

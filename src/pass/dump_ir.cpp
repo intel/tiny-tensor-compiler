@@ -295,6 +295,14 @@ void dump_ir_pass::operator()(barrier_inst b) {
     }
 }
 
+void dump_ir_pass::operator()(bitcast_inst c) {
+    dump_val(c.result());
+    *os_ << " = bitcast ";
+    dump_val(c.a());
+    *os_ << " : ";
+    visit(*this, *c.result().ty());
+}
+
 void dump_ir_pass::operator()(cast_inst c) {
     dump_val(c.result());
     *os_ << " = cast ";

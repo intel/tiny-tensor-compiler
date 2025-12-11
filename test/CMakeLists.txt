@@ -60,6 +60,7 @@ if(SPIRVTools_FOUND)
         lit/spv/associated.ir
         lit/spv/barrier.ir
         lit/spv/builtin.ir
+        lit/spv/bitcast.ir
         lit/spv/calling_convention.ir
         lit/spv/cast.ir
         lit/spv/compare.ir

@@ -1267,6 +1267,38 @@ Attribute Description
 .local    Ensure that local memory accesses become visible to the work-group.
 ========= ======================================================================================
 
+Bitcast
+.......
+
+.. code:: abnf
+
+    value-instruction       =/ "bitcast" local-identifier ":" number-type
+    value-instruction       =/ "bitcast" local-identifier ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Cast scalar or cooperative-matrix types preserving the bit-pattern.
+
+The source type must be a coopmatrix type if the destination type is a coopmatrix type,
+and the shapes must match.
+The coopmatrix use must either match, or
+the use of the source type must be matrix_acc and the use of the destination type
+must be matrix_a or matrix_b.
+
+Bitcasts are only allowed if the number of bits needed by source and target type match.
+The following table summarizes pairs of types that are allowed in a bitcast:
+
+============= =============
+Type 1        Type 2
+============= =============
+i16           bf16
+i16           f16
+i32           f32
+i64           f64
+i64           c32
+============= =============
+
 Builtin (mixed)
 ...............
 

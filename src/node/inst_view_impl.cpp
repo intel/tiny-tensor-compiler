@@ -100,6 +100,37 @@ auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_typ
     return {ot, rt};
 }
 
+void check_cast(tinytc_value_t a, tinytc_type_t to_ty,
+                bool (*check_number_cast)(tinytc_type_t, tinytc_type_t), tinytc_location_t loc) {
+    if (auto rt = dyn_cast<coopmatrix_type>(to_ty); rt) {
+        auto ct = dyn_cast<coopmatrix_type>(a->ty());
+        if (!ct) {
+            throw compilation_error(loc, {a}, status::ir_expected_coopmatrix);
+        }
+        if (ct->rows() != rt->rows() || ct->cols() != rt->cols()) {
+            throw compilation_error(loc, {a}, status::ir_forbidden_cast);
+        }
+        const bool use_matches = ct->use() == rt->use();
+        const bool use_conversion_allowed =
+            ct->use() == matrix_use::acc &&
+            (rt->use() == matrix_use::a || rt->use() == matrix_use::b);
+        if (!use_matches && !use_conversion_allowed) {
+            throw compilation_error(loc, {a}, status::ir_forbidden_cast);
+        }
+        if (!(*check_number_cast)(ct->component_ty(), rt->component_ty())) {
+            throw compilation_error(loc, {a}, status::ir_forbidden_cast);
+        }
+    } else {
+        if (!isa<number_type>(*to_ty)) {
+            throw compilation_error(loc, status::ir_expected_number);
+        }
+
+        if (!(*check_number_cast)(a->ty(), to_ty)) {
+            throw compilation_error(loc, {a}, status::ir_forbidden_cast);
+        }
+    }
+}
+
 void alloca_inst::setup_and_check() {
     auto memref = dyn_cast<memref_type>(result().ty());
     if (memref == nullptr) {
@@ -130,37 +161,9 @@ auto barrier_inst::has_fence(address_space as) -> bool {
     return (fence_flags() & static_cast<tinytc_address_spaces_t>(as)) > 0;
 }
 
-void cast_inst::setup_and_check() {
-    auto to_ty = result().ty();
+void bitcast_inst::setup_and_check() { check_cast(&a(), result().ty(), is_bitcast_allowed, loc()); }
 
-    if (auto rt = dyn_cast<coopmatrix_type>(to_ty); rt) {
-        auto ct = dyn_cast<coopmatrix_type>(a().ty());
-        if (!ct) {
-            throw compilation_error(loc(), {&a()}, status::ir_expected_coopmatrix);
-        }
-        if (ct->rows() != rt->rows() || ct->cols() != rt->cols()) {
-            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
-        }
-        const bool use_matches = ct->use() == rt->use();
-        const bool use_conversion_allowed =
-            ct->use() == matrix_use::acc &&
-            (rt->use() == matrix_use::a || rt->use() == matrix_use::b);
-        if (!use_matches && !use_conversion_allowed) {
-            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
-        }
-        if (!is_cast_allowed(ct->component_ty(), rt->component_ty())) {
-            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
-        }
-    } else {
-        if (!isa<number_type>(*to_ty)) {
-            throw compilation_error(loc(), status::ir_expected_number);
-        }
-
-        if (!is_cast_allowed(a().ty(), to_ty)) {
-            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
-        }
-    }
-}
+void cast_inst::setup_and_check() { check_cast(&a(), result().ty(), is_cast_allowed, loc()); }
 
 void constant_inst::setup_and_check() {
     auto ty = result().ty();

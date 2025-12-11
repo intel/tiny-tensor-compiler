@@ -20,6 +20,11 @@ inst @barrier "Barrier instruction" {
     cxx "auto has_fence(address_space as) -> bool;"
 }
 
+inst @bitcast "Bitcast instruction" {
+    op %a       "operand"
+    ret %result "target type"
+}
+
 inst @cast "Cast instruction" {
     op %a       "operand"
     ret %result "target type"

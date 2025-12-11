@@ -195,6 +195,7 @@ lex:
         "gemv"               { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"                { adv_loc(); return parser::make_GER(loc_); }
         "hadamard"           { adv_loc(); return parser::make_HADAMARD(loc_); }
+        "bitcast"            { adv_loc(); return parser::make_BITCAST(loc_); }
         "cast"               { adv_loc(); return parser::make_CAST(loc_); }
         "constant"           { adv_loc(); return parser::make_CONSTANT(loc_); }
         "cooperative_matrix_apply"        { adv_loc(); return parser::make_COOPERATIVE_MATRIX_APPLY(loc_); }

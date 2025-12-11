@@ -75,6 +75,7 @@ class coopmatrix_impl {
 
     virtual auto arith(arith_inst in, spv_inst *a, spv_inst *b) -> spv_inst *;
     virtual auto arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst *;
+    virtual auto bitcast(bitcast_inst in, spv_inst *a) -> spv_inst *;
     virtual auto cast(cast_inst in, spv_inst *a) -> spv_inst *;
     virtual auto constant(constant_inst in) -> spv_inst *;
     virtual auto construct(cooperative_matrix_construct_inst in, spv_inst *number) -> spv_inst *;
@@ -82,8 +83,11 @@ class coopmatrix_impl {
     virtual auto spv_ty(coopmatrix_type const *ct) -> spv_inst *;
 
   protected:
+    using cast_fun = std::function<spv_inst *(tinytc_type_t, tinytc_type_t, spv_inst *)>;
     auto spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto spv_ty(coopmatrix_layout const &layout) -> spv_inst *;
+    auto do_cast(coopmatrix_type const *at, coopmatrix_type const *rt, spv_inst *a,
+                 cast_fun make_cast_impl) -> spv_inst *;
     auto extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v) -> spv_inst *;
     auto insert(coopmatrix_layout const &layout, spv_inst *val, spv_inst *mat, LiteralInteger v)
         -> spv_inst *;

@@ -46,6 +46,7 @@ class dump_ir_pass {
     void operator()(atomic_update_inst s);
     void operator()(axpby_inst a);
     void operator()(barrier_inst b);
+    void operator()(bitcast_inst c);
     void operator()(cast_inst c);
     void operator()(compare_inst c);
     void operator()(constant_inst c);

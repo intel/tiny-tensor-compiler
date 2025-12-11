@@ -405,6 +405,17 @@ void inst_converter::operator()(barrier_inst in) {
     mod_->add<OpControlBarrier>(scope, scope, memory_semantics);
 }
 
+void inst_converter::operator()(bitcast_inst in) {
+    if (auto ct = dyn_cast<coopmatrix_type>(in.result().ty()); ct) {
+        declare(in.result(), matrix_impl().bitcast(in, val(in.a())));
+    } else {
+        auto av = val(in.a());
+        auto to_ty = in.result().ty();
+        auto a_ty = in.a().ty();
+        declare(in.result(), make_bitcast(unique_, to_ty, a_ty, av, in.loc()));
+    }
+}
+
 void inst_converter::operator()(cast_inst in) {
     if (auto ct = dyn_cast<coopmatrix_type>(in.result().ty()); ct) {
         declare(in.result(), matrix_impl().cast(in, val(in.a())));

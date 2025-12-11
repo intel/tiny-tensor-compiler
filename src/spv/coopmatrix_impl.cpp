@@ -572,11 +572,10 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst 
     return result;
 }
 
-auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
-    auto at = get_coopmatrix_type(in.a());
+auto coopmatrix_impl::do_cast(coopmatrix_type const *at, coopmatrix_type const *rt, spv_inst *a,
+                              cast_fun make_cast_impl) -> spv_inst * {
     auto al = get_layout(cfg(), at);
     auto a_ty = at->component_ty();
-    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto r_ty = rt->component_ty();
     auto ty = spv_ty(rl);
@@ -623,11 +622,25 @@ auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
             : std::function([](LiteralInteger v) -> LiteralInteger { return v; });
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto a_v = extract(al, a, P(v));
-        auto r_v = make_cast(*unique_, r_ty, a_ty, a_v, in.loc());
+        auto r_v = make_cast_impl(r_ty, a_ty, a_v);
         result = insert(rl, r_v, result, v);
     }
 
     return result;
+}
+
+auto coopmatrix_impl::bitcast(bitcast_inst in, spv_inst *a) -> spv_inst * {
+    return do_cast(get_coopmatrix_type(in.a()), get_coopmatrix_type(in.result()), a,
+                   [&](tinytc_type_t r_ty, tinytc_type_t a_ty, spv_inst *av) {
+                       return make_bitcast(unique(), r_ty, a_ty, av, in.loc());
+                   });
+}
+
+auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
+    return do_cast(get_coopmatrix_type(in.a()), get_coopmatrix_type(in.result()), a,
+                   [&](tinytc_type_t r_ty, tinytc_type_t a_ty, spv_inst *av) {
+                       return make_cast(unique(), r_ty, a_ty, av, in.loc());
+                   });
 }
 
 auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {

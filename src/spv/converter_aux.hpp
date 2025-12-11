@@ -44,6 +44,8 @@ auto make_binary_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_ins
 auto make_binary_op_mixed_precision(uniquifier &unique, tinytc_type_t result_ty, IK op,
                                     tinytc_type_t a_ty, spv_inst *a, tinytc_type_t b_ty,
                                     spv_inst *b, location const &loc) -> spv_inst *;
+auto make_bitcast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_inst *a,
+                  location const &loc) -> spv_inst *;
 auto make_cast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_inst *a,
                location const &loc) -> spv_inst *;
 auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b,

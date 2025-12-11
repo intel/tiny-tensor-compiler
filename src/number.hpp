@@ -20,6 +20,7 @@ auto component_type(tinytc_type_t ty) -> tinytc_type_t;
 auto promotable(tinytc_type_t a_ty, tinytc_type_t b_ty) -> bool;
 auto promote(tinytc_type_t a_ty, tinytc_type_t b_ty) -> tinytc_type_t;
 auto promote_or_throw(tinytc_type_t a_ty, tinytc_type_t b_ty, location const &loc) -> tinytc_type_t;
+auto is_bitcast_allowed(tinytc_type_t from_ty, tinytc_type_t to_ty) -> bool;
 auto is_cast_allowed(tinytc_type_t from_ty, tinytc_type_t to_ty) -> bool;
 auto alignment(tinytc_type_t ty, vector_size count = vector_size::v1) -> std::int32_t;
 auto size(tinytc_type_t ty) -> std::size_t;

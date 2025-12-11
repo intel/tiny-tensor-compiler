@@ -42,6 +42,7 @@ class inst_converter {
     void operator()(atomic_store_inst in);
     void operator()(atomic_update_inst in);
     void operator()(barrier_inst in);
+    void operator()(bitcast_inst in);
     void operator()(cast_inst in);
     void operator()(compare_inst in);
     void operator()(constant_inst in);
