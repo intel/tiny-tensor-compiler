@@ -107,6 +107,11 @@ The right-hand side of a definition can stem from a calculation given reverse Po
                   rpn-expr rpn-expr "*" /
                   rpn-expr rpn-expr "/" /
                   rpn-expr rpn-expr "%" /
+                  rpn-expr rpn-expr "shl" /
+                  rpn-expr rpn-expr "shr"
+                  rpn-expr rpn-expr "and" /
+                  rpn-expr rpn-expr "or"
+                  rpn-expr rpn-expr "xor"
                   rpn-expr rpn-expr "min" /
                   rpn-expr rpn-expr "max"
     int-or-def = integer-constant / def-identifier
@@ -122,6 +127,11 @@ Operator Description
 ``*``    Multiplication
 ``/``    Integer division
 ``%``    Remainder
+``shl``  Shift left
+``shr``  Shift right
+``and``  Bitwise and
+``or``   Bitwise or
+``xor``  Bitwise xor
 ``min``  Minimum
 ``max``  Maximum
 ======== ==================

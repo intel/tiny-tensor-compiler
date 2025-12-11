@@ -1444,6 +1444,11 @@ calc:
   | calc[a] calc[b] STAR { $$ = $a * $b; }
   | calc[a] calc[b] SLASH { $$ = $a / $b; }
   | calc[a] calc[b] PERCENT { $$ = $a % $b; }
+  | calc[a] calc[b] SHL { $$ = $a << $b; }
+  | calc[a] calc[b] SHR { $$ = $a >> $b; }
+  | calc[a] calc[b] AND { $$ = $a & $b; }
+  | calc[a] calc[b] OR { $$ = $a | $b; }
+  | calc[a] calc[b] XOR { $$ = $a ^ $b; }
   | calc[a] calc[b] MIN { $$ = std::min($a, $b); }
   | calc[a] calc[b] MAX { $$ = std::max($a, $b); }
 ;
