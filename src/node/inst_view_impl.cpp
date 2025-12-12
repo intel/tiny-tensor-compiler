@@ -199,21 +199,32 @@ auto constant_inst::is_identity() -> bool {
 }
 
 void cooperative_matrix_apply_inst::setup_and_check() {
-    auto ty = result().ty();
+    auto rt = get_coopmatrix_type(loc(), result().ty());
 
-    if (a().ty() != ty) {
-        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
-    }
-
-    auto at = get_coopmatrix_type(loc(), a());
-
-    auto i32_ty = i32_type::get(at->context());
+    auto i32_ty = i32_type::get(rt->context());
     body().loc(loc());
     body().kind(region_kind::spmd);
-    body().set_num_params(3);
+    body().set_num_params(2 + a().size());
     body().set_param(0, i32_ty);
     body().set_param(1, i32_ty);
-    body().set_param(2, at->component_ty());
+
+    std::size_t i = 2;
+    for (auto &v : a()) {
+        auto vt = get_coopmatrix_type(loc(), v);
+
+        if (vt->rows() != rt->rows() || vt->cols() != rt->cols()) {
+            throw compilation_error(loc(), {&v}, status::ir_incompatible_shapes);
+        }
+        const bool use_matches = vt->use() == rt->use();
+        const bool use_conversion_allowed =
+            vt->use() == matrix_use::acc &&
+            (rt->use() == matrix_use::a || rt->use() == matrix_use::b);
+        if (!use_matches && !use_conversion_allowed) {
+            throw compilation_error(loc(), {&v}, status::ir_invalid_matrix_use);
+        }
+
+        body().set_param(i++, vt->component_ty());
+    }
 }
 
 void cooperative_matrix_construct_inst::setup_and_check() {

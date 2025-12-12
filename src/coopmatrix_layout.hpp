@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <string_view>
 
 namespace tinytc {
@@ -37,6 +38,10 @@ struct coopmatrix_layout {
 };
 
 auto get_layout(core_config const &cfg, coopmatrix_type const *ct) -> coopmatrix_layout;
+
+using use_permutation_functional = std::function<std::int64_t(std::int64_t)>;
+auto get_use_permutation_functional(core_config const &cfg, coopmatrix_type const *at,
+                                    coopmatrix_type const *rt) -> use_permutation_functional;
 
 } // namespace tinytc
 

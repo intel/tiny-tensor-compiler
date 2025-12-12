@@ -958,20 +958,26 @@ valued_inst:
 
 valued_inst:
     COOPERATIVE_MATRIX_APPLY
-    LPAREN LOCAL_IDENTIFIER[row] COMMA LOCAL_IDENTIFIER[col] COMMA LOCAL_IDENTIFIER[val] RPAREN
-    EQUALS var ARROW data_type[result_ty] <unique_handle<tinytc_inst_t>> {
+    LPAREN LOCAL_IDENTIFIER[row] COMMA LOCAL_IDENTIFIER[col] COMMA identifier_list[vals] RPAREN
+    EQUALS value_list[vars] ARROW data_type[result_ty] <unique_handle<tinytc_inst_t>> {
         yytry(ctx, [&] {
+            if ($vals.size() != $vars.size()) {
+                throw parser::syntax_error(@vals,
+                    "Number of value identifiers must match number of input matrices");
+            }
             location loc = @COOPERATIVE_MATRIX_APPLY;
             loc.end = @result_ty.end;
-            $$ = cooperative_matrix_apply_inst::create($var, $result_ty, loc);
+            $$ = cooperative_matrix_apply_inst::create(std::move($vars), $result_ty, loc);
             auto inode = cooperative_matrix_apply_inst($$.get());
             ctx.push_scope();
             auto &row = inode.row();
             ctx.val($row, row, @row);
             auto &col = inode.col();
             ctx.val($col, col, @col);
-            auto &val = inode.val();
-            ctx.val($val, val, @val);
+            for (std::size_t i = 0; i < $vals.size(); ++i) {
+                auto &val = inode.val(i);
+                ctx.val($vals[i], val, @vals);
+            }
             ctx.push_region(&inode.body());
         });
     }[apply_header] region {

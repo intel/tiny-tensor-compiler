@@ -355,10 +355,12 @@ void dump_ir_pass::operator()(cooperative_matrix_apply_inst c) {
     dump_val(c.row());
     *os_ << ",";
     dump_val(c.col());
-    *os_ << ",";
-    dump_val(c.val());
-    *os_ << ") in ";
-    dump_val(c.a());
+    for (std::ptrdiff_t i = 0; i < c.a().size(); ++i) {
+        *os_ << ",";
+        dump_val(c.val(static_cast<std::size_t>(i)));
+    }
+    *os_ << ")=";
+    do_with_infix(c.a().begin(), c.a().end(), [this](auto const &i) { dump_val(i); });
     *os_ << " -> ";
     visit(*this, *c.result().ty());
     dump_region(c.body());

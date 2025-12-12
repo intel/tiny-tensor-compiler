@@ -583,43 +583,7 @@ auto coopmatrix_impl::do_cast(coopmatrix_type const *at, coopmatrix_type const *
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
 
-    const auto P =
-        rt->use() == matrix_use::b && at->use() == matrix_use::acc
-            ? std::function([&](LiteralInteger v) -> LiteralInteger {
-                  /**
-                   * Using that M >= S we have for matrix_b
-                   * L_b(i,k_1,j,k_2) = i + k_1*S + j*S*K_1 + k_2*S*K_1*J.
-                   *
-                   * We have
-                   * p_b + v_bS = L_b
-                   *
-                   * Recovering i,k_1,j,k_2 from L_b we have
-                   *   i = L_b%S = p_b
-                   * k_1 = L_b/S%K_1 = v_b%K_1
-                   *   j = L_b/(SK_1)%J = v_b/K_1%J
-                   * k_2 = L_b/(SK_1J) = v_b/(K_1J)
-                   *
-                   * Let k=k_1 + k_2K_1, and L_1, L_2 be the block sizes of matrix
-                   * acc. We have L_{acc} = i + (k%L_1)*S + j*S*L_1 +
-                   * (k/L_1)*S*L_1*J.
-                   *
-                   * Recovering p_{acc}, v_{acc} from
-                   * p_{acc} + v_{acc}S = L_{acc}
-                   * we have
-                   * p_{acc} = L_{acc}%S = p_b
-                   * v_{acc} = L_{acc}/S = k%L_1 + j*L_1 + (k/L_1)*L_1*J
-                   *
-                   * If M < S, then we have K_1=K_2=L_1=L_2=1, and there is no layout
-                   * transformation. The code below just returns v - the identity -
-                   * if M < S.
-                   */
-                  auto const k_1 = v % rl.blocks1;
-                  auto const j = v / rl.blocks1 % rl.cols;
-                  auto const k_2 = v / (rl.blocks1 * rl.cols);
-                  auto const k = k_1 + k_2 * rl.blocks1;
-                  return k % al.blocks1 + j * al.blocks1 + (k / al.blocks1) * al.blocks1 * al.cols;
-              })
-            : std::function([](LiteralInteger v) -> LiteralInteger { return v; });
+    const auto P = get_use_permutation_functional(cfg(), at, rt);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto a_v = extract(al, a, P(v));
         auto r_v = make_cast_impl(r_ty, a_ty, a_v);

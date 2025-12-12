@@ -21,29 +21,30 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
     }
 ; CHECK-LABEL: func @tmatrix_acc({{.*}}
 ; CHECK:      %1 = subgroup_local_id : i32
-; CHECK-NEXT: %2 = constant 0 : i32
-; CHECK-NEXT: %3 = cooperative_matrix_extract %0[0] : f32
-; CHECK-NEXT: %4 = less_than_equal %1, %2 : bool
-; CHECK-NEXT: %5 = if %4 -> (f32) {
-; CHECK-NEXT:   %6 = native_exp %3 : f32
-; CHECK-NEXT:   yield (%6)
+; CHECK-NEXT: %2 = constant 0x0p+0 : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %3 = constant 0 : i32
+; CHECK-NEXT: %4 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %5 = less_than_equal %1, %3 : bool
+; CHECK-NEXT: %6 = if %5 -> (f32) {
+; CHECK-NEXT:     %7 = native_exp %4 : f32
+; CHECK-NEXT:     yield (%7)
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:   %7 = constant 0x0p+0 : f32
-; CHECK-NEXT:   yield (%7)
+; CHECK-NEXT:     %8 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%8)
 ; CHECK-NEXT: }
-; CHECK-NEXT: %8 = cooperative_matrix_insert %5, %0[0] : coopmatrix<f32x16x2,matrix_acc>
-; CHECK-NEXT: %9 = constant 1 : i32
-; CHECK-NEXT: %10 = cooperative_matrix_extract %0[1] : f32
-; CHECK-NEXT: %11 = less_than_equal %1, %9 : bool
-; CHECK-NEXT: %12 = if %11 -> (f32) {
-; CHECK-NEXT:   %13 = native_exp %10 : f32
-; CHECK-NEXT:   yield (%13)
+; CHECK-NEXT: %9 = cooperative_matrix_insert %6, %2[0] : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %10 = constant 1 : i32
+; CHECK-NEXT: %11 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %12 = less_than_equal %1, %10 : bool
+; CHECK-NEXT: %13 = if %12 -> (f32) {
+; CHECK-NEXT:     %14 = native_exp %11 : f32
+; CHECK-NEXT:     yield (%14)
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:   %14 = constant 0x0p+0 : f32
-; CHECK-NEXT:   yield (%14)
+; CHECK-NEXT:     %15 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%15)
 ; CHECK-NEXT: }
-; CHECK-NEXT: %15 = cooperative_matrix_insert %12, %8[1] : coopmatrix<f32x16x2,matrix_acc>
-; CHECK-NEXT: %16 = neg %15 : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %16 = cooperative_matrix_insert %13, %9[1] : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %17 = neg %16 : coopmatrix<f32x16x2,matrix_acc>
 }
 
 func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
@@ -67,31 +68,32 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %2 = constant 8 : i32
 ; CHECK-NEXT: %3 = rem %1, %2 : i32
 ; CHECK-NEXT: %4 = div %1, %2 : i32
-; CHECK-NEXT: %5 = constant 0 : i32
-; CHECK-NEXT: %6 = add %4, %5 : i32
-; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
-; CHECK-NEXT: %8 = less_than_equal %3, %6 : bool
-; CHECK-NEXT: %9 = if %8 -> (f32) {
-; CHECK-NEXT:   %10 = native_exp %7 : f32
-; CHECK-NEXT:   yield (%10)
+; CHECK-NEXT: %5 = constant 0x0p+0 : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %6 = constant 0 : i32
+; CHECK-NEXT: %7 = add %4, %6 : i32
+; CHECK-NEXT: %8 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %9 = less_than_equal %3, %7 : bool
+; CHECK-NEXT: %10 = if %9 -> (f32) {
+; CHECK-NEXT:     %11 = native_exp %8 : f32
+; CHECK-NEXT:     yield (%11)
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:   %11 = constant 0x0p+0 : f32
-; CHECK-NEXT:   yield (%11)
+; CHECK-NEXT:     %12 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%12)
 ; CHECK-NEXT: }
-; CHECK-NEXT: %12 = cooperative_matrix_insert %9, %0[0] : coopmatrix<f32x8x4,matrix_b>
-; CHECK-NEXT: %13 = constant 2 : i32
-; CHECK-NEXT: %14 = add %4, %13 : i32
-; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
-; CHECK-NEXT: %16 = less_than_equal %3, %14 : bool
-; CHECK-NEXT: %17 = if %16 -> (f32) {
-; CHECK-NEXT:   %18 = native_exp %15 : f32
-; CHECK-NEXT:   yield (%18)
+; CHECK-NEXT: %13 = cooperative_matrix_insert %10, %5[0] : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %14 = constant 2 : i32
+; CHECK-NEXT: %15 = add %4, %14 : i32
+; CHECK-NEXT: %16 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %17 = less_than_equal %3, %15 : bool
+; CHECK-NEXT: %18 = if %17 -> (f32) {
+; CHECK-NEXT:     %19 = native_exp %16 : f32
+; CHECK-NEXT:     yield (%19)
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:   %19 = constant 0x0p+0 : f32
-; CHECK-NEXT:   yield (%19)
+; CHECK-NEXT:     %20 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%20)
 ; CHECK-NEXT: }
-; CHECK-NEXT: %20 = cooperative_matrix_insert %17, %12[1] : coopmatrix<f32x8x4,matrix_b>
-; CHECK-NEXT: %21 = neg %20 : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %21 = cooperative_matrix_insert %18, %13[1] : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %22 = neg %21 : coopmatrix<f32x8x4,matrix_b>
 }
 
 func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
@@ -115,37 +117,100 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %2 = constant 1 : i32
 ; CHECK-NEXT: %3 = rem %1, %2 : i32
 ; CHECK-NEXT: %4 = div %1, %2 : i32
-; CHECK-NEXT: %5 = constant 0 : i32
-; CHECK-NEXT: %6 = add %4, %5 : i32
-; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
-; CHECK-NEXT: %8 = less_than_equal %3, %6 : bool
-; CHECK-NEXT: %9 = if %8 -> (f32) {
-; CHECK-NEXT:   %10 = native_exp %7 : f32
-; CHECK-NEXT:   yield (%10)
+; CHECK-NEXT: %5 = constant 0x0p+0 : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %6 = constant 0 : i32
+; CHECK-NEXT: %7 = add %4, %6 : i32
+; CHECK-NEXT: %8 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %9 = less_than_equal %3, %7 : bool
+; CHECK-NEXT: %10 = if %9 -> (f32) {
+; CHECK-NEXT:     %11 = native_exp %8 : f32
+; CHECK-NEXT:     yield (%11)
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:   %11 = constant 0x0p+0 : f32
-; CHECK-NEXT:   yield (%11)
+; CHECK-NEXT:     %12 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%12)
 ; CHECK-NEXT: }
-; CHECK-NEXT: %12 = cooperative_matrix_insert %9, %0[0] : coopmatrix<f32x1x17,matrix_b>
-; CHECK-NEXT: %13 = constant 16 : i32
-; CHECK-NEXT: %14 = add %4, %13 : i32
-; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
-; CHECK-NEXT: %16 = constant 17 : i32
-; CHECK-NEXT: %17 = less_than %14, %16 : bool
-; CHECK-NEXT: %18 = if %17 -> (f32) {
-; CHECK-NEXT:   %19 = less_than_equal %3, %14 : bool
-; CHECK-NEXT:   %20 = if %19 -> (f32) {
-; CHECK-NEXT:     %21 = native_exp %15 : f32
+; CHECK-NEXT: %13 = cooperative_matrix_insert %10, %5[0] : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %14 = constant 16 : i32
+; CHECK-NEXT: %15 = add %4, %14 : i32
+; CHECK-NEXT: %16 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %17 = constant 17 : i32
+; CHECK-NEXT: %18 = less_than %15, %17 : bool
+; CHECK-NEXT: %19 = if %18 -> (f32) {
+; CHECK-NEXT:     %20 = less_than_equal %3, %15 : bool
+; CHECK-NEXT:     %21 = if %20 -> (f32) {
+; CHECK-NEXT:         %22 = native_exp %16 : f32
+; CHECK-NEXT:         yield (%22)
+; CHECK-NEXT:     } else {
+; CHECK-NEXT:         %23 = constant 0x0p+0 : f32
+; CHECK-NEXT:         yield (%23)
+; CHECK-NEXT:     }
 ; CHECK-NEXT:     yield (%21)
-; CHECK-NEXT:   } else {
-; CHECK-NEXT:     %22 = constant 0x0p+0 : f32
-; CHECK-NEXT:     yield (%22)
-; CHECK-NEXT:   }
-; CHECK-NEXT:   yield (%20)
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:   %23 = constant 0x0p+0 : f32
-; CHECK-NEXT:   yield (%23)
+; CHECK-NEXT:     %24 = constant 0x0p+0 : f32
+; CHECK-NEXT:     yield (%24)
 ; CHECK-NEXT: }
-; CHECK-NEXT: %24 = cooperative_matrix_insert %18, %12[1] : coopmatrix<f32x1x17,matrix_b>
-; CHECK-NEXT: %25 = neg %24 : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %25 = cooperative_matrix_insert %19, %13[1] : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %26 = neg %25 : coopmatrix<f32x1x17,matrix_b>
+}
+
+func @tmatrix_multi() attributes{subgroup_size=16} {
+    parallel {
+        %0 = constant 42.0 : coopmatrix<f32x16x2,matrix_acc>
+        %1 = constant 42 : coopmatrix<i32x16x2,matrix_acc>
+        %2 = cooperative_matrix_apply (%i,%j,%v1,%v2)=%0,%1 -> coopmatrix<f16x16x2,matrix_b> {
+            %v2_f32 = cast %v2 : f32
+            %sum = add %v1, %v2_f32 : f32
+            %sum_f16 = cast %sum : f16
+            yield (%sum_f16)
+        }
+        %3 = neg %2 : coopmatrix<f16x16x2,matrix_b>
+    }
+; CHECK-LABEL: func @tmatrix_multi({{.*}}
+; CHECK:      %2 = subgroup_local_id : i32
+; CHECK-NEXT: %3 = constant 0x0p+0 : coopmatrix<f16x16x2,matrix_b>
+; CHECK-NEXT: %4 = constant 0 : i32
+; CHECK-NEXT: %5 = cooperative_matrix_extract %0[0] : f32
+; CHECK-NEXT: %6 = cooperative_matrix_extract %1[0] : i32
+; CHECK-NEXT: %7 = cast %6 : f32
+; CHECK-NEXT: %8 = add %5, %7 : f32
+; CHECK-NEXT: %9 = cast %8 : f16
+; CHECK-NEXT: %10 = cooperative_matrix_insert %9, %3[0] : coopmatrix<f16x16x2,matrix_b>
+; CHECK-NEXT: %11 = constant 1 : i32
+; CHECK-NEXT: %12 = cooperative_matrix_extract %0[1] : f32
+; CHECK-NEXT: %13 = cooperative_matrix_extract %1[1] : i32
+; CHECK-NEXT: %14 = cast %13 : f32
+; CHECK-NEXT: %15 = add %12, %14 : f32
+; CHECK-NEXT: %16 = cast %15 : f16
+; CHECK-NEXT: %17 = cooperative_matrix_insert %16, %10[1] : coopmatrix<f16x16x2,matrix_b>
+; CHECK-NEXT: %18 = neg %17 : coopmatrix<f16x16x2,matrix_b>
+}
+
+func @tmatrix_use() attributes{subgroup_size=16} {
+    parallel {
+        %0 = constant 42 : coopmatrix<i8x32x2,matrix_acc>
+        %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<i8x32x2,matrix_b> {
+            yield (%v)
+        }
+        %2 = neg %1 : coopmatrix<i8x32x1,matrix_b>
+    }
+; CHECK-LABEL: func @tmatrix_use({{.*}}
+; CHECK:      %1 = subgroup_local_id : i32
+; CHECK-NEXT: %2 = constant 0 : coopmatrix<i8x32x2,matrix_b>
+; CHECK-NEXT: %3 = constant 0 : i32
+; CHECK-NEXT: %4 = cooperative_matrix_extract %0[0] : i8
+; CHECK-NEXT: %5 = cooperative_matrix_insert %4, %2[0] : coopmatrix<i8x32x2,matrix_b>
+; CHECK-NEXT: %6 = constant 16 : i32
+; CHECK-NEXT: %7 = add %1, %6 : i32
+; CHECK-NEXT: %8 = constant 0 : i32
+; CHECK-NEXT: %9 = cooperative_matrix_extract %0[2] : i8
+; CHECK-NEXT: %10 = cooperative_matrix_insert %9, %5[1] : coopmatrix<i8x32x2,matrix_b>
+; CHECK-NEXT: %11 = constant 1 : i32
+; CHECK-NEXT: %12 = cooperative_matrix_extract %0[1] : i8
+; CHECK-NEXT: %13 = cooperative_matrix_insert %12, %10[2] : coopmatrix<i8x32x2,matrix_b>
+; CHECK-NEXT: %14 = constant 16 : i32
+; CHECK-NEXT: %15 = add %1, %14 : i32
+; CHECK-NEXT: %16 = constant 1 : i32
+; CHECK-NEXT: %17 = cooperative_matrix_extract %0[3] : i8
+; CHECK-NEXT: %18 = cooperative_matrix_insert %17, %13[3] : coopmatrix<i8x32x2,matrix_b>
+; CHECK-NEXT: %19 = neg %18 : coopmatrix<i8x32x1,matrix_b>
 }

@@ -58,43 +58,53 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
 
     auto cloner = inst_cloner{};
 
-    auto ct = get_coopmatrix_type(in.a());
-    auto cl = get_layout(core_cfg_, ct);
+    auto rt = get_coopmatrix_type(in.result().ty());
+    auto rl = get_layout(core_cfg_, rt);
 
     auto p = bb_.create<subgroup_local_id_inst>(i32_ty, in.loc());
     auto i = p;
     auto j0 = tinytc_value_t{nullptr};
-    if (cl.rows < core_cfg_.subgroup_size) {
-        auto cI = bb_.create<constant_inst>(cl.rows, i32_ty, in.loc());
+    if (rl.rows < core_cfg_.subgroup_size) {
+        auto cI = bb_.create<constant_inst>(rl.rows, i32_ty, in.loc());
         i = bb_.create<rem_inst>(p, cI, i32_ty, in.loc());
         j0 = bb_.create<div_inst>(p, cI, i32_ty, in.loc());
     }
-    const auto col_inc_factor = core_cfg_.subgroup_size / cl.rows;
+    const auto col_inc_factor = core_cfg_.subgroup_size / rl.rows;
 
-    auto copy = &in.a();
-    for (std::int64_t v = 0; v < cl.length; ++v) {
-        const auto k1 = v % cl.blocks1;
-        const auto u = v / cl.blocks1 % cl.cols;
-        const auto k2 = v / (cl.blocks1 * cl.cols);
+    auto P = std::vector<use_permutation_functional>{};
+    for (auto &av : in.a()) {
+        auto at = get_coopmatrix_type(av.ty());
+        P.emplace_back(get_use_permutation_functional(core_cfg_, at, rt));
+    }
+
+    auto result = bb_.constant_zero(rt, in.loc());
+    for (std::int64_t v = 0; v < rl.length; ++v) {
+        const auto k1 = v % rl.blocks1;
+        const auto u = v / rl.blocks1 % rl.cols;
+        const auto k2 = v / (rl.blocks1 * rl.cols);
 
         auto row = i;
-        const auto block_offset = k1 * cl.rows + k2 * cl.rows * cl.blocks1;
+        const auto block_offset = k1 * rl.rows + k2 * rl.rows * rl.blocks1;
         if (block_offset) {
             auto cblock_offset = bb_.create<constant_inst>(block_offset, i32_ty, in.loc());
             row = bb_.create<add_inst>(i, cblock_offset, i32_ty, in.loc());
         }
         auto j1 = bb_.create<constant_inst>(u * col_inc_factor, i32_ty, in.loc());
         auto col = j0 ? bb_.create<add_inst>(j0, j1, i32_ty, in.loc()) : j1;
-        auto val =
-            bb_.create<cooperative_matrix_extract_inst>(v, &in.a(), ct->component_ty(), in.loc());
 
         cloner.set_subs(&in.row(), row);
         cloner.set_subs(&in.col(), col);
-        cloner.set_subs(&in.val(), val);
+        for (std::ptrdiff_t i = 0; i < in.a().size(); ++i) {
+            auto &av = in.a()[i];
+            auto at = get_coopmatrix_type(av.ty());
+            auto val = bb_.create<cooperative_matrix_extract_inst>(P[i](v), &av, at->component_ty(),
+                                                                   in.loc());
+            cloner.set_subs(&in.val(i), val);
+        }
 
         auto modified_val = tinytc_value_t{};
-        if ((u + 1) * col_inc_factor > cl.shape1) {
-            auto cshape1 = bb_.create<constant_inst>(cl.shape1, i32_ty, in.loc());
+        if ((u + 1) * col_inc_factor > rl.shape1) {
+            auto cshape1 = bb_.create<constant_inst>(rl.shape1, i32_ty, in.loc());
             auto cond = bb_.create<less_than_inst>(col, cshape1, bool_ty, in.loc());
             modified_val = bb_.ifelse(
                                   cond,
@@ -102,10 +112,10 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
                                       cloner.clone_region(in.body(), *bb.get_region());
                                   },
                                   [&](region_builder &bb) {
-                                      auto c0 = bb.constant_zero(ct->component_ty(), in.loc());
+                                      auto c0 = bb.constant_zero(rt->component_ty(), in.loc());
                                       bb.create<yield_inst>(array_view{c0});
                                   },
-                                  {ct->component_ty()}, in.loc())
+                                  {rt->component_ty()}, in.loc())
                                .front();
         } else {
             cloner.clone_region(in.body(), *bb_.get_region());
@@ -122,13 +132,13 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
                 throw compilation_error(in.loc(), status::ir_must_have_yield);
             }
         }
-        copy = bb_.create<cooperative_matrix_insert_inst>(v, modified_val, copy, in.result().ty(),
-                                                          in.loc());
+        result = bb_.create<cooperative_matrix_insert_inst>(v, modified_val, result,
+                                                            in.result().ty(), in.loc());
     }
     for (auto &r : in.get().results()) {
         auto u = r.use_begin();
         while (r.has_uses()) {
-            u->set(copy);
+            u->set(result);
             u = r.use_begin();
         }
     }

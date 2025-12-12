@@ -40,12 +40,12 @@ inst @constant "Constant instruction" {
 
 inst @cooperative_matrix_apply "Cooperative matrix apply instruction" {
     spmd
-    op %a       "matrix"
+    op* %a      "input matrices"
     reg %body   "instructions to apply to coopmatrix entries"
     ret %result "result type"
     cxx "inline auto row() -> tinytc_value & { return body().param(0); }"
     cxx "inline auto col() -> tinytc_value & { return body().param(1); }"
-    cxx "inline auto val() -> tinytc_value & { return body().param(2); }"
+    cxx "inline auto val(std::size_t i) -> tinytc_value & { return body().param(2 + i); }"
 }
 
 inst @cooperative_matrix_construct "Cooperative matrix construct instruction" {

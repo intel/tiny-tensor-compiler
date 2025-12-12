@@ -1961,28 +1961,37 @@ Cooperative matrix apply
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_apply"
-                                   "(" local-identifier "," local-identifier "," local-identifier ")"
-                                   "=" local-identifier
-                                   "->" coopmatrix-type region
+    value-instruction =/ "cooperative_matrix_apply"
+                         "(" local-identifier "," local-identifier "," local-identifier-list ")"
+                         "=" local-identifier-list
+                         "->" coopmatrix-type region
 
 Overview
 ~~~~~~~~
 
-Apply an action on every component of a coopmatrix and update the component with the result of the action.
-The action is described in the *parallel region* of the instruction.
+Apply a *n*-ary operator on *n* coopmatrices and return the result as a new coopmatrix.
+The operator is applied component-wise and is defined in the *parallel region* of the instruction.
 
 Arguments
 ~~~~~~~~~
 
-The first three local identifier introduce SSA values for the row index, column index, and component value.
-The row and columns values have i32 type and the component value has the same component type as the resulting
-coopmatrix type.
-The fourth identifer, after "in", gives the input coopmatrix, and its type must match the result type.
+The first two local identifiers introduce SSA values for the row index and column index,
+which have i32 type.
+Then, local identifiers for the component values of the coopmatrices listed on the right-hand side
+of the equals sign are introduced, which have the same type as the respective coopmatrix' component type.
+(Hence, we must have *2+n* local identifiers on the left-hand side of "=" and *n* local identifiers on the
+right-hand side.)
 
-The region must yield exactly one value whose scalar type is identical to the component type of the coopmatrix.
+The shapes of all input and output coopmatrices must be identical.
+The component types may differ.
+The rules for matrix use follow the rules in the cast instruction,
+meaning that the use of an input matrix must match the use of the output matrix,
+or the use of the input matrix must be matrix_acc and the use of the output matrix must be matrix_a or matrix_b.
 
-Example:
+The region must yield exactly one value whose scalar type is identical to the component type of the output
+coopmatrix.
+
+Unary operator example:
 
 .. code::
 
@@ -1999,6 +2008,20 @@ Example:
         yield (%exp_v_masked)
     }
     ; The entries of %1 are given by %1[i,j] = exp(%0[i,j]) if i <= j else 0
+
+Binary operator example with type and layout conversion:
+
+.. code::
+
+    %0 = ... ; contains a coopmatrix of type coopmatrix<f32x16x16,matrix_acc>
+    %1 = ... ; contains a coopmatrix of type coopmatrix<i32x16x16,matrix_acc>
+    %2 = cooperative_matrix_apply (%i,%j,%v1,%v2)=%0,%1 -> coopmatrix<f16x16x16,matrix_b> {
+        %v2_f32 = cast %v2 : f32
+        %sum = add %v1, %v2_f32 : f32
+        %sum_f16 = cast %sum : f16
+        yield (%sum_f16)
+    }
+    ; The entries of %2 are given by %2[i,j] = f16(%0[i,j] + f32(%1[i,j]))
 
 Cooperative matrix atomic load
 ..............................
