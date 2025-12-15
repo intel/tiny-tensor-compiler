@@ -40,16 +40,13 @@ auto max_block_io_vec_size(tinytc_type_t ty) -> std::int64_t {
 
 auto coopmatrix_impl_block::load(cooperative_matrix_load_inst in, dope_vector const &odv,
                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
-    const auto ot = get_memref_type(in.operand());
     const auto rt = get_coopmatrix_type(in.result());
     const auto layout = get_layout(cfg(), rt);
     const auto sty = layout.sty;
 
-    const std::int32_t required_alignment = ot->addrspace() == address_space::global ? 4 : 16;
-
     const bool layout_ok = layout.rows >= cfg().subgroup_size;
     const bool transpose_ok = in.t() == transpose::N;
-    const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
+    const bool alignment_ok = is_aligned(cfg().block_load_align, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
     const bool sty_ok = !isa<c64_type>(*sty); // We do not have 16 byte/lane block loads
@@ -150,15 +147,13 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst in, dope_vector co
 void coopmatrix_impl_block::store(cooperative_matrix_store_inst in, dope_vector const &odv,
                                   spv_inst *val, spv_inst *operand, spv_inst *pos0,
                                   spv_inst *pos1) {
-    constexpr std::int32_t required_alignment = 16;
-
     auto vt = get_coopmatrix_type(in.val());
     auto layout = get_layout(cfg(), vt);
     auto sty = vt->component_ty();
 
     const bool layout_ok = layout.rows >= cfg().subgroup_size;
     const bool transpose_ok = in.t() == transpose::N;
-    const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
+    const bool alignment_ok = is_aligned(cfg().block_store_align, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
     const bool sty_ok = !isa<c64_type>(*sty); // We do not have 16 byte/lane block writes

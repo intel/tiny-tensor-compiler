@@ -23,6 +23,8 @@ class core_config {
     std::int32_t subgroup_size;       ///< Smallest unit of execution
     std::int32_t max_work_group_size; ///< Maximum size of local work group in number of works items
     std::int32_t register_space;      ///< Size of register file in bytes
+    std::int32_t block_load_align;    ///< Required alignment for block loads
+    std::int32_t block_store_align;   ///< Required alignment for block stores
     matrix_ext_info const *matrix;
 };
 

@@ -40,7 +40,7 @@ auto core_info_generic::get_core_config(std::int32_t subgroup_size) const -> tin
         subgroup_sizes_.end()) {
         throw std::out_of_range("Requested subgroup size not available");
     }
-    return core_config{subgroup_size, max_work_group_size_, register_space_, &matrix_};
+    return core_config{subgroup_size, max_work_group_size_, register_space_, 4, 16, &matrix_};
 }
 auto core_info_generic::matrix() const -> matrix_ext_info const & { return matrix_; }
 
@@ -131,8 +131,17 @@ auto core_info_intel::get_core_config(std::int32_t subgroup_size) const -> core_
         throw std::out_of_range("Requested subgroup size not available");
     }
 
-    return core_config{subgroup_size, max_work_group_size(subgroup_size), register_space(),
-                       &matrix_};
+    const std::int32_t block_load_align = 4;
+    const std::int32_t block_store_align = [&]() {
+        if (static_cast<std::uint32_t>(tinytc_intel_gpu_architecture_pvc) <= ip_version_) {
+            return 4;
+        }
+        return 16;
+    }();
+
+    return core_config{subgroup_size,     max_work_group_size(subgroup_size),
+                       register_space(),  block_load_align,
+                       block_store_align, &matrix_};
 }
 
 auto core_info_intel::matrix() const -> matrix_ext_info const & { return matrix_; }
