@@ -7,6 +7,7 @@ project(tiny-tensor-compiler VERSION 0.5.0 LANGUAGES C CXX)
 
 include(CMakeDependentOption)
 option(BUILD_DOCUMENTATION "Build documentation" OFF)
+option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SYCL "Build support for SYCL run-time" ON)
 cmake_dependent_option(BUILD_LEVEL_ZERO
     "Build support for Level Zero run-time; required when SYCL is enabled"
@@ -34,7 +35,9 @@ if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting build type to \"Release\".")
 endif()
 
+if(BUILD_EXAMPLES)
 add_subdirectory(examples)
+endif()
 add_subdirectory(src)
 add_subdirectory(tools)
 

@@ -1,0 +1,71 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+;$ty = f64
+;$BM = 256
+;$BN = 64
+;$alpha = 7
+
+$bm = 64
+$bn = 8
+$sgs = 16
+
+$wg_x = !calc($BM $bm / $sgs *)
+$wg_y = !calc($BN $bn /)
+
+func @acc_f(
+        %C_tmp: memref<i32x?x?> {shape_gcd=[4,4],stride_gcd=[1,16]},
+        %C: memref<$ty x?x?> {stride_gcd=[1,8,8]},
+        %eA: memref<$ty x?>,
+        %eB: memref<$ty x?>,
+        %step: i32
+    ) attributes{subgroup_size=$sgs,work_group_size=[$wg_x,$wg_y]} {
+    %gi = group_id.x : index
+    %gj = group_id.y : index
+
+    %BM = constant $BM : index
+    %BN = constant $BN : index
+    %oi = mul %gi, %BM : index
+    %oj = mul %gj, %BN : index
+
+    %c2 = constant 2 : i32
+    %alpha = constant $alpha : i32
+    %scale0 = add %step, %c2 : i32
+    %scale1 = mul %scale0, %alpha : i32
+    %scale2 = sub %c2, %scale1 : i32
+    %scale3 = cast %scale2 : $ty
+    %scale = native_exp2 %scale3 : $ty
+
+    %eA_sub = subview %eA[%oi:$BM] : memref<$ty x $BM>
+    %eB_sub = subview %eB[%oj:$BN] : memref<$ty x $BN>
+    %eA_mat = expand %eA_sub[0->$BM x 1] : memref<$ty x $BM x 1>
+    %eB_mat = expand %eB_sub[0->1 x $BN] : memref<$ty x 1 x $BN>
+
+    %c0 = constant 0 : index
+    %c0_i32 = constant 0 : i32
+    %step_gt_0 = greater_than %step, %c0_i32 : bool
+    foreach_tile (%i,%j)=(%c0,%c0),(%BM,%BN) as (%ti,%tj)<=($bm,$bn) {
+        $fmat_t = coopmatrix<$ty x $bm x $bn,matrix_acc>
+        $imat32_t = coopmatrix<i32x $bm x $bn,matrix_acc>
+
+        %ea = cooperative_matrix_load %eA_mat[%i,%c0] : coopmatrix<$ty x $bm x 1,matrix_a>
+        %eb = cooperative_matrix_load %eB_mat[%c0,%j] : coopmatrix<$ty x 1 x $bn,matrix_b>
+        %scale_ea = cooperative_matrix_scale %scale, %ea : coopmatrix<$ty x $bm x 1,matrix_a>
+
+        %I = add %oi, %i : index
+        %J = add %oj, %j : index
+        %c_tmp = cooperative_matrix_load %C_tmp[%I,%J] : $imat32_t
+        %zero = constant 0.0 : $fmat_t
+        %scale_ea_eb = cooperative_matrix_mul_add %scale_ea, %eb, %zero : $fmat_t
+        %c_tmp_f = cast %c_tmp : $fmat_t
+        %c_tmp_f_scaled = mul %c_tmp_f, %scale_ea_eb : $fmat_t
+        %result = if %step_gt_0 -> ($fmat_t) {
+            %c_in = cooperative_matrix_load %C[%I,%J] : $fmat_t
+            %result = add %c_in, %c_tmp_f_scaled : $fmat_t
+            yield (%result)
+        } else {
+            yield (%c_tmp_f_scaled)
+        }
+        cooperative_matrix_store %result, %C[%I,%J]
+    }
+}

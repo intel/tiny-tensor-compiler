@@ -25,9 +25,17 @@ struct test_case {
     std::int64_t k;
 };
 
-enum class test_type { bf16, f16, f32, f64, c32, c64 };
-auto to_string(test_type ty) {
+enum class test_type { i8, i16, i32, i64, bf16, f16, f32, f64, c32, c64 };
+inline auto to_string(test_type ty) {
     switch (ty) {
+    case test_type::i8:
+        return "i8";
+    case test_type::i16:
+        return "i16";
+    case test_type::i32:
+        return "i32";
+    case test_type::i64:
+        return "i64";
     case test_type::bf16:
         return "bf16";
     case test_type::f16:
@@ -43,9 +51,37 @@ auto to_string(test_type ty) {
     }
     return "unknown";
 }
+inline auto size(test_type ty) -> std::int32_t {
+    switch (ty) {
+    case test_type::i8:
+        return 1;
+    case test_type::i16:
+    case test_type::bf16:
+    case test_type::f16:
+        return 2;
+    case test_type::i32:
+    case test_type::f32:
+        return 4;
+    case test_type::i64:
+    case test_type::f64:
+    case test_type::c32:
+        return 8;
+    case test_type::c64:
+        return 16;
+    }
+    return 0;
+}
 
 inline auto convert_data_type(char const *str, test_type &val) -> cmd::parser_status {
-    if (std::strcmp(str, "bf16") == 0) {
+    if (std::strcmp(str, "i8") == 0) {
+        val = test_type::i8;
+    } else if (std::strcmp(str, "i16") == 0) {
+        val = test_type::i16;
+    } else if (std::strcmp(str, "i32") == 0) {
+        val = test_type::i32;
+    } else if (std::strcmp(str, "i64") == 0) {
+        val = test_type::i64;
+    } else if (std::strcmp(str, "bf16") == 0) {
         val = test_type::bf16;
     } else if (std::strcmp(str, "f16") == 0) {
         val = test_type::f16;
@@ -83,7 +119,7 @@ template <typename F> auto dispatch(test_type ty, F &&f) {
         f.template operator()<std::complex<double>>();
         break;
     default:
-        throw std::runtime_error("Unknown test type");
+        throw std::runtime_error("Unsupported test type in dispatch");
     }
 }
 

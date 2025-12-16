@@ -1,0 +1,60 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+;$ty = f64
+;$acc_ty = f64
+;$bm = 32
+;$bn = 32
+;$bk = 4
+;$BM = 256
+;$BN = 128
+;$A_stride_gcd = 16
+;$B_stride_gcd = 16
+;$C_stride_gcd = 4
+;$sgs = 16
+;$init = 0.0
+
+$num_sg_x = !calc($BM $bm /)
+$num_sg_y = !calc($BN $bn /)
+$wg_size_x = !calc($num_sg_x $sgs *)
+$wg_size_y = $num_sg_y
+$func_attr = {subgroup_size=$sgs, work_group_size=[$wg_size_x,$wg_size_y]}
+
+; %A: (M,K)
+; %B: (K,N)
+; %C: (M,N)
+func @gemm(
+        %A: memref<$ty x?x?> {shape_gcd=[$BM,$BN], stride_gcd=[1,$A_stride_gcd]},
+        %B: memref<$ty x?x?> {shape_gcd=[$BM,$BN], stride_gcd=[1,$A_stride_gcd]},
+        %C: memref<$acc_ty x?x?> {shape_gcd=[$BM,$BN],stride_gcd=[1,$C_stride_gcd]})
+    attributes $func_attr {
+    %row_block = group_id.x : index
+    %col_block = group_id.y : index
+    %BM = constant $BM : index
+    %BN = constant $BN : index
+    %row_offset = mul %row_block, %BM : index
+    %col_offset = mul %col_block, %BN : index
+
+    %K = size %B[0] : index
+
+    %a = subview %A[%row_offset:$BM,0:%K] : memref<$ty x $BM x ?,strided<1,?>>
+    %b = subview %B[0:%K,%col_offset:$BN] : memref<$ty x ? x $BN,strided<1,?>>
+    %c = subview %C[%row_offset:$BM,%col_offset:$BN] : memref<$acc_ty x $BM x $BN,strided<1,?>>
+
+    %c0 = constant 0 : index
+    %bk = constant $bk : index
+    foreach_tile (%i,%j)=(%c0,%c0),(%BM,%BN) as (%ti,%tj) <= ($bm,$bn) {
+        $acc_mat_t = coopmatrix<$acc_ty x $bm x $bn,matrix_acc>
+        %c_init = constant $init : $acc_mat_t
+        %c_acc = for %k=%c0,%K,%bk init(%c_iter=%c_init) -> ($acc_mat_t) {
+            %aa = cooperative_matrix_load %a[%i,%k] : coopmatrix<$ty x $bm x $bk,matrix_a>
+            %bb = cooperative_matrix_load %b[%k,%j] : coopmatrix<$ty x $bk x $bn,matrix_b>
+            %k_next = add %k, %bk : index
+            cooperative_matrix_prefetch 0, %a[%i,%k_next], $bm, $bk
+            cooperative_matrix_prefetch 0, %b[%k_next,%j], $bk, $bn
+            %c_next = cooperative_matrix_mul_add %aa, %bb, %c_iter : $acc_mat_t
+            yield (%c_next)
+        } attributes{unroll=2}
+        cooperative_matrix_store %c_acc, %c[%i,%j]
+    }
+}

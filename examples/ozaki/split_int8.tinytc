@@ -1,0 +1,199 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+;$ty = f64
+;$ity = i64
+;$BM0 = 64
+;$BN0 = 256
+;$BM1 = 256
+;$BN1 = 64
+;$man_bits = 52
+;$exp_bits = 11
+;$alpha = 7
+
+$bm0 = 16
+$bn0 = 32
+$bm1 = 64
+$bn1 = 8
+$sgs = 16
+$wg0_x = !calc($BM0 $bm0 / $sgs *)
+$wg0_y = !calc($BN0 $bn0 /)
+$wg1_x = !calc($BM1 $bm1 / $sgs *)
+$wg1_y = !calc($BN1 $bn1 /)
+
+$man_bits1 = !calc($man_bits 1 +)
+$man_mask = !calc(1 $man_bits shl 1 -)
+$exp_mask = !calc(1 $exp_bits shl 1 - $man_bits shl)
+$one_bit = !calc(1 $man_bits shl)
+$total_bits = !calc($man_bits $exp_bits + 1 +)
+$alpha_mask = !calc(1 $alpha shl 1 -)
+
+
+func @reduce_exp_max(
+        %A: memref<$ty x?x?,strided<1,?>>,
+        %isB: i32,
+        %E: memref<$ty x?,strided<1>>
+    ) attributes{subgroup_size=$sgs,work_group_size=[$wg0_x,$wg0_y]} {
+    %gi = group_id.x : index
+    %gj = group_id.y : index
+
+    %BM0 = constant $BM0 : index
+    %BN0 = constant $BN0 : index
+    %oi = mul %gi, %BM0 : index
+    %oj = mul %gj, %BN0 : index
+
+    %E_size = size %E[0] : index
+    %E_mat = expand %E[0->%E_size x1] : memref<$ty x?x1>
+
+    %c0 = constant 0 : index
+    %exp_mask = constant $exp_mask : $ity
+    %c0_i32 = constant 0 : i32
+    %isB_bool = greater_than %isB, %c0_i32 : bool
+    foreach_tile (%i,%j)=(%c0,%c0),(%BM0,%BN0) as (%ti,%tj)<=($bm0,$bn0) {
+        $fmat_t = coopmatrix<$ty x $bm0 x $bn0,matrix_acc>
+        $mat_t = coopmatrix<$ity x $bm0 x $bn0,matrix_acc>
+
+        %I = add %oi, %i : index
+        %J = add %oj, %j : index
+
+        %a = if %isB_bool -> ($fmat_t) {
+            %a = cooperative_matrix_load.t %A[%J,%I] : $fmat_t
+            yield (%a)
+        } else {
+            %a = cooperative_matrix_load %A[%I,%J] : $fmat_t
+            yield (%a)
+        }
+        %abinexp = cooperative_matrix_apply (%ii,%jj,%v)=%a -> $mat_t {
+            %vbin = bitcast %v : $ity
+            %exp = and %vbin, %exp_mask : $ity
+            yield (%exp)
+        }
+        %abinmax = cooperative_matrix_reduce_max.row %abinexp : coopmatrix<$ity x $bm0 x 1,matrix_acc>
+        %amax = bitcast %abinmax : coopmatrix<$ty x $bm0 x 1,matrix_acc>
+        %c2 = constant 2.0 : $ty
+        %amax2 = cooperative_matrix_scale %c2, %amax : coopmatrix<$ty x $bm0 x 1,matrix_acc>
+
+        %dummy = cooperative_matrix_atomic_max %amax2, %E_mat[%I,%c0] : coopmatrix<$ty x $bm0 x 1,matrix_acc>
+    }
+}
+
+func @split_int8(
+        %A: memref<$ty x?x?,strided<1,?>>,
+        %isB: i32,
+        %E: memref<$ty x?,strided<1>>,
+        %As: memref<i8x?x?x?,strided<1,?,?>> {shape_gcd=[4,1,1],stride_gcd=[1,16,64]}
+    ) attributes{subgroup_size=$sgs,work_group_size=[$wg1_x,$wg1_y]} {
+    %gi = group_id.x : index
+    %gj = group_id.y : index
+
+    %BM1 = constant $BM1 : index
+    %BN1 = constant $BN1 : index
+    %oi = mul %gi, %BM1 : index
+    %oj = mul %gj, %BN1 : index
+
+    %c0 = constant 0 : index
+    %man_bits = constant $man_bits : $ity
+    %man_mask = constant $man_mask : $ity
+    %exp_mask = constant $exp_mask : $ity
+    %one_bit = constant $one_bit : $ity
+    %alpha = constant $alpha : i16
+    %c0_i32 = constant 0 : i32
+    %isB_bool = greater_than %isB, %c0_i32 : bool
+    foreach_tile (%i,%j)=(%c0,%c0),(%BM1,%BN1) as (%ti,%tj)<=($bm1,$bn1) {
+        $fmat_t = coopmatrix<$ty x $bm1 x $bn1,matrix_acc>
+        $mat_t = coopmatrix<$ity x $bm1 x $bn1,matrix_acc>
+        $mat16_t = coopmatrix<i16x $bm1 x $bn1,matrix_acc>
+        $mat8_t  = coopmatrix< i8x $bm1 x $bn1,matrix_b>
+
+        %I = add %oi, %i : index
+        %J = add %oj, %j : index
+        %a = cooperative_matrix_load %A[%I,%J] : $fmat_t
+
+        %sign = cooperative_matrix_apply (%ii,%jj,%v)=%a -> $mat8_t {
+            %zero = constant 0.0 : $ty
+            %v_is_neg = less_than %v, %zero : bool
+            %sign = if %v_is_neg -> (i8) {
+                %m1 = constant -1 : i8
+                yield (%m1)
+            } else {
+                %p1 = constant 1 : i8
+                yield (%p1)
+            }
+            yield (%sign)
+        }
+
+        %abin = bitcast %a : $mat_t
+        %lsb = cooperative_matrix_apply (%ii,%jj,%v)=%abin -> $mat16_t {
+            %local_max = if %isB_bool -> ($ty) {
+                %jj_idx = cast %jj : index
+                %col = add %J, %jj_idx : index
+                %local_max = load %E[%col] : $ty
+                yield (%local_max)
+            } else {
+                %ii_idx = cast %ii : index
+                %row = add %I, %ii_idx : index
+                %local_max = load %E[%row] : $ty
+                yield (%local_max)
+            }
+            %local_max_i = bitcast %local_max : $ity
+            %exp = and %v, %exp_mask : $ity
+            %shift0 = sub %local_max_i, %exp : $ity
+            %shift1 = shr %shift0, %man_bits : $ity
+            %shift2 = cast %shift1 : i16
+            %man_bits1 = constant $man_bits1 : i16
+            %shift3 = add %man_bits1, %shift2 : i16
+            yield (%shift3)
+        }
+
+        %mantissa = cooperative_matrix_apply (%ii,%jj,%v)=%abin -> $mat_t {
+            %exp = and %v, %exp_mask : $ity
+            %0 = constant 0 : $ity
+            %1 = not_equal %exp, %0 : bool
+            %man = and %v, %man_mask : $ity
+            %man1 = if %1 -> ($ity) {
+                %man1 = or %man, %one_bit : $ity
+                yield (%man1)
+            } else {
+                yield (%man)
+            }
+            yield (%man1)
+        }
+
+        %num_splits = size %As[2] : index
+        %lsb_shift_final = for %k=%c0,%num_splits init(%lsb_shift=%alpha) -> (i16) {
+            %split = cooperative_matrix_apply (%ii,%jj,%m,%l,%s)=%mantissa,%lsb,%sign -> $mat8_t {
+                %l_s = sub %l, %lsb_shift : i16
+                %l_s_abs = abs %l_s : i16
+                %total_bits = constant $total_bits : i16
+                %l_s_in_bounds = less_than %l_s_abs, %total_bits : bool
+                %val = if %l_s_in_bounds -> (i8) {
+                    %l_s_pos = equal %l_s, %l_s_abs : bool
+                    %l_s_abs_i = cast %l_s_abs : $ity
+                    %m_s = if %l_s_pos -> ($ity) {
+                        %m_s = shr %m, %l_s_abs_i : $ity
+                        yield (%m_s)
+                    } else {
+                        %m_s = shl %m, %l_s_abs_i : $ity
+                        yield (%m_s)
+                    }
+                    %mask = constant $alpha_mask : $ity
+                    %masked = and %m_s, %mask : $ity
+                    %masked_i8 = cast %masked : i8
+                    %result = mul %masked_i8, %s : i8
+                    yield (%result)
+                } else {
+                    %zero = constant 0 : i8
+                    yield (%zero)
+                }
+                yield (%val)
+            }
+            %s0 = size %As[0] : index
+            %s1 = size %As[1] : index
+            %As_sub = subview %As[0:%s0,0:%s1,%k] : memref<i8x?x?>
+            cooperative_matrix_store.both_checked %split, %As_sub[%I,%J]
+
+            %lsb_shift_next = add %lsb_shift, %alpha : i16
+            yield (%lsb_shift_next)
+        }
+    }
+}
