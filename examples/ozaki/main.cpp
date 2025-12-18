@@ -105,6 +105,11 @@ template <typename T> void test(queue q, args const &a) {
             oz(A, B, C);
             q.wait();
         });
+
+        bench_print("oz_int8_fused", [&](T *A, T *B, T *C) {
+            oz.fused(A, B, C);
+            q.wait();
+        });
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
     } catch (std::exception const &e) {

@@ -29,6 +29,7 @@ class oz_int8 {
 
     void ref(void *A, void *B, void *C);
     void operator()(void *A, void *B, void *C);
+    void fused(void *A, void *B, void *C);
 
   private:
     auto split_i8(void *A, std::size_t stride0, std::size_t stride1)
@@ -39,7 +40,7 @@ class oz_int8 {
     sycl::queue q_;
     tinytc::shared_handle<tinytc_compiler_context_t> ctx_;
     std::array<kernel2d, 2u> split_int8_;
-    kernel2d acc_f_, gemm_, gemm_s8s8s32_;
+    kernel2d acc_f_, gemm_, gemm_s8s8s32_, gemm_fused_;
 };
 
 #endif // OZ_INT8_20251216_HPP

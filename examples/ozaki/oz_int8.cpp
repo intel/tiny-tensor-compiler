@@ -135,13 +135,39 @@ auto make_gemm_kernel(examples::test_type ty, examples::test_type acc_ty,
     return kernel2d{create_kernel(bundle, "gemm"), BM, BN};
 }
 
+auto make_gemm_fused_kernel(examples::test_type ty, tinytc_compiler_context_t ctx, queue q) {
+    extern const std::uint8_t _binary_gemm_fused_tinytc_start, _binary_gemm_fused_tinytc_end;
+    std::uint8_t const *start = &_binary_gemm_fused_tinytc_start;
+    std::uint8_t const *end = &_binary_gemm_fused_tinytc_end;
+    const std::size_t size = end - start;
+
+    std::int32_t BM = 256, BN = 256, bm = 64, bn = 32, bk = 32, sgs = 16, bm_acc = 64, bn_acc = 8;
+
+    auto oss = std::stringstream{};
+    oss << "$ty = " << examples::to_string(ty) << "\n";
+    oss << "$bm = " << bm << "\n";
+    oss << "$bn = " << bn << "\n";
+    oss << "$bk = " << bk << "\n";
+    oss << "$BM = " << BM << "\n";
+    oss << "$BN = " << BN << "\n";
+    oss << "$sgs = " << sgs << "\n";
+    oss << "$alpha = " << alpha << "\n";
+    oss << "$bm_acc = " << bm_acc << "\n";
+    oss << "$bn_acc = " << bn_acc << "\n";
+    oss.write((char const *)start, size);
+    auto bundle = compile_module(ctx, std::move(oss).str().c_str(), q,
+                                 tinytc_core_feature_flag_large_register_file);
+    return kernel2d{create_kernel(bundle, "gemm_fused"), BM, BN};
+}
+
 oz_int8::oz_int8(examples::test_type ty, std::int64_t N, std::int64_t num_splits, queue q)
     : ty_size_{size(ty)}, N_{N}, num_splits_{num_splits}, q_{std::move(q)}, ctx_{make_context()},
       split_int8_{make_split_int8_kernel(ty, ctx_.get(), q_)},
       acc_f_{make_acc_f_kernel(ty, ctx_.get(), q_)},
       gemm_{make_gemm_kernel(ty, ty, ctx_.get(), q_)},
       gemm_s8s8s32_{
-          make_gemm_kernel(examples::test_type::i8, examples::test_type::i32, ctx_.get(), q_)} {}
+          make_gemm_kernel(examples::test_type::i8, examples::test_type::i32, ctx_.get(), q_)},
+      gemm_fused_{make_gemm_fused_kernel(ty, ctx_.get(), q_)} {}
 
 auto oz_int8::split_i8(void *A, std::size_t stride0, std::size_t stride1)
     -> std::pair<sycl_unique_ptr<std::int8_t>, sycl_unique_ptr<void>> {
@@ -213,3 +239,20 @@ void oz_int8::operator()(void *A, void *B, void *C) {
     q_.wait();
 }
 
+void oz_int8::fused(void *A, void *B, void *C) {
+    auto [As, eA] = split_i8(A, 1, N_);
+    auto [Bs, eB] = split_i8(B, N_, 1);
+
+    auto Ctmp = malloc_device_unique<std::int32_t>(N_ * N_, q_);
+    q_.submit([&](sycl::handler &h) {
+        h.set_args(As.get(), N_, N_, num_splits_, N_, N_ * N_, // A
+                   Bs.get(), N_, N_, num_splits_, N_, N_ * N_, // B
+                   Ctmp.get(), N_, N_, N_,                     // C
+                   C, N_, N_, N_,                              // C_acc
+                   eA.get(), N_,                               // eA
+                   eB.get(), N_                                // eB
+        );
+        h.parallel_for(gemm_fused_.execution_range(N_), gemm_fused_.kernel);
+    });
+    q_.wait();
+}

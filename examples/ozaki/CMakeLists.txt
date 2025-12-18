@@ -18,4 +18,5 @@ set_cxx_common_options(ozaki)
 
 embed_source(ozaki acc_f.tinytc)
 embed_source(ozaki gemm.tinytc)
+embed_source(ozaki gemm_fused.tinytc)
 embed_source(ozaki split_int8.tinytc)
