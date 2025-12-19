@@ -59,6 +59,7 @@ class inst_converter {
     void operator()(cooperative_matrix_scale_inst in);
     void operator()(cooperative_matrix_store_inst in);
     void operator()(expand_inst in);
+    void operator()(expandc2r_inst in);
     void operator()(for_inst in);
     void operator()(fuse_inst in);
     void operator()(if_inst in);

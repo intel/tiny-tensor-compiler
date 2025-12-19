@@ -1500,6 +1500,41 @@ Further restrictions:
 * If the product of the expand shape is only known at runtime, then it is undefined behaviour
   if the dynamic product does not match the mode size.
 
+ExpandC2R
+......
+
+.. code:: abnf
+
+    value-instruction       =/ "expandc2r" local-identifier ":" memref-type
+
+Overview
+~~~~~~~~
+
+The expandc2r instruction returns a view on a tensor which has a complex element type with the complex elements reinterpreted as a new mode of size 2 and a floating element type.
+
+Operands
+~~~~~~~~
+
+The argument must point to a value of memref type with complex element type.
+
+Restrictions
+~~~~~~~~~~~~
+
+The memref type of the result must conform with the following rules:
+
+#. Element type must be the floating type corresponding to the operand's complex element type.
+#. The address space must match the operand's memref type.
+#. **Shape:** A mode of size 2 is prepended to the operand's shape.
+   The rest of the shape must be unchanged.
+
+   .. code::
+
+       expandc2r %0      : memref<f32x2x32x8>     ; %0: memref<c32x32x8>
+       expandc2r %0      : memref<f64x2x32x8>     ; %0: memref<c64x32x8>
+       expandc2r %0      : memref<f32x2x32x?>     ; %0: memref<c32x32x?>
+
+#. **Stride:** A new stride entry is entered that follows the canonical stride computation: all strides -- which are measured in units of the element type -- are multiplied by 2, and a unit stride prepended for the unrolled complex mode.
+
 For
 ...
 

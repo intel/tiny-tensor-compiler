@@ -301,13 +301,9 @@ auto make_binary_op_mixed_precision(uniquifier &unique, tinytc_type_t result_ty,
     return make_binary_op(unique, result_ty, op, a, b, loc);
 }
 
-auto make_bitcast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_inst *a,
-                  location const &loc) -> spv_inst * {
+auto make_bitcast_nosizecheck(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty,
+                              spv_inst *a) -> spv_inst * {
     auto &mod = unique.mod();
-
-    if (size(a_ty) != size(to_ty)) {
-        throw compilation_error(loc, status::ir_forbidden_cast);
-    }
 
     auto spv_a_ty = get_spv_ty_non_coopmatrix(unique, a_ty);
     auto spv_to_ty = get_spv_ty_non_coopmatrix(unique, to_ty);
@@ -315,6 +311,15 @@ auto make_bitcast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, s
         return mod.add<OpCopyObject>(spv_to_ty, a);
     }
     return mod.add<OpBitcast>(spv_to_ty, a);
+}
+
+auto make_bitcast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_inst *a,
+                  location const &loc) -> spv_inst * {
+    if (size(a_ty) != size(to_ty)) {
+        throw compilation_error(loc, status::ir_forbidden_cast);
+    }
+
+    return make_bitcast_nosizecheck(unique, to_ty, a_ty, a);
 }
 
 auto make_cast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_inst *a,
@@ -922,4 +927,3 @@ auto make_subgroup_op(uniquifier &unique, tinytc_type_t op_ty, IK op, spv_inst *
 }
 
 } // namespace tinytc::spv
-

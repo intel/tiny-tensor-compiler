@@ -1,0 +1,35 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -O0 -S < %s | filecheck %s
+
+; CHECK:  %[[#F32:]] = OpTypeFloat 32
+; CHECK:  %[[#C32:]] = OpTypeVector %[[#F32]]
+; CHECK:  %[[#I64:]] = OpTypeInt 64 0
+; CHECK:  %[[#I64_C32:]] = OpConstant %[[#I64]] 32
+; CHECK:  %[[#I64_C1:]] = OpConstant %[[#I64]] 1
+; CHECK:  %[[#I64_C0:]] = OpConstant %[[#I64]] 0
+; CHECK:  %[[#I64_C2:]] = OpConstant %[[#I64]] 2
+
+func @f1(%0: memref<c32x32x?>) {
+  %c0 = constant 0 : index
+  %1 = expandc2r %0 : memref<f32x2x32x?>
+  %2 = size %1[0] : index
+  %3 = size %1[1] : index
+  %4 = size %1[2] : index
+  %5 = not %2 : index
+  %6 = not %3 : index
+  %7 = not %4 : index
+  %8 = load %1[%c0,%c0,%c0] : f32
+; CHECK:                %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:      %[[#P_MR:]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT:  %[[#PSHAPE1:]] = OpFunctionParameter %[[#I64]]
+; CHECK:       %[[#ESTRIDE1:]] = OpIMul %[[#I64]] %[[#I64_C2]] %[[#I64_C1]]
+; CHECK-NEXT:  %[[#ESTRIDE2:]] = OpIMul %[[#I64]] %[[#I64_C2]] %[[#I64_C32]]
+; CHECK-NEXT:           %[[#]] = OpBitcast {{.*}} %[[#P_MR]]
+; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#I64_C2]]
+; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#I64_C32]]
+; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#PSHAPE1]]
+; CHECK:                %[[#]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#ESTRIDE1]]
+; CHECK:                %[[#]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#ESTRIDE2]]
+}

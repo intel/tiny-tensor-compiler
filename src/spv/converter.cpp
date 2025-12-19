@@ -571,6 +571,56 @@ void inst_converter::operator()(expand_inst in) {
     }
 }
 
+void inst_converter::operator()(expandc2r_inst in) {
+    auto spv_index_ty = get_spv_index_ty(unique_, in.operand().context());
+
+    auto const make_shape_stride =
+        [&]() -> std::pair<std::vector<spv_inst *>, std::vector<spv_inst *>> {
+        auto sshape = std::vector<spv_inst *>{};
+        auto sstride = std::vector<spv_inst *>{};
+
+        auto dv = get_dope_vector(in.operand());
+        auto mt = get_memref_type(in.operand());
+        if (!dv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+        }
+
+        sshape.reserve(mt->dim() + 1);
+        sstride.reserve(mt->dim() + 1);
+
+        sshape.push_back(unique_.index_constant(2));
+        sstride.push_back(unique_.index_constant(1));
+
+        for (std::int64_t i = 0; i < mt->dim(); ++i) {
+            sshape.push_back(dv->shape(i));
+            sstride.push_back(
+                mod_->add<OpIMul>(spv_index_ty, unique_.index_constant(2), dv->stride(i)));
+        }
+
+        return {sshape, sstride};
+    };
+
+    auto [shape, stride] = make_shape_stride();
+
+    auto ov = val(in.operand());
+    auto to_ty = in.result().ty();
+    auto o_ty = in.operand().ty();
+    declare(in.result(), make_bitcast_nosizecheck(unique_, to_ty, o_ty, ov));
+
+    auto rdv = make_dope_vector(in.result());
+
+    if (shape.size() != static_cast<std::size_t>(rdv->dim()) ||
+        stride.size() != static_cast<std::size_t>(rdv->dim())) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->shape(i, shape[i]);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->stride(i, stride[i]);
+    }
+}
+
 void inst_converter::operator()(for_inst in) {
     auto header_label_op = std::make_unique<OpLabel>();
     auto body_label_op = std::make_unique<OpLabel>();
@@ -1174,4 +1224,3 @@ void inst_converter::run_on_function(tinytc_func &fn) {
 }
 
 } // namespace tinytc::spv
-

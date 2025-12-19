@@ -170,6 +170,11 @@ inst @expand "Expand instruction" {
     ret %result                       "result type"
 }
 
+inst @expandc2r "Expand complex-to-real instruction" {
+    op %operand                       "tensor"
+    ret %result                       "result type"
+}
+
 inst @fuse "Fuse instruction" {
     prop %from => i64 "first mode to fuse"
     prop %to   => i64 "last mode to fuse"

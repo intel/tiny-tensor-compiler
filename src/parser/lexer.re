@@ -213,6 +213,7 @@ lex:
         "cooperative_matrix_scale"        { adv_loc(); return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); }
         "cooperative_matrix_store"        { adv_loc(); return parser::make_COOPERATIVE_MATRIX_STORE(loc_); }
         "expand"             { adv_loc(); return parser::make_EXPAND(loc_); }
+        "expandc2r"          { adv_loc(); return parser::make_EXPANDC2R(loc_); }
         "fuse"               { adv_loc(); return parser::make_FUSE(loc_); }
         "load"               { adv_loc(); return parser::make_LOAD(loc_); }
         "for"                { adv_loc(); return parser::make_FOR(loc_); }

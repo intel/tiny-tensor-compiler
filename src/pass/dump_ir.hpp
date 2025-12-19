@@ -65,6 +65,7 @@ class dump_ir_pass {
     void operator()(cooperative_matrix_store_inst c);
     void operator()(cumsum_inst a);
     void operator()(expand_inst e);
+    void operator()(expandc2r_inst e);
     void operator()(fuse_inst f);
     void operator()(load_inst l);
     void operator()(lifetime_stop_inst l);
