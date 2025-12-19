@@ -517,6 +517,14 @@ void dump_ir_pass::operator()(expand_inst e) {
     visit(*this, *e.result().ty());
 }
 
+void dump_ir_pass::operator()(expandc2r_inst e) {
+    dump_val(e.result());
+    *os_ << " = expandc2r ";
+    dump_val(e.operand());
+    *os_ << " : ";
+    visit(*this, *e.result().ty());
+}
+
 void dump_ir_pass::operator()(fuse_inst f) {
     dump_val(f.result());
     *os_ << " = fuse ";

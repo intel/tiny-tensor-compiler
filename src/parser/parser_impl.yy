@@ -179,6 +179,7 @@
     COOPERATIVE_MATRIX_SCALE        "cooperative_matrix_scale"
     COOPERATIVE_MATRIX_STORE        "cooperative_matrix_store"
     EXPAND                          "expand"
+    EXPANDC2R                       "expandc2r"
     FUSE                            "fuse"
     LOAD                            "load"
     IF                              "if"
@@ -1156,6 +1157,14 @@ integer_constant_or_identifier:
     }
   | integer_constant_or_def {
         $$ = $integer_constant_or_def;
+    }
+;
+
+valued_inst:
+    EXPANDC2R var COLON data_type[ty] {
+        yytry(ctx, [&] {
+            $$ = expandc2r_inst::create(std::move($var), $ty, @valued_inst);
+        });
     }
 ;
 

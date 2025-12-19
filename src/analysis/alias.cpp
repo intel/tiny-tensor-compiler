@@ -22,6 +22,7 @@ class alias_analysis_visitor {
     void operator()(inst_view);
     void operator()(alloca_inst a);
     void operator()(expand_inst e);
+    void operator()(expandc2r_inst e);
     void operator()(fuse_inst f);
     void operator()(subview_inst s);
 
@@ -44,6 +45,13 @@ void alias_analysis_visitor::operator()(alloca_inst a) {
     }
 }
 void alias_analysis_visitor::operator()(expand_inst e) {
+    const_tinytc_value_t source = &e.operand();
+    while (alias_.find(source) != alias_.end()) {
+        source = alias_[source];
+    }
+    alias_[&e.result()] = source;
+}
+void alias_analysis_visitor::operator()(expandc2r_inst e) {
     const_tinytc_value_t source = &e.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];

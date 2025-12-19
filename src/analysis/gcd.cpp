@@ -72,6 +72,7 @@ class gcd_helper {
     void operator()(cast_inst in);
     void operator()(constant_inst in);
     void operator()(expand_inst in);
+    void operator()(expandc2r_inst in);
     void operator()(for_inst in);
     void operator()(fuse_inst in);
     void operator()(load_inst in);
@@ -193,6 +194,28 @@ void gcd_helper::operator()(expand_inst in) {
         for (std::int64_t i = in.expanded_mode() + 1; i < mt->dim(); ++i) {
             shape_gcd.push_back(mi->shape_gcd(i));
             stride_gcd.push_back(mi->stride_gcd(i));
+        }
+
+        gcd_.set_memref(in.result(),
+                        memref_info(offset_gcd, std::move(shape_gcd), std::move(stride_gcd)));
+    }
+}
+void gcd_helper::operator()(expandc2r_inst in) {
+    if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
+        const auto mt = get_memref_type(in.operand());
+        const auto offset_gcd = mi->offset_gcd();
+        auto shape_gcd = std::vector<std::int64_t>{};
+        auto stride_gcd = std::vector<std::int64_t>{};
+
+        shape_gcd.reserve(mt->dim() + 1);
+        stride_gcd.reserve(mt->dim() + 1);
+
+        shape_gcd.push_back(2);
+        stride_gcd.push_back(1);
+
+        for (std::int64_t i = 0; i < mt->dim(); ++i) {
+            shape_gcd.push_back(mi->shape_gcd(i));
+            stride_gcd.push_back(2 * mi->stride_gcd(i));
         }
 
         gcd_.set_memref(in.result(),

@@ -479,6 +479,45 @@ void expand_inst::setup_and_check() {
     }
 }
 
+void expandc2r_inst::setup_and_check() {
+    auto ty = result().ty();
+
+    auto rt = dyn_cast<memref_type>(ty);
+    if (!rt) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+    auto ot = get_memref_type(loc(), operand());
+    if (!isa<complex_type>(*ot->element_ty()) ||
+        rt->element_ty() != component_type(ot->element_ty())) {
+        throw compilation_error(loc(), {&operand()}, status::ir_number_mismatch);
+    }
+    if (rt->addrspace() != ot->addrspace()) {
+        throw compilation_error(loc(), {&operand()}, status::ir_address_space_mismatch);
+    }
+
+    if (rt->dim() != ot->dim() + 1 || rt->shape(0) != 2) {
+        throw compilation_error(loc(), {&operand()}, status::ir_incompatible_shapes);
+    }
+
+    if (rt->stride(0) != 1) {
+        auto extra_info = std::ostringstream{} << "Stride of return mode 0 is " << rt->stride(0)
+                                               << ", must be 1";
+        throw compilation_error(loc(), status::ir_invalid_stride, std::move(extra_info).str());
+    }
+
+    for (std::int64_t i = 0; i < ot->dim(); ++i) {
+        check_memref_shape(rt, i + 1, ot, i, loc());
+
+        if (!is_dynamic_value(rt->stride(i + 1)) && rt->stride(i + 1) != 2 * ot->stride(i)) {
+            auto extra_info = std::ostringstream{}
+                              << "Stride of mode " << i + 1
+                              << " does not equal two times the operand stride " << i << " ["
+                              << rt->stride(i + 1) << "!= 2x" << ot->stride(i) << "]";
+            throw compilation_error(loc(), status::ir_invalid_stride, std::move(extra_info).str());
+        }
+    }
+}
+
 void fuse_inst::setup_and_check() {
     auto ty = result().ty();
     auto [ot, rt] = get_and_check_memref_type_addrspace(operand(), ty, loc());

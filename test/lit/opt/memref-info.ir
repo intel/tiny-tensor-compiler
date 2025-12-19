@@ -25,6 +25,18 @@ func @expand(%a: memref<i8x64>, %b: memref<i8x?x?> {shape_gcd=[16,3], stride_gcd
 ; CHECK:       stride_gcd(%3) = [1,4,16]
 }
 
+func @expandc2r(%a: memref<c32x64x16>, %b: memref<c32x16x?> {shape_gcd=[16,8], stride_gcd=[1,4]}) {
+    %0 = expandc2r %a : memref<f32x2x64x16>
+    %1 = expandc2r %b : memref<f32x2x16x?,strided<1,2,32>>
+; CHECK-LABEL: GCD in @expandc2r
+; CHECK:       offset_gcd(%0) = 16
+; CHECK:       shape_gcd(%0) = [2,64,16]
+; CHECK:       stride_gcd(%0) = [1,2,128]
+; CHECK:       offset_gcd(%1) = 16
+; CHECK:       shape_gcd(%1) = [2,16,8]
+; CHECK:       stride_gcd(%1) = [1,2,8]
+}
+
 func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_gcd=[1,4,16]}) {
     %0 = fuse %a[0,1] : memref<i8x64>
     %1 = fuse %b[0,1] : memref<i8x?x?>
