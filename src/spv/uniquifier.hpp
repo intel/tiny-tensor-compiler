@@ -35,6 +35,7 @@ class uniquifier {
 
     auto asm_target() -> spv_inst *;
     auto bool_constant(bool b) -> spv_inst *;
+    auto index_constant(std::int64_t i) -> spv_inst *;
     auto builtin_alignment(BuiltIn b) -> std::int32_t;
     auto builtin_pointee_ty(BuiltIn b) -> spv_inst *;
     auto builtin_var(BuiltIn b) -> spv_inst *;

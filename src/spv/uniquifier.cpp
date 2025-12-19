@@ -47,6 +47,12 @@ auto uniquifier::bool_constant(bool b) -> spv_inst * {
     });
 }
 
+auto uniquifier::index_constant(std::int64_t i) -> spv_inst * {
+    if (mod().context()->index_bit_width() == 32)
+        return constant(std::int32_t(i));
+    return constant(i);
+}
+
 auto uniquifier::builtin_alignment(BuiltIn b) -> std::int32_t {
     switch (b) {
     case BuiltIn::WorkDim:
@@ -253,4 +259,3 @@ auto uniquifier::load_builtin(BuiltIn b) -> spv_inst * {
 }
 
 } // namespace tinytc::spv
-
