@@ -260,11 +260,13 @@ auto inst_converter::get_pointer_helper(MemoryReadWriteInst in) -> spv_inst * {
             return val(in.operand());
         }
 
-        auto idx0 = val(in.index_list()[0]);
+        auto idx0 = make_index_cast(unique_, val(in.index_list()[0]), in.loc());
         spv_inst *offset =
             memref_ty->stride(0) != 1 ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0)) : idx0;
         for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
-            auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
+            auto tmp = mod_->add<OpIMul>(
+                spv_index_ty, make_index_cast(unique_, val(in.index_list()[i]), in.loc()),
+                dv->stride(i));
             offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
         }
         return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
@@ -467,8 +469,10 @@ void inst_converter::operator()(cooperative_matrix_atomic_update_inst in) {
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    declare(in.result(), matrix_impl().atomic_update(in, *odv, val(in.val()), val(in.operand()),
-                                                     val(in.pos0()), val(in.pos1())));
+    declare(in.result(),
+            matrix_impl().atomic_update(in, *odv, val(in.val()), val(in.operand()),
+                                        make_index_cast(unique_, val(in.pos0()), in.loc()),
+                                        make_index_cast(unique_, val(in.pos1()), in.loc())));
 }
 
 void inst_converter::operator()(cooperative_matrix_construct_inst in) {
@@ -486,8 +490,9 @@ void inst_converter::operator()(cooperative_matrix_load_inst in) {
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    declare(in.result(),
-            matrix_impl().load(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1())));
+    declare(in.result(), matrix_impl().load(in, *odv, val(in.operand()),
+                                            make_index_cast(unique_, val(in.pos0()), in.loc()),
+                                            make_index_cast(unique_, val(in.pos1()), in.loc())));
 }
 
 void inst_converter::operator()(cooperative_matrix_mul_add_inst in) {
@@ -498,7 +503,9 @@ void inst_converter::operator()(cooperative_matrix_prefetch_inst in) {
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    matrix_impl().prefetch(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1()));
+    matrix_impl().prefetch(in, *odv, val(in.operand()),
+                           make_index_cast(unique_, val(in.pos0()), in.loc()),
+                           make_index_cast(unique_, val(in.pos1()), in.loc()));
 }
 void inst_converter::operator()(cooperative_matrix_reduce_inst in) {
     declare(in.result(), matrix_impl().reduce(in, val(in.a())));
@@ -511,7 +518,9 @@ void inst_converter::operator()(cooperative_matrix_store_inst in) {
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    matrix_impl().store(in, *odv, val(in.val()), val(in.operand()), val(in.pos0()), val(in.pos1()));
+    matrix_impl().store(in, *odv, val(in.val()), val(in.operand()),
+                        make_index_cast(unique_, val(in.pos0()), in.loc()),
+                        make_index_cast(unique_, val(in.pos1()), in.loc()));
 }
 
 void inst_converter::operator()(expand_inst in) {

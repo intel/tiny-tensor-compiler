@@ -25,6 +25,7 @@ namespace tinytc::spv {
 
 auto get_spv_index_ty(uniquifier &unique, tinytc_compiler_context_t ctx) -> spv_inst *;
 auto get_spv_ty(uniquifier &unique, memref_type const *ty) -> spv_inst *;
+auto get_spv_ty(spv_inst &) -> spv_inst *;
 auto get_spv_pointer_index_ty(uniquifier &unique, tinytc_compiler_context_t ctx,
                               address_space addrspace = address_space::global) -> spv_inst *;
 auto get_spv_ty_non_coopmatrix(uniquifier &unique, tinytc_type_t ty) -> spv_inst *;
@@ -50,6 +51,7 @@ auto make_bitcast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, s
                   location const &loc) -> spv_inst *;
 auto make_cast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_inst *a,
                location const &loc) -> spv_inst *;
+auto make_index_cast(uniquifier &unique, spv_inst *a, location const &loc) -> spv_inst *;
 auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b,
                       bool conj_b = false) -> spv_inst *;
 auto make_compare_op(uniquifier &unique, tinytc_type_t operand_ty, IK op, spv_inst *a, spv_inst *b,

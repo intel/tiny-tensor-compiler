@@ -1153,7 +1153,7 @@ Operands
 Op.-No. Type                     Description
 ======= ======================== ===========
 1       memref-type / group-type tensor
-2...    index                    index list
+2...    integer-type             index list
 ======= ======================== ===========
 
 Returns
@@ -1188,7 +1188,7 @@ Op.-No. Type             Description
 ======= ================ ===========
 1       number-type      value
 2       memref-type      tensor
-3...    index            index list
+3...    integer-type     index list
 ======= ================ ===========
 
 Restrictions
@@ -1231,7 +1231,7 @@ Op.-No. Type             Description
 ======= ================ ===========
 1       number-type      value
 2       memref-type      tensor
-3...    index            index list
+3...    integer-type     index list
 ======= ================ ===========
 
 Restrictions
@@ -1731,7 +1731,7 @@ Operands
 Op.-No. Type                     Description
 ======= ======================== ===========
 1       memref-type / group-type tensor
-2...    index                    index list
+2...    integer-type             index list
 ======= ======================== ===========
 
 Returns
@@ -1916,7 +1916,7 @@ Op.-No. Type             Description
 ======= ================ ===========
 1       number-type      value
 2       memref-type      tensor
-3...    index            index list
+3...    integer-type     index list
 ======= ================ ===========
 
 Restrictions
@@ -2251,8 +2251,8 @@ Operands
 Op.-No. Type            Description
 ======= =============== ===========
 1       memref-type     M
-2       index           x
-3       index           y
+2       integer-type    x
+3       integer-type    y
 ======= =============== ===========
 
 Restrictions
@@ -2339,8 +2339,8 @@ Op.-No. Type             Description
 ======= ================ ===========
 1       integer-constant Cache-level
 2       memref-type      M
-3       index            x
-4       index            y
+3       integer-type     x
+4       integer-type     y
 5       integer-constant X
 6       integer-constant Y
 ======= ================ ===========
@@ -2469,8 +2469,8 @@ Op.-No. Type            Description
 ======= =============== ===========
 1       coopmatrix-type A
 2       memref-type     M
-3       index           x
-4       index           y
+3       integer-type    x
+4       integer-type    y
 ======= =============== ===========
 
 Restrictions

@@ -58,6 +58,12 @@ void check_index_ty(location const &loc, tinytc_value const &v) {
     }
 }
 
+void check_int_ty(location const &loc, tinytc_value const &v) {
+    if (!isa<integer_type>(*v.ty())) {
+        throw compilation_error(loc, {&v}, status::ir_expected_int);
+    }
+}
+
 void check_memref_shape(memref_type *rt, std::int64_t ri, memref_type *ot, std::int64_t oi,
                         location const &loc) {
     if (rt->shape(ri) != ot->shape(oi)) {
@@ -273,8 +279,8 @@ void cooperative_matrix_memory_read_inst::setup_and_check() {
         throw compilation_error(loc(), {&operand()}, status::ir_expected_memref_order_2);
     }
 
-    check_index_ty(loc(), pos0());
-    check_index_ty(loc(), pos1());
+    check_int_ty(loc(), pos0());
+    check_int_ty(loc(), pos1());
 }
 
 void cooperative_matrix_atomic_load_inst::setup_and_check() {
@@ -353,8 +359,8 @@ void cooperative_matrix_prefetch_inst::setup_and_check() {
         throw compilation_error(loc(), {}, status::ir_invalid_shape);
     }
 
-    check_index_ty(loc(), pos0());
-    check_index_ty(loc(), pos1());
+    check_int_ty(loc(), pos0());
+    check_int_ty(loc(), pos1());
 }
 
 void cooperative_matrix_reduce_inst::setup_and_check() {
@@ -405,8 +411,8 @@ void cooperative_matrix_memory_write_inst::setup_and_check() {
         throw compilation_error(loc(), {&operand()}, status::ir_expected_memref_order_2);
     }
 
-    check_index_ty(loc(), pos0());
-    check_index_ty(loc(), pos1());
+    check_int_ty(loc(), pos0());
+    check_int_ty(loc(), pos1());
 }
 void cooperative_matrix_atomic_store_inst::setup_and_check() {
     cooperative_matrix_memory_write_inst::setup_and_check();
@@ -580,6 +586,9 @@ void memory_read_inst::setup_and_check() {
         if (mr->dim() != static_cast<std::int64_t>(index_list().size())) {
             throw compilation_error(loc(), status::ir_invalid_number_of_indices);
         }
+        for (auto &val : index_list()) {
+            check_int_ty(loc(), val);
+        }
     } else {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
@@ -684,7 +693,7 @@ void subview_inst::setup_and_check() {
 
 void memory_write_inst::setup_and_check() {
     for (auto &val : index_list()) {
-        check_index_ty(loc(), val);
+        check_int_ty(loc(), val);
     }
 
     auto o = get_memref_type(loc(), operand());

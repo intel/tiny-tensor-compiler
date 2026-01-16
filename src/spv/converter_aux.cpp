@@ -9,6 +9,7 @@
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/opencl.std.hpp"
+#include "spv/visit.hpp"
 #include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/ilist.hpp"
@@ -36,6 +37,17 @@ auto get_spv_ty(uniquifier &unique, memref_type const *ty) -> spv_inst * {
     const auto align = alignment(ty->element_ty());
     return unique.pointer_ty(storage_cls, pointee_ty, align);
 }
+
+template <typename T>
+concept has_spv_type = requires(T rt) {
+    { rt.type() } -> std::same_as<IdResultType &>;
+};
+struct spv_type_getter {
+    template <has_spv_type T> auto operator()(T &in) -> IdResultType { return in.type(); }
+    auto operator()(spv_inst &) -> IdResultType { return nullptr; }
+};
+auto get_spv_type(spv_inst &in) -> spv_inst * { return visit(spv_type_getter(), in); }
+
 auto get_spv_pointer_index_ty(uniquifier &unique, tinytc_compiler_context_t ctx,
                               address_space addrspace) -> spv_inst * {
     auto index_ty = index_type::get(ctx);
@@ -388,7 +400,7 @@ auto make_cast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_
     };
 
     auto spv_to_ty = get_spv_ty_non_coopmatrix(unique, to_ty);
-    if (a_ty == to_ty) {
+    if (get_spv_ty_non_coopmatrix(unique, a_ty) == spv_to_ty) {
         return mod.add<OpCopyObject>(spv_to_ty, a);
     }
 
@@ -408,6 +420,21 @@ auto make_cast(uniquifier &unique, tinytc_type_t to_ty, tinytc_type_t a_ty, spv_
         throw compilation_error(loc, status::internal_compiler_error);
     }
     return castop;
+}
+
+auto make_index_cast(uniquifier &unique, spv_inst *a, location const &loc) -> spv_inst * {
+    auto &mod = unique.mod();
+    const auto &context = mod.context();
+    auto spv_index_ty = get_spv_index_ty(unique, context);
+
+    if (auto a_ty = get_spv_type(*a); a_ty) {
+        if (a_ty == spv_index_ty)
+            return a;
+        else
+            return mod.add<OpSConvert>(spv_index_ty, a);
+    }
+
+    throw compilation_error(loc, status::internal_compiler_error);
 }
 
 auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b)
