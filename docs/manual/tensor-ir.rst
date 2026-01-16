@@ -1956,7 +1956,7 @@ Example:
     %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x16x16,matrix_acc> {
         %mask = cmp.le %i, %j : bool
         %exp_v_masked = if %mask -> (f32) {
-            %exp_v = math.native_exp %v : f32
+            %exp_v = native_exp %v : f32
             yield (%exp_v)
         } else {
             %zero = constant 0.0 : f32
