@@ -90,7 +90,7 @@ When using SYCL, we can run the kernel using the following pseudo-code:
 
     #include <iostream>
 
-    auto ctx = tinytc::make_compiler_context();
+    auto ctx = tinytc::create_compiler_context();
     set_error_reporter([](ctx.get(), char const *what, const tinytc_location_t *,
                           void *) { std::cerr << what << std::endl; },
                        nullptr);
