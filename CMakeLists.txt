@@ -37,6 +37,7 @@ endif()
 add_subdirectory(examples)
 add_subdirectory(src)
 add_subdirectory(tools)
+add_subdirectory(sandbox)
 
 if(BUILD_DOCUMENTATION)
     add_subdirectory(docs)
